@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧠 Memory Matching Game</title>
+    <link rel="stylesheet" href="memory-game-styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🤯 Memory Matching Game</h1>
+        </div>
+        <div class="navigation">
+            <a href="index.html" class="nav-button">⏪Back to Number Guessing Game#️⃣</a>
+        </div>
+        <div class="game-setup" id="gameSetup">
+            <div class="setup-controls">
+                <div class="control-group">
+                    <label for="difficulty">Difficulty:</label>
+                    <select id="difficulty">
+                        <option value="easy">Easy (3 seconds)</option>
+                        <option value="medium">Medium (5 seconds)</option>
+                        <option value="hard">Hard (8 seconds)</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="pairs">Number of Pairs:</label>
+                    <select id="pairs">
+                        <option value="8">8 Pairs</option>
+                        <option value="10">10 Pairs</option>
+                        <option value="12">12 Pairs</option>
+                    </select>
+                </div>
+                
+                <button class="start-button" id="startButton">START 🧠 GAME</button>
+            </div>
+        </div>
+
+        <div class="memorization-phase" id="memorizationPhase">
+            <div class="memorization-text">Memorize the card positions!</div>
+            <div class="memorization-timer" id="memorizationTimer">3</div>
+        </div>
+
+        <div class="game-info" id="gameInfo">
+            <div class="game-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="matchesFound">0</div>
+                    <div class="stat-label">Matches Found</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="attempts">0</div>
+                    <div class="stat-label">Attempts</div>
+                </div>
+                <div class="timer" id="gameTimer">120</div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalPairs">8</div>
+                    <div class="stat-label">Total Pairs</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-board" id="gameBoard"></div>
+
+        <div class="game-over" id="gameOver">
+            <h2 id="gameOverTitle">🙌 Congratulations!</h2>
+            <p id="gameOverMessage">You completed the game!</p>
+            <button class="play-again-button" id="playAgainButton">PLAY AGAIN?</button>
+        </div>
+    </div>
+    <script src="memory-game-scripts.js"></script>
+</body>
+</html>
