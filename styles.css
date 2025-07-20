@@ -326,18 +326,21 @@ body {
     }
 }
 
+/* Mobile-specific improvements */
 @media (max-width: 600px) {
     body {
         padding: 5px;
         min-height: 100dvh;
+        align-items: flex-start;
+        padding-top: 20px;
     }
-
+    
     .game-container {
         padding: 0.8rem;
-        margin-top: 5px;
+        margin-top: 0;
         border-radius: 12px;
-        max-height: 90vh;
-        overflow-y: auto;
+        max-height: none;
+        min-height: auto;
     }
     
     .title {
@@ -345,58 +348,144 @@ body {
         margin-bottom: 0.3rem;
     }
     
-    .input-container {
-        flex-direction: row !important;
-        gap: 0.5rem;
-        justify-content: center;
-        align-items: center;
+    .clock {
+        font-size: 1rem;
         margin-bottom: 0.5rem;
     }
     
+    .navigation {
+        margin-bottom: 0.5rem;
+    }
+    
+    .nav-button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    
+    .game-info {
+        margin-bottom: 0.8rem;
+        padding: 0.6rem;
+    }
+    
+    .guesses-left {
+        font-size: 0.9rem;
+    }
+    
+    .range-info {
+        font-size: 0.8rem;
+    }
+    
+    /* Make message area prominent and visible */
+    .message {
+        min-height: 50px;
+        padding: 0.8rem;
+        margin-bottom: 0.8rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        background: rgba(255, 193, 7, 0.2);
+        border: 2px solid rgba(255, 193, 7, 0.6);
+        border-radius: 12px;
+        /* Make it stand out more */
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+    }
+    
+    .message.success {
+        background: rgba(76, 175, 80, 0.25);
+        border-color: rgba(76, 175, 80, 0.7);
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    }
+    
+    .message.error {
+        background: rgba(244, 67, 54, 0.25);
+        border-color: rgba(244, 67, 54, 0.7);
+        box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+    }
+    
+    .message.hint {
+        background: rgba(255, 193, 7, 0.25);
+        border-color: rgba(255, 193, 7, 0.7);
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+    }
+    
+    /* Input section - horizontal layout */
+    .input-section {
+        margin-bottom: 0.8rem;
+    }
+    
+    .input-container {
+        flex-direction: row;
+        gap: 0.8rem;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 0;
+    }
+    
     #guessInput {
-        width: 80px;
-        padding: 0.6rem 0.5rem;
+        width: 90px;
+        padding: 0.7rem 0.5rem;
         font-size: 1.1rem;
+        border-radius: 20px;
         margin-top: 0;
     }
     
     #guessButton {
-        padding: 0.6rem 1rem;
-        font-size: 0.9rem;
-        margin-top: 0; 
+        padding: 0.7rem 1.2rem;
+        font-size: 0.95rem;
+        border-radius: 20px;
+        margin-top: 0;
         white-space: nowrap;
     }
     
-    .message {
-        min-height: 50px;
-        padding: 0.6rem;
-        margin-bottom: 0.5rem;
-        font-size: 0.85rem;
-        background: rgba(255, 255, 255, 0.15);
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        font-weight: 500;
+    /* Compact stats */
+    .stats {
+        gap: 0.8rem;
+        margin-top: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
     }
     
-    .stats {
-        gap: 0.5rem;
-        margin-top: 0.3rem;
-    }
-
     .stat-item {
-        padding: 0.3rem 0.6rem;
-        min-width: 70px;
+        padding: 0.4rem 0.7rem;
+        min-width: 75px;
     }
     
     .stat-value {
-        font-size: 1rem;
+        font-size: 1.1rem;
     }
     
     .stat-label {
-        font-size: 0.65rem;
+        font-size: 0.7rem;
     }
-
+    
+    /* Reduce floating numbers for mobile */
     .floating-number {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
+        opacity: 0.6;
     }
 }
 
+/* Extra small screens (iPhone SE, etc.) */
+@media (max-width: 375px) {
+    .game-container {
+        padding: 0.6rem;
+    }
+    
+    .title {
+        font-size: 1.4rem;
+    }
+    
+    .message {
+        font-size: 0.85rem;
+        padding: 0.6rem;
+    }
+    
+    #guessInput {
+        width: 80px;
+        font-size: 1rem;
+    }
+    
+    #guessButton {
+        font-size: 0.9rem;
+        padding: 0.6rem 1rem;
+    }
+}
