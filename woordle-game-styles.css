@@ -335,7 +335,7 @@ body {
 
 /* Bottom stats and button */
 .bottom-section {
-    padding-bottom: 20px; /* Space for fixed keyboard */
+    padding-bottom: 180px; /* Space for fixed keyboard */
     flex-shrink: 0;
 }
 
