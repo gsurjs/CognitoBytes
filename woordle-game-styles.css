@@ -256,8 +256,8 @@ body {
 }
 
 .letter-tile.present {
-    background: linear-gradient(45deg, #f39c12, #e67e22);
-    border-color: #f39c12;
+    background: linear-gradient(45deg, #f3fa00, #d7dd07);
+    border-color: #f3fa00;
     animation: bounce 0.5s ease-in-out;
 }
 
