@@ -78,7 +78,7 @@ class BrainGamesMenu {
     }
 
     startFloatingElements() {
-        const icons = ['🧠', '🎯', '🎮', '⭐', '🏆', '💡', '🔢', '🃏', '🔤', '🎊'];
+        const icons = ['🧠'];
         
         const createFloatingElement = () => {
             const element = document.createElement('div');
