@@ -267,6 +267,16 @@ body {
         background: linear-gradient(45deg, #667eea 0%, #66ea7e 0%, #764ba2 100%);
         background-size: 200% 200%;
     }
+    .menu-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        pointer-events: none;
+    }
     
     .menu-container {
         padding: 1.5rem;
