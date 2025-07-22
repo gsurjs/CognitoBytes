@@ -264,7 +264,7 @@ body {
         min-height: 100dvh;
         align-items: flex-start;
         padding-top: 30px;
-        background-size: 100% 100%;
+        background-size: 50% 50%;
         animation: gradientShift 10s ease infinite;
     }
     
