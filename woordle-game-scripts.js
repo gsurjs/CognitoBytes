@@ -227,6 +227,13 @@ class WoordleGame {
         if (!this.gameActive) return;
         
         const key = e.key.toUpperCase();
+
+        // We only care about Enter, Backspace, and single letters.
+        if (key === 'ENTER' || key === 'BACKSPACE' || /^[A-Z]$/.test(key)) {
+            e.preventDefault(); // Prevent any unwanted default browser action.
+        } else {
+            return; // Ignore other keys like Shift, Alt, Ctrl, etc.
+        }
         
         // Don't allow typing disabled (absent) letters
         if (key.match(/[A-Z]/) && key.length === 1) {
@@ -283,6 +290,7 @@ class WoordleGame {
         if (this.currentWord.length !== this.wordLength) {
             this.updateMessage("Not enough letters!", "error");
             this.playSound('error');
+            this.shakeRow(this.currentRow);
             return;
         }
         
@@ -290,15 +298,6 @@ class WoordleGame {
             this.updateMessage("Not a valid word!", "error");
             this.playSound('error');
             this.shakeRow(this.currentRow);
-            
-            // Clear the current guess and reset for another attempt in the same row
-            setTimeout(() => {
-                this.clearCurrentRow();
-                this.currentCol = 0;
-                this.currentWord = '';
-                this.updateMessage("Guess the 5-letter word!", "info");
-            }, 1000); // Wait 1 second before clearing
-            
             return;
         }
         
@@ -308,11 +307,11 @@ class WoordleGame {
         if (this.currentWord === this.targetWord) {
             setTimeout(() => {
                 this.handleWin();
-            }, this.wordLength * 100 + 200);
+            }, this.wordLength * 350);
         } else if (this.currentRow >= this.maxAttempts - 1) {
             setTimeout(() => {
                 this.handleLoss();
-            }, this.wordLength * 100 + 200);
+            }, this.wordLength * 350);
         } else {
             // Move to next row after animation completes
             setTimeout(() => {
@@ -365,7 +364,7 @@ class WoordleGame {
                     (this.keyboardState[letter] === 'absent' && result === 'present')) {
                     this.keyboardState[letter] = result;
                 }
-            }, i * 100);
+            }, i * 300);
         }
         
         // Update keyboard after all tiles are processed
