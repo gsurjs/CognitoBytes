@@ -477,13 +477,13 @@ body {
     }
     
     .key {
-        padding: 15px 9px;
+        padding: 15px 6px;
         font-size: 1.9rem;
         min-width: 28px;
     }
     
     .key.wide {
-        min-width: 50px;
+        min-width: 60px;
         font-size: 0.65rem;
     }
     
