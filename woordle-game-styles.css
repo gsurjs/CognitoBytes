@@ -445,7 +445,7 @@ body {
     }
     
     .game-board {
-        max-width: 300px;
+        max-width: 500px;
         gap: 5px;
         margin-bottom: 0.8rem;
     }
@@ -527,7 +527,7 @@ body {
     }
     
     .game-board {
-        max-width: 350px;
+        max-width: 270px;
         gap: 4px;
     }
     
