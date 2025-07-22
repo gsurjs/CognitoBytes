@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧠 Cognito Bytes</title>
+    <link rel="stylesheet" href="app-menu-styles.css">
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <div class="menu-container">
+        <div class="header">
+            <h1 class="title">🧠 Brain Games</h1>
+            <div class="subtitle">Challenge Your Mind</div>
+            <div class="description">Test your skills with our collection of mind-bending games!</div>
+        </div>
+        
+        <div class="games-grid">
+            <a href="index.html" class="game-card" id="numberGame">
+                <div class="game-icon">🤔</div>
+                <div class="game-title">Number Guessing</div>
+                <div class="game-description">Guess the secret number between 1-100 with hints and time pressure!</div>
+            </a>
+            
+            <a href="memory-game.html" class="game-card" id="memoryGame">
+                <div class="game-icon">🧠</div>
+                <div class="game-title">Memory Match</div>
+                <div class="game-description">Memorize card positions and find matching pairs before time runs out!</div>
+            </a>
+            
+            <a href="woordle.html" class="game-card" id="woordleGame">
+                <div class="game-icon">🔤</div>
+                <div class="game-title">Woordle!</div>
+                <div class="game-description">Guess the 5-letter word in 6 tries. Daily puzzles or infinite mode!</div>
+            </a>
+        </div>
+        
+        <div class="stats-section">
+            <div class="stats-title">🏆 Your Gaming Stats</div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalGamesPlayed">0</div>
+                    <div class="stat-label">Games Played</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalGamesWon">0</div>
+                    <div class="stat-label">Games Won</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="winPercentage">0%</div>
+                    <div class="stat-label">Win Rate</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="app-menu-scripts.js"></script>
+</body>
+</html>
