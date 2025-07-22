@@ -341,6 +341,11 @@ body {
     .stat-label {
         font-size: 0.75rem;
     }
+    @keyframes gradientShift {
+        0% { background-position: 0% 25%; }
+        50% { background-position: 100% 25%; }
+        100% { background-position: 0% 25%; }
+    }
 }
 
 /* Extra small screens */
