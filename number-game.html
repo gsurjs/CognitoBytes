@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game!</title>
+    <link rel="stylesheet" href="number-game-styles.css">
+</head>
+<body>
+    <div class="floating-numbers" id="floatingNumbers"></div>
+    
+    <div class="game-container">
+        <div class="header">
+            <h1 class="title">🤔 Guess the Number!</h1>
+            <div class="clock" id="clock"></div>
+            <div class="navigation">
+                <a href="memory-game.html" class="nav-button">Play Memory Game 💾</a>
+            </div>
+            <div class="game-start" id="gameStart">
+                <button class="start-guessing-button" id="startGuessingButton">START GUESSING!</button>
+            </div>
+        </div>
+        <div class="game-interface" id="gameInterface" style="display: none;">
+            <div class="game-info">
+                <div class="guesses-left" id="guessesLeft">10 guesses left</div>
+                <div class="range-info">1 - 100</div>
+            </div>
+
+            <div class="message" id="message">
+                <p>I'm thinking of a number between 1 and 100. Can you guess it?</p>
+            </div>
+            
+            <div class="input-section">
+                <div class="input-container">
+                    <input type="number" id="guessInput" min="1" max="100" placeholder="?">
+                    <button id="guessButton">Guess</button>
+                </div>
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="gamesWon">0</div>
+                    <div class="stat-label">Games Won</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalGames">0</div>
+                    <div class="stat-label">Total Games</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="number-game-scripts.js"></script>
+</body>
+</html>
