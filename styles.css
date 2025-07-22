@@ -264,6 +264,7 @@ body {
         min-height: 100dvh;
         align-items: flex-start;
         padding-top: 30px;
+        background-size: 100% 100%;
     }
     
     .menu-container {
@@ -340,11 +341,6 @@ body {
     
     .stat-label {
         font-size: 0.75rem;
-    }
-    @keyframes gradientShift {
-        0% { background-position: 0% 25%; }
-        25% { background-position: 100% 25%; }
-        75% { background-position: 0% 25%; }
     }
 }
 
