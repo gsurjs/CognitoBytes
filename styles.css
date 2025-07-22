@@ -64,15 +64,9 @@ body {
 .title {
     font-size: 3rem;
     margin-bottom: 0.5rem;
+    color: white;
     text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.6);
     animation: glow 3s ease-in-out infinite alternate;
-    background: linear-gradient(45deg, #fff, #f0f0f0, #fff);
-    background-size: 200% 200%;
-    animation: glow 3s ease-in-out infinite alternate, textShine 2s ease-in-out infinite;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: white;
 }
 
 @keyframes glow {
