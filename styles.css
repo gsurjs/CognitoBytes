@@ -264,7 +264,8 @@ body {
         min-height: 100dvh;
         align-items: flex-start;
         padding-top: 30px;
-        background-size: 50% 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+        background-size: 80% 80%;
         animation: gradientShift 10s ease infinite;
     }
     
