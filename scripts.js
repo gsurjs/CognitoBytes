@@ -77,35 +77,6 @@ class BrainGamesMenu {
         return 1 - (--t) * t * t * t;
     }
 
-    startFloatingElements() {
-        const icons = ['🧠'];
-        
-        const createFloatingElement = () => {
-            const element = document.createElement('div');
-            element.className = 'floating-element';
-            element.textContent = icons[Math.floor(Math.random() * icons.length)];
-            element.style.left = Math.random() * 100 + '%';
-            element.style.animationDuration = (Math.random() * 10 + 10) + 's';
-            element.style.animationDelay = Math.random() * 2 + 's';
-            
-            this.floatingElementsEl.appendChild(element);
-            
-            setTimeout(() => {
-                if (element.parentNode) {
-                    element.parentNode.removeChild(element);
-                }
-            }, 20000);
-        };
-        
-        // Create initial elements
-        for (let i = 0; i < 3; i++) {
-            setTimeout(createFloatingElement, i * 2000);
-        }
-        
-        // Continue creating elements
-        setInterval(createFloatingElement, 3000);
-    }
-
     playSound(type) {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const oscillator = audioContext.createOscillator();
