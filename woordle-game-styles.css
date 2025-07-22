@@ -514,6 +514,10 @@ body {
         font-size: 0.85rem;
         margin-bottom: 0.8rem;
     }
+    .game-board {
+        max-width: 270px;
+        gap: 4px;
+    }
 }
 
 /* Extra small screens */
