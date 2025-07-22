@@ -290,6 +290,15 @@ class WoordleGame {
             this.updateMessage("Not a valid word!", "error");
             this.playSound('error');
             this.shakeRow(this.currentRow);
+            
+            // Clear the current guess and reset for another attempt in the same row
+            setTimeout(() => {
+                this.clearCurrentRow();
+                this.currentCol = 0;
+                this.currentWord = '';
+                this.updateMessage("Guess the 5-letter word!", "info");
+            }, 1000); // Wait 1 second before clearing
+            
             return;
         }
         
@@ -447,6 +456,14 @@ class WoordleGame {
         setTimeout(() => {
             rowElement.style.animation = '';
         }, 500);
+    }
+
+    clearCurrentRow() {
+        for (let col = 0; col < this.wordLength; col++) {
+            const tile = document.getElementById(`tile-${this.currentRow}-${col}`);
+            tile.textContent = '';
+            tile.classList.remove('filled');
+        }
     }
 
     createConfetti() {
