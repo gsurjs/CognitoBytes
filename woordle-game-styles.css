@@ -256,7 +256,7 @@ body {
 }
 
 .letter-tile.present {
-    background: linear-gradient(45deg, #e6dd47, #e6dd47);
+    background: linear-gradient(45deg, #d1c93f, #d1c93f);
     border-color: #f3fa00;
     animation: bounce 0.5s ease-in-out;
 }
@@ -326,7 +326,7 @@ body {
 }
 
 .key.present {
-    background: linear-gradient(45deg, #f39c12, #e67e22);
+    background: linear-gradient(45deg, #d1c93f, #d1c93f);
 }
 
 .key.absent {
