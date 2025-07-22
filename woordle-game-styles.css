@@ -317,8 +317,8 @@ body {
 }
 
 .key.wide {
-    min-width: 65px;
-    font-size: 1rem;
+    min-width: 55px;
+    font-size: 0.7rem;
 }
 
 .key.correct {
@@ -468,7 +468,7 @@ body {
     }
     
     .keyboard {
-        padding: 0.6rem;
+        padding: 0.2rem;
     }
     
     .keyboard-row {
