@@ -1,7 +1,7 @@
 class FloodThisGame {
     constructor() {
         this.boardSize = 14;
-        this.maxMoves = 20;
+        this.maxMoves = 25;
         this.numColors = 6;
         this.currentMoves = 0;
         this.gameActive = true;
@@ -50,12 +50,12 @@ class FloodThisGame {
                 break;
             case 'medium':
                 this.boardSize = 14;
-                this.maxMoves = 20;
+                this.maxMoves = 25;
                 this.numColors = 5;
                 break;
             case 'hard':
                 this.boardSize = 14;
-                this.maxMoves = 16;
+                this.maxMoves = 20;
                 this.numColors = 6;
                 break;
         }
@@ -71,7 +71,7 @@ class FloodThisGame {
         this.createGameBoard();
         this.createColorPalette();
         this.updateMovesDisplay();
-        this.updateMessage("Flood the board with one color!", "info");
+        this.updateMessage("Flood the board with one color from top left to bottom right!", "info");
         
         // Update difficulty display
         const difficultyEl = document.querySelector('.difficulty');
