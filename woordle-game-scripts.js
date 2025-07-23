@@ -10,9 +10,9 @@ class WoordleGame {
         this.gameMode = 'daily';
         this.keyboardState = {};
         
-        // Word lists - will be loaded from file
-        this.commonWords = [];
-        this.validWords = [];
+        // Word lists - will be loaded from files
+        this.answerWords = []; // Words that can be answers (from wordle-answers-alphabetical.txt)
+        this.validWords = []; // All valid guesses (from valid-wordle-words.txt)
         
         // Initialize the game after loading words
         this.initializeGame();
@@ -38,7 +38,7 @@ class WoordleGame {
         } catch (error) {
             console.error('Failed to load words:', error);
             // Fallback to a basic word list if file loading fails
-            this.commonWords = [
+            this.answerWords = [
                 'ABOUT', 'ABOVE', 'ABUSE', 'ACTOR', 'ACUTE', 'ADMIT', 'ADOPT', 'ADULT', 'AFTER', 'AGAIN',
                 'AGENT', 'AGREE', 'AHEAD', 'ALARM', 'ALBUM', 'ALERT', 'ALIEN', 'ALIGN', 'ALIKE', 'ALIVE',
                 'ALLOW', 'ALONE', 'ALONG', 'ALTER', 'AMONG', 'ANGER', 'ANGLE', 'ANGRY', 'APART', 'APPLE',
@@ -48,7 +48,7 @@ class WoordleGame {
                 'BLOOD', 'BOARD', 'BOAST', 'BOOST', 'BOOTH', 'BOUND', 'BRAIN', 'BRAND', 'BRAVE', 'BREAD',
                 'BREAK', 'BREED', 'BRIEF', 'BRING', 'BROAD', 'BROKE', 'BROWN', 'BUILD', 'BUILT', 'BURST'
             ];
-            this.validWords = [...this.commonWords];
+            this.validWords = [...this.answerWords];
             
             // Continue with initialization
             this.initializeElements();
@@ -61,26 +61,42 @@ class WoordleGame {
     }
 
     async loadWordsFromFile() {
-        const response = await fetch('valid-wordle-words.txt');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        // Load answer words from wordle-answers-alphabetical.txt
+        const response = await fetch('wordle-answers-alphabetical.txt');
+        if (!answerResponse.ok) {
+            throw new Error(`HTTP error! status: ${answerResponse.status}`);
         }
         
-        const text = await response.text();
+        const answerText = await answerResponse.text();
         
         // Split by lines and filter out empty lines, then convert to uppercase
-        this.commonWords = text
+        this.answerWords = answerText
             .split('\n')
             .map(word => word.trim().toUpperCase())
             .filter(word => word.length === this.wordLength);
         
-        // Create a copy for valid words
-        this.validWords = [...this.commonWords];
+        // Load valid guess words from valid-wordle-words.txt
+        const validResponse = await fetch('valid-wordle-words.txt');
+        if (!validResponse.ok) {
+            throw new Error(`HTTP error loading valid words! status: ${validResponse.status}`);
+        }
         
-        console.log(`Loaded ${this.commonWords.length} words from file`);
+        const validText = await validResponse.text();
         
-        if (this.commonWords.length === 0) {
-            throw new Error('No valid 5-letter words found in file');
+        // Split by lines and filter out empty lines, then convert to uppercase
+        this.validWords = validText
+            .split('\n')
+            .map(word => word.trim().toUpperCase())
+            .filter(word => word.length === this.wordLength);
+        
+        console.log(`Loaded ${this.answerWords.length} answer words and ${this.validWords.length} valid guess words`);
+        
+        if (this.answerWords.length === 0) {
+            throw new Error('No valid 5-letter answer words found in file');
+        }
+        
+        if (this.validWords.length === 0) {
+            throw new Error('No valid 5-letter guess words found in file');
         }
     }
 
@@ -158,7 +174,7 @@ class WoordleGame {
 
     startNewGame() {
         // Make sure words are loaded before starting
-        if (this.commonWords.length === 0) {
+        if (this.answerWords.length === 0) {
             console.error('Cannot start game: word list not loaded');
             return;
         }
@@ -211,12 +227,12 @@ class WoordleGame {
         const today = new Date();
         const dateString = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
         const seed = this.hashCode(dateString);
-        const index = Math.abs(seed) % this.commonWords.length;
-        return this.commonWords[index];
+        const index = Math.abs(seed) % this.answerWords.length;
+        return this.answerWords[index];
     }
 
     getRandomWord() {
-        return this.commonWords[Math.floor(Math.random() * this.commonWords.length)];
+        return this.answerWords[Math.floor(Math.random() * this.answerWords.length)];
     }
 
     hashCode(str) {
