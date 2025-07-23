@@ -205,10 +205,14 @@ class WoordleGame {
             key.disabled = false;
         });
 
-        // Hide share button and new game button
+        // Hide share button, definition button, and new game button
         const shareButton = document.getElementById('shareButton');
         if (shareButton) {
             shareButton.style.display = 'none';
+        }
+        const definitionButton = document.getElementById('definitionButton');
+        if (definitionButton) {
+            definitionButton.style.display = 'none';
         }
         this.newGameButton.style.display = 'none';
         
@@ -472,10 +476,11 @@ class WoordleGame {
         this.updateStatsDisplay();
         
         setTimeout(() => {
-            this.newGameButton.style.display = 'inline-block';
             if (this.gameMode === 'daily') {
                 this.showShareButton();
-            }
+            } //always show definition button in both modes
+            this.showDefinitionButton();
+            this.newGameButton.style.display = 'inline-block'
         }, 2000);
     }
 
@@ -640,6 +645,40 @@ class WoordleGame {
             newGameButton.parentNode.insertBefore(shareButton, newGameButton);
         }
         shareButton.style.display = 'inline-block';
+    }
+
+    showDefinitionButton() {
+        //create definition button if doesn't exist
+        let definitionButton = document.getElementById('definitionButton');
+        if (!definitionButton) {
+            definitionButton = document.createElement('button');
+            definitionButton.id = 'definitionButton';
+            definitionButton.className = 'definition-button';
+            definitionButton.innerHTML = '📖 Definition';
+            definitionButton.addEventListener('click', () => this.searchDefinition());
+            
+            // Insert after share button (if it exists) or before new game button
+            const shareButton = document.getElementById('shareButton');
+            const newGameButton = document.getElementById('newGameButton');
+            
+            if (shareButton) {
+                // Insert after share button
+                shareButton.parentNode.insertBefore(definitionButton, shareButton.nextSibling);
+            } else {
+                // Insert before new game button
+                newGameButton.parentNode.insertBefore(definitionButton, newGameButton);
+            }
+        }
+        definitionButton.style.display = 'inline-block';
+    }
+
+    searchDefinition() {
+        // Create Google search URL for the word's definition
+        const searchQuery = `${this.targetWord.toLowerCase()} definition meaning`;
+        const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
+        
+        // Open in new tab/window
+        window.open(googleSearchUrl, '_blank');
     }
 
     shareResults() {
