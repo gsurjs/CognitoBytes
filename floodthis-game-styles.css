@@ -178,9 +178,9 @@ body {
     margin-bottom: 1rem;
     display: grid;
     gap: 1px;
-    max-width: 420px;
-    width: 420px;
-    height: 420px;
+    max-width: 380px;
+    width: 380px;
+    height: 380px;
     margin: 0 auto 1rem auto;
     flex-shrink: 0;
     background: rgba(0, 0, 0, 0.2);
@@ -252,9 +252,10 @@ body {
     display: flex;
     justify-content: center;
     gap: 0.8rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     flex-wrap: wrap;
     flex-shrink: 0;
+    padding-bottom: 1rem;
 }
 
 .stat-item {
@@ -393,17 +394,23 @@ body {
     }
     
     .game-board {
-        max-width: 350px;
-        width: 350px;
-        height: 350px;
+        max-width: 320px;
+        width: 320px;
+        height: 320px;
         gap: 1px;
         margin-bottom: 0.8rem;
         padding: 2px;
     }
 
     .cell {
-        min-width: 22px;
-        min-height: 22px;
+        min-width: 20px;
+        min-height: 20px;
+    }
+
+    .stats {
+        gap: 0.6rem;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.8rem;
     }
     
     .message {
@@ -464,15 +471,21 @@ body {
     }
     
     .game-board {
-        max-width: 300px;
-        width: 300px;
-        height: 300px;
+        max-width: 280px;
+        width: 280px;
+        height: 280px;
         gap: 1px;
     }
 
     .cell {
         min-width: 18px;
         min-height: 18px;
+    }
+
+    .stats {
+        gap: 0.5rem;
+        margin-bottom: 0.4rem;
+        padding-bottom: 0.6rem;
     }
     
     .color-button {
@@ -518,14 +531,20 @@ body {
     
     .game-board {
         margin-bottom: 0.5rem;
-        max-width: 280px;
-        width: 280px;
-        height: 280px;
+        max-width: 260px;
+        width: 260px;
+        height: 260px;
     }
 
     .cell {
         min-width: 16px;
         min-height: 16px;
+    }
+    
+    .stats {
+        gap: 0.4rem;
+        margin-bottom: 0.3rem;
+        padding-bottom: 0.5rem;
     }
     
     .color-palette {
