@@ -389,7 +389,7 @@ class NumberGuessingGame {
     }
 }
 
-// Add simple CSS animation
+// Add simple CSS animation for confetti
 const style = document.createElement('style');
 style.textContent = `
     @keyframes simpleFall {
