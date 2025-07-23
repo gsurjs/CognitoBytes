@@ -9,6 +9,8 @@ class WoordleGame {
         this.targetWord = '';
         this.gameMode = 'daily';
         this.keyboardState = {};
+        this.isSubmitting = false; // Prevent multiple rapid submissions
+        this.lastKeyTime = 0; // For debouncing
         
         // Word lists - will be loaded from files
         this.answerWords = []; // Words that can be answers (from wordle-answers-alphabetical.txt)
@@ -184,6 +186,8 @@ class WoordleGame {
         this.currentWord = '';
         this.gameActive = true;
         this.keyboardState = {};
+        this.isSubmitting = false; // Reset submission flag
+        this.lastKeyTime = 0; // Reset debounce timer
         
         // Clear the board
         for (let row = 0; row < this.maxAttempts; row++) {
@@ -246,9 +250,16 @@ class WoordleGame {
     }
 
     handleKeyPress(e) {
-        if (!this.gameActive) return;
+        if (!this.gameActive || this.isSubmitting) return;
         
         const key = e.key.toUpperCase();
+        const currentTime = Date.now();
+        
+        // Debounce rapid key presses (minimum 50ms between actions)
+        if (currentTime - this.lastKeyTime < 50) {
+            return;
+        }
+        this.lastKeyTime = currentTime;
 
         // We only care about Enter, Backspace, and single letters.
         if (key === 'ENTER' || key === 'BACKSPACE' || /^[A-Z]$/.test(key)) {
@@ -273,7 +284,15 @@ class WoordleGame {
     }
 
     handleKeyClick(key) {
-        if (!this.gameActive) return;
+        if (!this.gameActive || this.isSubmitting) return;
+        
+        const currentTime = Date.now();
+        
+        // Debounce rapid clicks (minimum 50ms between actions)
+        if (currentTime - this.lastKeyTime < 50) {
+            return;
+        }
+        this.lastKeyTime = currentTime;
         
         // Don't allow clicking on disabled (absent) keys
         const keyElement = document.querySelector(`[data-key="${key}"]`);
@@ -289,16 +308,20 @@ class WoordleGame {
     }
 
     addLetter(letter) {
-        if (this.currentCol < this.wordLength) {
-            const tile = document.getElementById(`tile-${this.currentRow}-${this.currentCol}`);
-            tile.textContent = letter;
-            tile.classList.add('filled');
-            this.currentWord += letter;
-            this.currentCol++;
-        }
+        // Don't add letters if submitting or if row is full
+        if (this.isSubmitting || this.currentCol >= this.wordLength) return;
+        
+        const tile = document.getElementById(`tile-${this.currentRow}-${this.currentCol}`);
+        tile.textContent = letter;
+        tile.classList.add('filled');
+        this.currentWord += letter;
+        this.currentCol++;
     }
 
     deleteLetter() {
+        // Don't delete letters if submitting
+        if (this.isSubmitting) return;
+        
         if (this.currentCol > 0) {
             this.currentCol--;
             const tile = document.getElementById(`tile-${this.currentRow}-${this.currentCol}`);
@@ -309,6 +332,9 @@ class WoordleGame {
     }
 
     submitGuess() {
+        // Prevent multiple submissions
+        if (this.isSubmitting) return;
+        
         if (this.currentWord.length !== this.wordLength) {
             this.updateMessage("Not enough letters!", "error");
             this.playSound('error');
@@ -331,6 +357,9 @@ class WoordleGame {
             return;
         }
         
+        // Set submitting flag to prevent rapid submissions
+        this.isSubmitting = true;
+        
         // Check the guess and process results
         this.checkGuess();
         
@@ -349,6 +378,7 @@ class WoordleGame {
                 this.currentCol = 0;
                 this.currentWord = '';
                 this.updateAttemptsDisplay();
+                this.isSubmitting = false; // Reset submitting flag
             }, this.wordLength * 100 + 100);
         }
     }
