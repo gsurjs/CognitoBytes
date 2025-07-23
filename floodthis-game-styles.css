@@ -461,12 +461,6 @@ body {
     .stat-label {
         font-size: 0.6rem;
     }
-    
-    .new-game-button {
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
-        margin-bottom: 0.3rem;
-    }
 }
 
 /* Extra small screens */
