@@ -49,5 +49,115 @@
         </div>
     </div>
     <script src="number-game-scripts.js"></script>
+    <script>
+        // Orientation Lock Script - Add to all your HTML files
+        class OrientationLock {
+            constructor() {
+                this.createRotationOverlay();
+                this.checkOrientation();
+                
+                // Listen for orientation changes
+                window.addEventListener('orientationchange', () => {
+                    setTimeout(() => this.checkOrientation(), 100);
+                });
+                
+                window.addEventListener('resize', () => {
+                    this.checkOrientation();
+                });
+            }
+
+            createRotationOverlay() {
+                // Create overlay element
+                this.overlay = document.createElement('div');
+                this.overlay.id = 'rotation-overlay';
+                this.overlay.innerHTML = `
+                    <div class="rotation-content">
+                        <div class="rotation-icon">
+                            📱↻
+                        </div>
+                        <h2>Please rotate your device</h2>
+                        <p>This app works best in portrait mode</p>
+                    </div>
+                `;
+                
+                // Add styles
+                const style = document.createElement('style');
+                style.textContent = `
+                    #rotation-overlay {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        display: none;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 999999;
+                        font-family: Arial, sans-serif;
+                    }
+                    
+                    .rotation-content {
+                        text-align: center;
+                        color: white;
+                        padding: 2rem;
+                        max-width: 90%;
+                    }
+                    
+                    .rotation-icon {
+                        font-size: 4rem;
+                        margin-bottom: 1rem;
+                        animation: rotate 2s ease-in-out infinite;
+                    }
+                    
+                    .rotation-content h2 {
+                        font-size: 1.5rem;
+                        margin-bottom: 0.5rem;
+                        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+                    }
+                    
+                    .rotation-content p {
+                        font-size: 1rem;
+                        opacity: 0.9;
+                        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+                    }
+                    
+                    @keyframes rotate {
+                        0%, 100% { transform: rotate(0deg); }
+                        25% { transform: rotate(-10deg); }
+                        75% { transform: rotate(10deg); }
+                    }
+                    
+                    /* Show overlay in landscape on mobile devices */
+                    @media screen and (max-width: 768px) and (orientation: landscape) {
+                        #rotation-overlay {
+                            display: flex !important;
+                        }
+                    }
+                `;
+                
+                document.head.appendChild(style);
+                document.body.appendChild(this.overlay);
+            }
+
+            checkOrientation() {
+                const isMobile = window.innerWidth <= 768;
+                const isLandscape = window.innerWidth > window.innerHeight;
+                
+                if (isMobile && isLandscape) {
+                    this.overlay.style.display = 'flex';
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    this.overlay.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new OrientationLock();
+        });
+    </script>
 </body>
 </html>
