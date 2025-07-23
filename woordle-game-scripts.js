@@ -678,14 +678,18 @@ class WoordleGame {
 
     generateShareText() {
         //set epoch to January 22, 2025 (day of game creation)
-        const epoch = new Date('2025-01-22');
+        const epoch = new Date('2025-01-22T00:00:00');
         const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
         //calculate days since game creation
-        const daysSinceEpoch = Math.floor(today.getTime() / (1000 * 60 * 60 * 24)) + 1;
+        const daysSinceEpoch = Math.floor((today.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24)) + 1;
         const attempts = this.currentRow + 1;
+
+        //edge case to make sure we never show a number less than 1
+        const puzzleNumber = Math.max(1, daysSinceEpoch);
         
-        let shareText = `Woordle ${daysSinceEpoch} ${attempts}/6\n\n`;
+        let shareText = `Woordle ${puzzleNumber} ${attempts}/6\n\n`;
         
         // Generate the emoji grid
         for (let row = 0; row <= this.currentRow; row++) {
