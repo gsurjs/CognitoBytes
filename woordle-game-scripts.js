@@ -677,8 +677,12 @@ class WoordleGame {
     }
 
     generateShareText() {
+        //set epoch to January 22, 2025 (day of game creation)
+        const epoch = new Date('2025-01-22');
         const today = new Date();
-        const daysSinceEpoch = Math.floor(today.getTime() / (1000 * 60 * 60 * 24));
+
+        //calculate days since game creation
+        const daysSinceEpoch = Math.floor(today.getTime() / (1000 * 60 * 60 * 24)) + 1;
         const attempts = this.currentRow + 1;
         
         let shareText = `Woordle ${daysSinceEpoch} ${attempts}/6\n\n`;
