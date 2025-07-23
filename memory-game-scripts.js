@@ -236,7 +236,12 @@ class MemoryGame {
         this.gameInfo.style.display = 'none';
         this.gameOver.style.display = 'block';
         
+        // Update and save stats
+        const stats = this.getStats();
+        stats.gamesPlayed++;
+        
         if (success) {
+            stats.gamesWon++;
             this.gameOver.className = 'game-over success';
             this.gameOverTitle.textContent = '🎉 Congratulations!';
             this.gameOverMessage.textContent = `You completed the game in ${this.attempts} attempts with ${this.currentTimer} seconds remaining!`;
@@ -248,6 +253,9 @@ class MemoryGame {
             this.gameOverMessage.textContent = `Game over! You found ${this.matchesFound} out of ${this.numPairs} pairs.`;
             this.playSound('lose');
         }
+        
+        this.saveStats(stats);
+        console.log('Memory game stats saved:', stats);
     }
 
     createSuccessAnimation() {
@@ -293,6 +301,21 @@ class MemoryGame {
         if (this.timerInterval) {
             clearInterval(this.timerInterval);
         }
+    }
+
+    // Stats methods
+    getStats() {
+        const defaultStats = {
+            gamesWon: 0,
+            gamesPlayed: 0
+        };
+        
+        const saved = localStorage.getItem('memory-game-stats');
+        return saved ? JSON.parse(saved) : defaultStats;
+    }
+
+    saveStats(stats) {
+        localStorage.setItem('memory-game-stats', JSON.stringify(stats));
     }
 
     playSound(type) {

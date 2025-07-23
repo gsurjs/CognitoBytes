@@ -3,8 +3,6 @@ class NumberGuessingGame {
         this.secretNumber = 0;
         this.maxGuesses = 10;
         this.guessesLeft = this.maxGuesses;
-        this.gamesWon = 0;
-        this.totalGames = 0;
         this.gameActive = false;
         this.countdownTime = 120; //two minutes
         this.currentCountdown = this.countdownTime;
@@ -12,6 +10,7 @@ class NumberGuessingGame {
         
         this.initializeElements();
         this.setupEventListeners();
+        this.loadStats();
         this.startFloatingNumbers();
     }
 
@@ -46,6 +45,7 @@ class NumberGuessingGame {
             }
         });
     }
+    
     startFirstGame() {
         //hide start button and show clock
         this.gameStartEl.style.display = 'none';
@@ -103,22 +103,46 @@ class NumberGuessingGame {
     }
 
     handleCorreectGuess() {
-        this.gamesWon++;
-        this.totalGames++;
         this.gameActive = false;
         this.updateMessage(`🗣️ Awesome! You guessed it! The number was ${this.secretNumber}!`, "success");
-        this.updateStats();
         this.playSound('win');
         this.createConfetti();
+        
+        // Update and save stats
+        const stats = this.getStats();
+        stats.gamesWon++;
+        stats.totalGames++;
+        this.saveStats(stats);
+        this.updateStatsDisplay();
+        
         setTimeout(() => this.startNewGame(), 3000);
     }
 
     handleGameOver() {
-        this.totalGames++;
         this.gameActive = false;
         this.updateMessage(`💀 Game Over! The number was ${this.secretNumber}.`, "error");
-        this.updateStats();
         this.playSound('lose');
+        
+        // Update and save stats
+        const stats = this.getStats();
+        stats.totalGames++;
+        this.saveStats(stats);
+        this.updateStatsDisplay();
+        
+        setTimeout(() => this.startNewGame(), 3000);
+    }
+
+    handleTimeUp() {
+        this.gameActive = false;
+        this.updateMessage(`⏰ Time's up! The number was ${this.secretNumber}. Try again!`, "error");
+        this.playSound('lose');
+        
+        // Update and save stats
+        const stats = this.getStats();
+        stats.totalGames++;
+        this.saveStats(stats);
+        this.updateStatsDisplay();
+        
         setTimeout(() => this.startNewGame(), 3000);
     }
 
@@ -151,9 +175,30 @@ class NumberGuessingGame {
         }
     }
 
-    updateStats() {
-        this.gamesWonEl.textContent = this.gamesWon;
-        this.totalGamesEl.textContent = this.totalGames;
+    // Stats methods
+    getStats() {
+        const defaultStats = {
+            gamesWon: 0,
+            totalGames: 0
+        };
+        
+        const saved = localStorage.getItem('number-game-stats');
+        return saved ? JSON.parse(saved) : defaultStats;
+    }
+
+    saveStats(stats) {
+        localStorage.setItem('number-game-stats', JSON.stringify(stats));
+        console.log('Number game stats saved:', stats);
+    }
+
+    loadStats() {
+        this.updateStatsDisplay();
+    }
+
+    updateStatsDisplay() {
+        const stats = this.getStats();
+        this.gamesWonEl.textContent = stats.gamesWon;
+        this.totalGamesEl.textContent = stats.totalGames;
     }
 
     startClock() {
@@ -190,15 +235,6 @@ class NumberGuessingGame {
                 this.handleTimeUp();
             }
         }, 1000);
-    }
-
-    handleTimeUp() {
-        this.totalGames++;
-        this.gameActive = false;
-        this.updateMessage(`⏰ Time's up! The number was ${this.secretNumber}. Try again!`, "error");
-        this.updateStats();
-        this.playSound('lose');
-        setTimeout(() => this.startNewGame(), 3000);
     }
 
     startFloatingNumbers() {
