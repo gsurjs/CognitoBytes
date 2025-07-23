@@ -177,7 +177,7 @@ body {
     z-index: 1;
     margin-bottom: 1rem;
     display: grid;
-    gap: 1px;
+    gap: 0px;
     max-width: 380px;
     width: 380px;
     height: 380px;
@@ -190,10 +190,10 @@ body {
 
 .cell {
     aspect-ratio: 1;
-    border-radius: 2px;
+    border-radius: 0px;
     transition: all 0.3s ease;
     cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: none;
     min-width: 25px;
     min-height: 25px;
 }
@@ -540,7 +540,7 @@ body {
         min-width: 16px;
         min-height: 16px;
     }
-    
+
     .stats {
         gap: 0.4rem;
         margin-bottom: 0.3rem;
