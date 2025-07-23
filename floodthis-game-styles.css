@@ -286,6 +286,8 @@ body {
     display: flex;
     gap: 0.4rem;
     justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 .difficulty-button {
@@ -312,8 +314,8 @@ body {
 }
 
 .new-game-button {
-    padding: 0.8rem 1.5rem;
-    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
     font-weight: bold;
     border: none;
     border-radius: 20px;
@@ -324,8 +326,8 @@ body {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-bottom: 1rem;
     touch-action: manipulation;
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .new-game-button:active {
@@ -373,11 +375,17 @@ body {
     .difficulty-selector {
         margin-bottom: 0.6rem;
         gap: 0.3rem;
+        flex-wrap: wrap;
     }
     
     .difficulty-button {
         padding: 0.35rem 0.7rem;
         font-size: 0.75rem;
+    }
+
+    .new-game-button {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.7rem;
     }
     
     .game-info {
@@ -436,8 +444,9 @@ body {
     }
     
     .stats {
-        gap: 0.6rem;
-        margin-bottom: 0.8rem;
+        gap: 0.5rem;
+        margin-bottom: 0.3rem;
+        padding-bottom: 0.3rem;
     }
     
     .stat-item {
@@ -454,9 +463,9 @@ body {
     }
     
     .new-game-button {
-        padding: 0.5rem 1rem;
+        padding: 0.7rem 1.2rem;
         font-size: 0.8rem;
-        margin-bottom: 0.3rem;
+        margin-bottom: 0.8rem;
     }
 }
 
@@ -558,6 +567,11 @@ body {
         gap: 0.4rem;
         margin-bottom: 0.3rem;
         padding-bottom: 0.5rem;
+    }
+
+    .new-game-button {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.6rem;
     }
     
     .color-palette {
