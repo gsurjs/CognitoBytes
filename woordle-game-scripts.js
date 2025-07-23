@@ -661,15 +661,18 @@ class WoordleGame {
             const shareButton = document.getElementById('shareButton');
             const newGameButton = document.getElementById('newGameButton');
             
-            if (shareButton) {
-                // Insert after share button
+            if (shareButton && shareButton.style.display !== 'none') {
+                // Insert after share button (daily mode)
                 shareButton.parentNode.insertBefore(definitionButton, shareButton.nextSibling);
             } else {
-                // Insert before new game button
+                // Insert before new game button (infinite mode or if no share button)
                 newGameButton.parentNode.insertBefore(definitionButton, newGameButton);
             }
+            
+            console.log('Definition button created successfully');
         }
         definitionButton.style.display = 'inline-block';
+        console.log('Definition button should now be visible');
     }
 
     searchDefinition() {
