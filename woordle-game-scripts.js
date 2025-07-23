@@ -113,12 +113,22 @@ class WoordleGame {
         this.dailyMode = document.getElementById('dailyMode');
         this.infiniteMode = document.getElementById('infiniteMode');
         this.newGameButton = document.getElementById('newGameButton');
+        this.shareButton = document.getElementById('shareButton');
+        this.definitionButton = document.getElementById('definitionButton');
     }
 
     setupEventListeners() {
         this.dailyMode.addEventListener('click', () => this.setGameMode('daily'));
         this.infiniteMode.addEventListener('click', () => this.setGameMode('infinite'));
         this.newGameButton.addEventListener('click', () => this.startNewGame());
+
+    if (this.shareButton) {
+        this.shareButton.addEventListener('click', () => this.shareResults());
+    }
+    
+    if (this.definitionButton) {
+        this.definitionButton.addEventListener('click', () => this.searchDefinition());
+    }
         
         document.addEventListener('keydown', (e) => this.handleKeyPress(e));
     }
@@ -174,6 +184,18 @@ class WoordleGame {
         });
     }
 
+    hideAllButtons() {
+        if (this.shareButton) {
+            this.shareButton.style.display = 'none';
+        }
+        if (this.definitionButton) {
+            this.definitionButton.style.display = 'none';
+        }
+        if (this.newGameButton) {
+            this.newGameButton.style.display = 'none';
+        }
+    }
+
     startNewGame() {
         // Make sure words are loaded before starting
         if (this.answerWords.length === 0) {
@@ -205,17 +227,8 @@ class WoordleGame {
             key.disabled = false;
         });
 
-        // Hide share button, definition button, and new game button
-        const shareButton = document.getElementById('shareButton');
-        if (shareButton) {
-            shareButton.style.display = 'none';
-        }
-        const definitionButton = document.getElementById('definitionButton');
-        if (definitionButton) {
-            definitionButton.style.display = 'none';
-        }
-        this.newGameButton.style.display = 'none';
-        
+        this.hideAllButtons();
+
         // Select target word from answer words only
         if (this.gameMode === 'daily') {
             this.targetWord = this.getDailyWord();
@@ -476,11 +489,15 @@ class WoordleGame {
         this.updateStatsDisplay();
         
         setTimeout(() => {
-            if (this.gameMode === 'daily') {
-                this.showShareButton();
+            if (this.gameMode === 'daily' && this.shareButton) {
+                this.shareButton.style.display = 'inline-block';
             } //always show definition button in both modes
-            this.showDefinitionButton();
-            this.newGameButton.style.display = 'inline-block'
+            if (this.definitionButton) {
+                this.definitionButton.style.display = 'inline-block';
+            }
+            if (this.newGameButton) {
+                this.newGameButton.style.display = 'inline-block';
+            }
         }, 2000);
     }
 
@@ -497,7 +514,14 @@ class WoordleGame {
         this.updateStatsDisplay();
         
         setTimeout(() => {
-            this.newGameButton.style.display = 'inline-block';
+            // Show definition and new game buttons after loss
+            if (this.definitionButton) {
+                this.definitionButton.style.display = 'inline-block';
+            }
+            
+            if (this.newGameButton) {
+                this.newGameButton.style.display = 'inline-block';
+            }
         }, 2000);
     }
 
@@ -628,51 +652,6 @@ class WoordleGame {
         this.gamesWon.textContent = stats.gamesWon;
         this.gamesPlayed.textContent = stats.gamesPlayed;
         this.winStreak.textContent = stats.currentStreak;
-    }
-
-    showShareButton() {
-        // Create share button if it doesn't exist
-        let shareButton = document.getElementById('shareButton');
-        if (!shareButton) {
-            shareButton = document.createElement('button');
-            shareButton.id = 'shareButton';
-            shareButton.className = 'share-button';
-            shareButton.innerHTML = '💬 Share';
-            shareButton.addEventListener('click', () => this.shareResults());
-            
-            // Insert before new game button
-            const newGameButton = document.getElementById('newGameButton');
-            newGameButton.parentNode.insertBefore(shareButton, newGameButton);
-        }
-        shareButton.style.display = 'inline-block';
-    }
-
-    showDefinitionButton() {
-        //create definition button if doesn't exist
-        let definitionButton = document.getElementById('definitionButton');
-        if (!definitionButton) {
-            definitionButton = document.createElement('button');
-            definitionButton.id = 'definitionButton';
-            definitionButton.className = 'definition-button';
-            definitionButton.innerHTML = '📖 Definition';
-            definitionButton.addEventListener('click', () => this.searchDefinition());
-            
-            // Insert after share button (if it exists) or before new game button
-            const shareButton = document.getElementById('shareButton');
-            const newGameButton = document.getElementById('newGameButton');
-            
-            if (shareButton && shareButton.style.display !== 'none') {
-                // Insert after share button (daily mode)
-                shareButton.parentNode.insertBefore(definitionButton, shareButton.nextSibling);
-            } else {
-                // Insert before new game button (infinite mode or if no share button)
-                newGameButton.parentNode.insertBefore(definitionButton, newGameButton);
-            }
-            
-            console.log('Definition button created successfully');
-        }
-        definitionButton.style.display = 'inline-block';
-        console.log('Definition button should now be visible');
     }
 
     searchDefinition() {
