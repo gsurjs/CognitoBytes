@@ -2,7 +2,7 @@ class FloodThisGame {
     constructor() {
         this.boardSize = 14;
         this.maxMoves = 25;
-        this.numColors = 6;
+        this.numColors = 4;
         this.currentMoves = 0;
         this.gameActive = true;
         this.board = [];
