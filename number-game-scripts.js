@@ -4,14 +4,38 @@ class NumberGuessingGame {
         this.maxGuesses = 10;
         this.guessesLeft = this.maxGuesses;
         this.gameActive = false;
-        this.countdownTime = 120; //two minutes
+        this.countdownTime = 120;
         this.currentCountdown = this.countdownTime;
         this.clockInterval = null;
+        
+        // Performance optimizations
+        this.audioContext = null;
+        this.isVisible = true;
+        this.floatingInterval = null;
         
         this.initializeElements();
         this.setupEventListeners();
         this.loadStats();
         this.startFloatingNumbers();
+        this.setupVisibilityHandling();
+    }
+
+    setupVisibilityHandling() {
+        document.addEventListener('visibilitychange', () => {
+            this.isVisible = !document.hidden;
+            if (!this.isVisible) {
+                if (this.audioContext) {
+                    this.audioContext.suspend();
+                }
+                // Clear floating numbers when not visible
+                if (this.floatingInterval) {
+                    clearInterval(this.floatingInterval);
+                }
+            } else {
+                // Restart floating numbers when visible
+                this.startFloatingNumbers();
+            }
+        });
     }
 
     initializeElements() {
@@ -29,8 +53,8 @@ class NumberGuessingGame {
     }
 
     setupEventListeners() {
-        this.guessButton.addEventListener('click', () => this.makeGuess());
-        this.startGuessingButton.addEventListener('click', () => this.startFirstGame());
+        this.guessButton.addEventListener('click', () => this.makeGuess(), { passive: true });
+        this.startGuessingButton.addEventListener('click', () => this.startFirstGame(), { passive: true });
         this.guessInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 this.makeGuess();
@@ -43,16 +67,14 @@ class NumberGuessingGame {
             } else {
                 this.guessInput.style.borderColor = '#4CAF50';
             }
-        });
+        }, { passive: true });
     }
     
     startFirstGame() {
-        //hide start button and show clock
         this.gameStartEl.style.display = 'none';
         this.clockEl.style.display = 'block';
-        this.gameInterfaceEl.style.display = 'block'; //show game interface
+        this.gameInterfaceEl.style.display = 'block';
         
-        //start first game
         this.startNewGame();
         this.startClock();
     }
@@ -62,7 +84,6 @@ class NumberGuessingGame {
         this.guessesLeft = this.maxGuesses;
         this.gameActive = true;
 
-        //reset countdown
         if (this.clockInterval) {
             clearInterval(this.clockInterval);
             this.currentCountdown = this.countdownTime;
@@ -77,7 +98,7 @@ class NumberGuessingGame {
     }
 
     makeGuess() {
-        if (!this.gameActive) return;
+        if (!this.gameActive || !this.isVisible) return;
 
         const guess = parseInt(this.guessInput.value);
         
@@ -106,16 +127,15 @@ class NumberGuessingGame {
         this.gameActive = false;
         this.updateMessage(`🗣️ Awesome! You guessed it! The number was ${this.secretNumber}!`, "success");
         this.playSound('win');
-        this.createConfetti();
+        this.createSimpleConfetti();
         
-        // Update and save stats
         const stats = this.getStats();
         stats.gamesWon++;
         stats.totalGames++;
         this.saveStats(stats);
         this.updateStatsDisplay();
         
-        setTimeout(() => this.startNewGame(), 3000);
+        setTimeout(() => this.startNewGame(), 2000); // Reduced timing
     }
 
     handleGameOver() {
@@ -123,13 +143,12 @@ class NumberGuessingGame {
         this.updateMessage(`💀 Game Over! The number was ${this.secretNumber}.`, "error");
         this.playSound('lose');
         
-        // Update and save stats
         const stats = this.getStats();
         stats.totalGames++;
         this.saveStats(stats);
         this.updateStatsDisplay();
         
-        setTimeout(() => this.startNewGame(), 3000);
+        setTimeout(() => this.startNewGame(), 2000);
     }
 
     handleTimeUp() {
@@ -137,13 +156,12 @@ class NumberGuessingGame {
         this.updateMessage(`⏰ Time's up! The number was ${this.secretNumber}. Try again!`, "error");
         this.playSound('lose');
         
-        // Update and save stats
         const stats = this.getStats();
         stats.totalGames++;
         this.saveStats(stats);
         this.updateStatsDisplay();
         
-        setTimeout(() => this.startNewGame(), 3000);
+        setTimeout(() => this.startNewGame(), 2000);
     }
 
     handleIncorrectGuess(guess) {
@@ -175,35 +193,8 @@ class NumberGuessingGame {
         }
     }
 
-    // Stats methods
-    getStats() {
-        const defaultStats = {
-            gamesWon: 0,
-            totalGames: 0
-        };
-        
-        const saved = localStorage.getItem('number-game-stats');
-        return saved ? JSON.parse(saved) : defaultStats;
-    }
-
-    saveStats(stats) {
-        localStorage.setItem('number-game-stats', JSON.stringify(stats));
-        console.log('Number game stats saved:', stats);
-    }
-
-    loadStats() {
-        this.updateStatsDisplay();
-    }
-
-    updateStatsDisplay() {
-        const stats = this.getStats();
-        this.gamesWonEl.textContent = stats.gamesWon;
-        this.totalGamesEl.textContent = stats.totalGames;
-    }
-
     startClock() {
-        //set init countdown time in seconds
-        this.countdownTime = 120; //2 minute countdown
+        this.countdownTime = 120;
         this.currentCountdown = this.countdownTime;
         
         const updateCountdown = () => {
@@ -212,7 +203,6 @@ class NumberGuessingGame {
             const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
             this.clockEl.textContent = `⏱️ ${timeString}`;
             
-            //warning for when time runs low
             if (this.currentCountdown <= 30) {
                 this.clockEl.style.color = '#ff3333';
                 this.clockEl.style.animation = 'pulse 1s ease-in-out infinite';
@@ -229,7 +219,6 @@ class NumberGuessingGame {
             this.currentCountdown--;
             updateCountdown();
             
-            // End game when countdown reaches 0
             if (this.currentCountdown <= 0) {
                 clearInterval(this.clockInterval);
                 this.handleTimeUp();
@@ -238,14 +227,21 @@ class NumberGuessingGame {
     }
 
     startFloatingNumbers() {
+        if (!this.isVisible) return;
+        
+        // Clear existing interval
+        if (this.floatingInterval) {
+            clearInterval(this.floatingInterval);
+        }
+        
         const createFloatingNumber = () => {
+            if (!this.isVisible) return;
+            
             const number = document.createElement('div');
             number.className = 'floating-number';
             number.textContent = Math.floor(Math.random() * 100) + 1;
             number.style.left = Math.random() * 100 + '%';
-            number.style.animationDelay = Math.random() * 2 + 's';
-            number.style.animationDuration = (Math.random() * 5 + 8) + 's';
-            number.style.animation = `float ${Math.random() * 5 + 8}s linear infinite`;
+            number.style.animation = `float ${Math.random() * 3 + 6}s linear infinite`;
             number.style.animationDelay = Math.random() * 2 + 's';
                 
             this.floatingNumbersEl.appendChild(number);
@@ -254,29 +250,33 @@ class NumberGuessingGame {
                 if (number.parentNode) {
                     number.parentNode.removeChild(number);
                 }
-            }, 13000);
+            }, 9000); // Reduced duration
         };
         
         createFloatingNumber();
-        setInterval(createFloatingNumber, 2000);
+        this.floatingInterval = setInterval(createFloatingNumber, 4000); // Reduced frequency
     }
 
-    createConfetti() {
-        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f7dc6f', '#bb8fce'];
+    createSimpleConfetti() {
+        if (!this.isVisible) return;
         
-        for (let i = 0; i < 50; i++) {
+        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f7dc6f'];
+        
+        for (let i = 0; i < 8; i++) { // Reduced from 50
             setTimeout(() => {
                 const confetti = document.createElement('div');
-                confetti.style.position = 'fixed';
-                confetti.style.width = '10px';
-                confetti.style.height = '10px';
-                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                confetti.style.left = Math.random() * 100 + '%';
-                confetti.style.top = '-10px';
-                confetti.style.borderRadius = '50%';
-                confetti.style.pointerEvents = 'none';
-                confetti.style.zIndex = '9999';
-                confetti.style.animation = 'confettiFall 3s linear forwards';
+                confetti.style.cssText = `
+                    position: fixed;
+                    width: 6px;
+                    height: 6px;
+                    background: ${colors[Math.floor(Math.random() * colors.length)]};
+                    left: ${Math.random() * 100}%;
+                    top: -10px;
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 9999;
+                    animation: simpleFall 1.5s linear forwards;
+                `;
                 
                 document.body.appendChild(confetti);
                 
@@ -284,70 +284,131 @@ class NumberGuessingGame {
                     if (confetti.parentNode) {
                         confetti.parentNode.removeChild(confetti);
                     }
-                }, 3000);
-            }, i * 50);
+                }, 1500);
+            }, i * 100);
         }
     }
 
     playSound(type) {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
+        if (!this.isVisible) return;
+        
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+        
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
         
         oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+        gainNode.connect(this.audioContext.destination);
         
         let frequency, duration;
         
         switch(type) {
             case 'win':
                 frequency = 523.25; 
-                duration = 0.5;
+                duration = 0.3;
                 break;
             case 'lose':
                 frequency = 220;
-                duration = 0.8;
+                duration = 0.4;
                 break;
             case 'hint':
                 frequency = 440;
-                duration = 0.2;
+                duration = 0.1;
                 break;
             case 'error':
                 frequency = 200;
-                duration = 0.3;
+                duration = 0.2;
                 break;
             case 'newGame':
                 frequency = 330;
-                duration = 0.3;
+                duration = 0.2;
                 break;
             default:
                 frequency = 440;
-                duration = 0.2;
+                duration = 0.1;
         }
         
-        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
         oscillator.type = 'sine';
         
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+        gainNode.gain.setValueAtTime(0.05, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
         
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + duration);
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration);
+    }
+
+    getStats() {
+        const defaultStats = {
+            gamesWon: 0,
+            totalGames: 0
+        };
+        
+        try {
+            const saved = localStorage.getItem('number-game-stats');
+            return saved ? JSON.parse(saved) : defaultStats;
+        } catch (error) {
+            return defaultStats;
+        }
+    }
+
+    saveStats(stats) {
+        try {
+            localStorage.setItem('number-game-stats', JSON.stringify(stats));
+        } catch (error) {
+            console.warn('Could not save stats:', error);
+        }
+    }
+
+    loadStats() {
+        this.updateStatsDisplay();
+    }
+
+    updateStatsDisplay() {
+        const stats = this.getStats();
+        this.gamesWonEl.textContent = stats.gamesWon;
+        this.totalGamesEl.textContent = stats.totalGames;
+    }
+
+    cleanup() {
+        if (this.audioContext) {
+            this.audioContext.close();
+        }
+        if (this.clockInterval) {
+            clearInterval(this.clockInterval);
+        }
+        if (this.floatingInterval) {
+            clearInterval(this.floatingInterval);
+        }
     }
 }
 
-//css for confetti animation
+// Add simple CSS animation
 const style = document.createElement('style');
 style.textContent = `
-    @keyframes confettiFall {
+    @keyframes simpleFall {
         to {
-            transform: translateY(100vh) rotate(360deg);
+            transform: translateY(100vh);
+            opacity: 0;
         }
     }
 `;
 document.head.appendChild(style);
 
-//init game when page loads
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (window.numberGame) {
+        window.numberGame.cleanup();
+    }
+});
+
+// Initialize game when page loads
 window.addEventListener('load', () => {
-    new NumberGuessingGame();
+    window.numberGame = new NumberGuessingGame();
 });

@@ -12,7 +12,11 @@ class MemoryGame {
         this.gameActive = false;
         this.timerInterval = null;
         
-        //image paths for cards
+        // Performance optimizations
+        this.audioContext = null;
+        this.isVisible = true;
+        
+        // Reduced image paths for better performance
         this.imagePaths = [
             'images/img01.jpg',
             'images/img02.jpg', 
@@ -30,6 +34,16 @@ class MemoryGame {
         
         this.initializeElements();
         this.setupEventListeners();
+        this.setupVisibilityHandling();
+    }
+
+    setupVisibilityHandling() {
+        document.addEventListener('visibilitychange', () => {
+            this.isVisible = !document.hidden;
+            if (!this.isVisible && this.audioContext) {
+                this.audioContext.suspend();
+            }
+        });
     }
 
     initializeElements() {
@@ -52,18 +66,18 @@ class MemoryGame {
     }
 
     setupEventListeners() {
-        this.startButton.addEventListener('click', () => this.startGame());
-        this.playAgainButton.addEventListener('click', () => this.resetGame());
+        this.startButton.addEventListener('click', () => this.startGame(), { passive: true });
+        this.playAgainButton.addEventListener('click', () => this.resetGame(), { passive: true });
         
         this.difficultySelect.addEventListener('change', (e) => {
             this.difficulty = e.target.value;
             this.memorizationTime = e.target.value === 'easy' ? 3 : e.target.value === 'medium' ? 5 : 8;
-        });
+        }, { passive: true });
         
         this.pairsSelect.addEventListener('change', (e) => {
             this.numPairs = parseInt(e.target.value);
             this.gameTime = this.numPairs === 8 ? 120 : this.numPairs === 10 ? 150 : 180;
-        });
+        }, { passive: true });
     }
 
     startGame() {
@@ -76,24 +90,27 @@ class MemoryGame {
     }
 
     createGameBoard() {
+        const fragment = document.createDocumentFragment();
         this.gameBoard.innerHTML = '';
         this.gameBoard.className = `game-board grid-${this.numPairs}`;
         
-        //create card pairs
+        // Create card pairs
         const cardPairs = [];
         for (let i = 0; i < this.numPairs; i++) {
             const imagePath = this.imagePaths[i];
             cardPairs.push(imagePath, imagePath);
         }
         
-        //shuffle cars
+        // Shuffle cards
         this.shuffleArray(cardPairs);
         
-        //create card elements
+        // Create card elements with fragment for better performance
         cardPairs.forEach((imagePath, index) => {
             const card = this.createCard(imagePath, index);
-            this.gameBoard.appendChild(card);
+            fragment.appendChild(card);
         });
+        
+        this.gameBoard.appendChild(fragment);
     }
 
     createCard(imagePath, index) {
@@ -102,15 +119,16 @@ class MemoryGame {
         card.dataset.image = imagePath;
         card.dataset.index = index;
         
+        // Simplified card structure for better performance
         card.innerHTML = `
             <div class="card-face card-back">${index + 1}</div>
             <div class="card-face card-front">
                 <img src="${imagePath}" alt="Memory Card" class="card-image" 
-                     onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=&quot;display:flex;align-items:center;justify-content:center;height:100%;font-size:0.8rem;color:#666;text-align:center;&quot;>Image<br>Missing</div>'">
+                     onerror="this.parentElement.innerHTML='<div style=&quot;display:flex;align-items:center;justify-content:center;height:100%;font-size:0.8rem;color:#666;text-align:center;&quot;>🖼️</div>'">
             </div>
         `;
         
-        card.addEventListener('click', () => this.flipCard(card));
+        card.addEventListener('click', () => this.flipCard(card), { passive: true });
         return card;
     }
 
@@ -122,11 +140,10 @@ class MemoryGame {
     }
 
     startMemorizationPhase() {
-        //visible during memorization
         this.gameBoard.style.display = 'grid';
 
-        //show all cards during memorization
-        const cards = document.querySelectorAll('.card');
+        // Show all cards during memorization
+        const cards = this.gameBoard.querySelectorAll('.card');
         cards.forEach(card => card.classList.add('flipped'));
         
         let timeLeft = this.memorizationTime;
@@ -144,16 +161,16 @@ class MemoryGame {
     }
 
     startGamePlay() {
-        //hide all cards
-        const cards = document.querySelectorAll('.card');
+        // Hide all cards efficiently
+        const cards = this.gameBoard.querySelectorAll('.card');
         cards.forEach(card => card.classList.remove('flipped'));
         
-        //show game interface
+        // Show game interface
         this.memorizationPhase.style.display = 'none';
         this.gameInfo.style.display = 'block';
         this.gameBoard.style.display = 'grid';
         
-        //enable card flipping start timer
+        // Enable card flipping and start timer
         this.canFlip = true;
         this.gameActive = true;
         this.currentTimer = this.gameTime;
@@ -164,6 +181,8 @@ class MemoryGame {
         this.updateTimerDisplay();
         
         this.timerInterval = setInterval(() => {
+            if (!this.isVisible) return; // Pause when not visible
+            
             this.currentTimer--;
             this.updateTimerDisplay();
             
@@ -184,7 +203,8 @@ class MemoryGame {
     }
 
     flipCard(card) {
-        if (!this.canFlip || !this.gameActive || card.classList.contains('flipped') || card.classList.contains('matched')) {
+        if (!this.canFlip || !this.gameActive || !this.isVisible || 
+            card.classList.contains('flipped') || card.classList.contains('matched')) {
             return;
         }
         
@@ -196,7 +216,7 @@ class MemoryGame {
             this.attempts++;
             this.attemptsEl.textContent = this.attempts;
             
-            setTimeout(() => this.checkMatch(), 1000);
+            setTimeout(() => this.checkMatch(), 800); // Reduced timing
         }
     }
 
@@ -204,20 +224,20 @@ class MemoryGame {
         const [card1, card2] = this.flippedCards;
         
         if (card1.dataset.image === card2.dataset.image) {
-            //match found
+            // Match found
             card1.classList.add('matched');
             card2.classList.add('matched');
-            card1.classList.add('flipped'); //keep flipped after match
-            card2.classList.add('flipped'); //keep flipped after match
+            card1.classList.add('flipped');
+            card2.classList.add('flipped');
             this.matchesFound++;
             this.matchesFoundEl.textContent = this.matchesFound;
             this.playSound('match');
             
             if (this.matchesFound === this.numPairs) {
-                setTimeout(() => this.endGame(true), 500);
+                setTimeout(() => this.endGame(true), 300); // Reduced timing
             }
         } else {
-            //no match
+            // No match
             card1.classList.remove('flipped');
             card2.classList.remove('flipped');
             this.playSound('nomatch');
@@ -246,7 +266,7 @@ class MemoryGame {
             this.gameOverTitle.textContent = '🎉 Congratulations!';
             this.gameOverMessage.textContent = `You completed the game in ${this.attempts} attempts with ${this.currentTimer} seconds remaining!`;
             this.playSound('win');
-            this.createSuccessAnimation();
+            this.createSimpleSuccessAnimation();
         } else {
             this.gameOver.className = 'game-over failure';
             this.gameOverTitle.textContent = '⏰ Time\'s Up!';
@@ -255,22 +275,25 @@ class MemoryGame {
         }
         
         this.saveStats(stats);
-        console.log('Memory game stats saved:', stats);
     }
 
-    createSuccessAnimation() {
-        //create floating sparkles
-        for (let i = 0; i < 20; i++) {
+    createSimpleSuccessAnimation() {
+        if (!this.isVisible) return;
+        
+        // Much simpler animation
+        for (let i = 0; i < 6; i++) { // Reduced from 20
             setTimeout(() => {
                 const sparkle = document.createElement('div');
                 sparkle.textContent = '👟';
-                sparkle.style.position = 'fixed';
-                sparkle.style.left = Math.random() * 100 + '%';
-                sparkle.style.top = Math.random() * 100 + '%';
-                sparkle.style.fontSize = '2rem';
-                sparkle.style.pointerEvents = 'none';
-                sparkle.style.zIndex = '9999';
-                sparkle.style.animation = 'sparkle 3s ease-out forwards';
+                sparkle.style.cssText = `
+                    position: fixed;
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    font-size: 1.5rem;
+                    pointer-events: none;
+                    z-index: 9999;
+                    animation: simpleSparkle 1.5s ease-out forwards;
+                `;
                 
                 document.body.appendChild(sparkle);
                 
@@ -278,8 +301,8 @@ class MemoryGame {
                     if (sparkle.parentNode) {
                         sparkle.parentNode.removeChild(sparkle);
                     }
-                }, 3000);
-            }, i * 100);
+                }, 1500);
+            }, i * 200);
         }
     }
 
@@ -303,68 +326,93 @@ class MemoryGame {
         }
     }
 
-    // Stats methods
+    playSound(type) {
+        if (!this.isVisible) return;
+        
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+        
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        let frequency, duration;
+        
+        switch(type) {
+            case 'match':
+                frequency = 523.25;
+                duration = 0.2;
+                break;
+            case 'nomatch':
+                frequency = 220;
+                duration = 0.15;
+                break;
+            case 'win':
+                frequency = 659.25;
+                duration = 0.3;
+                break;
+            case 'lose':
+                frequency = 196;
+                duration = 0.4;
+                break;
+            default:
+                frequency = 440;
+                duration = 0.1;
+        }
+        
+        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.05, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
+        
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration);
+    }
+
     getStats() {
         const defaultStats = {
             gamesWon: 0,
             gamesPlayed: 0
         };
         
-        const saved = localStorage.getItem('memory-game-stats');
-        return saved ? JSON.parse(saved) : defaultStats;
+        try {
+            const saved = localStorage.getItem('memory-game-stats');
+            return saved ? JSON.parse(saved) : defaultStats;
+        } catch (error) {
+            return defaultStats;
+        }
     }
 
     saveStats(stats) {
-        localStorage.setItem('memory-game-stats', JSON.stringify(stats));
+        try {
+            localStorage.setItem('memory-game-stats', JSON.stringify(stats));
+        } catch (error) {
+            console.warn('Could not save stats:', error);
+        }
     }
 
-    playSound(type) {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        let frequency, duration;
-        //sound tone types
-        switch(type) {
-            case 'match':
-                frequency = 523.25;
-                duration = 0.3;
-                break;
-            case 'nomatch':
-                frequency = 220;
-                duration = 0.2;
-                break;
-            case 'win':
-                frequency = 659.25;
-                duration = 0.5;
-                break;
-            case 'lose':
-                frequency = 196;
-                duration = 0.8;
-                break;
-            default:
-                frequency = 440;
-                duration = 0.2;
+    cleanup() {
+        if (this.audioContext) {
+            this.audioContext.close();
         }
-        
-        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-        oscillator.type = 'sine';
-        
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-        
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + duration);
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
     }
 }
 
-//styling for sparkle animation
+// Add simple CSS animations
 const style = document.createElement('style');
 style.textContent = `
-    @keyframes sparkle {
+    @keyframes simpleSparkle {
         0% {
             opacity: 0;
             transform: scale(0) rotate(0deg);
@@ -381,7 +429,14 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-//init game when page loads
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (window.memoryGame) {
+        window.memoryGame.cleanup();
+    }
+});
+
+// Initialize game when page loads
 window.addEventListener('load', () => {
-    new MemoryGame();
+    window.memoryGame = new MemoryGame();
 });

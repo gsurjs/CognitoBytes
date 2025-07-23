@@ -1,9 +1,25 @@
 class BrainGamesMenu {
     constructor() {
+        // Performance optimizations
+        this.audioContext = null;
+        this.isVisible = true;
+        
         this.initializeElements();
-        this.startFloatingElements();
         this.loadAndDisplayStats();
         this.setupEventListeners();
+        this.setupVisibilityHandling();
+        
+        // Removed floating elements for better performance
+        // this.startFloatingElements();
+    }
+
+    setupVisibilityHandling() {
+        document.addEventListener('visibilitychange', () => {
+            this.isVisible = !document.hidden;
+            if (!this.isVisible && this.audioContext) {
+                this.audioContext.suspend();
+            }
+        });
     }
 
     initializeElements() {
@@ -14,10 +30,10 @@ class BrainGamesMenu {
     }
 
     setupEventListeners() {
-        // Add hover sound effects
+        // Add hover sound effects with passive listeners
         document.querySelectorAll('.game-card').forEach(card => {
-            card.addEventListener('mouseenter', () => this.playSound('hover'));
-            card.addEventListener('click', () => this.playSound('click'));
+            card.addEventListener('mouseenter', () => this.playSound('hover'), { passive: true });
+            card.addEventListener('click', () => this.playSound('click'), { passive: true });
         });
     }
 
@@ -27,12 +43,6 @@ class BrainGamesMenu {
         const memoryGameStats = this.getGameStats('memory-game-stats');
         const woordleStats = this.getGameStats('woordle-stats');
         const floodItStats = this.getGameStats('flood-it-stats');
-
-        // Debug logging
-        console.log('Number Game Stats:', numberGameStats);
-        console.log('Memory Game Stats:', memoryGameStats);
-        console.log('Woordle Stats:', woordleStats);
-        console.log('Flood-It Stats:', floodItStats);
 
         // Calculate totals with proper field mapping
         const totalPlayed = 
@@ -49,19 +59,30 @@ class BrainGamesMenu {
             
         const winRate = totalPlayed > 0 ? Math.round((totalWon / totalPlayed) * 100) : 0;
 
-        console.log(`Total: ${totalPlayed} played, ${totalWon} won, ${winRate}% win rate`);
-
+        // Update display immediately (no animation to reduce performance overhead)
         this.totalGamesPlayedEl.textContent = totalPlayed;
         this.totalGamesWonEl.textContent = totalWon;
         this.winPercentageEl.textContent = winRate + '%';
 
-        // Animate the numbers
-        this.animateValue(this.totalGamesPlayedEl, 0, totalPlayed, 2000);
-        this.animateValue(this.totalGamesWonEl, 0, totalWon, 2500);
-        
-        setTimeout(() => {
-            this.animateValue(this.winPercentageEl, 0, winRate, 1500, '%');
-        }, 1000);
+        // Optional: Add subtle animation only if user prefers motion
+        if (this.prefersReducedMotion()) {
+            // No animations for users who prefer reduced motion
+            this.totalGamesPlayedEl.textContent = totalPlayed;
+            this.totalGamesWonEl.textContent = totalWon;
+            this.winPercentageEl.textContent = winRate + '%';
+        } else {
+            // Simplified, faster animations
+            this.animateValue(this.totalGamesPlayedEl, 0, totalPlayed, 1000);
+            this.animateValue(this.totalGamesWonEl, 0, totalWon, 1200);
+            
+            setTimeout(() => {
+                this.animateValue(this.winPercentageEl, 0, winRate, 800, '%');
+            }, 500);
+        }
+    }
+
+    prefersReducedMotion() {
+        return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     }
 
     getGameStats(key) {
@@ -75,7 +96,6 @@ class BrainGamesMenu {
             const saved = localStorage.getItem(key);
             if (saved) {
                 const parsed = JSON.parse(saved);
-                console.log(`Loaded ${key}:`, parsed);
                 return parsed;
             }
         } catch (error) {
@@ -86,9 +106,16 @@ class BrainGamesMenu {
     }
 
     animateValue(element, start, end, duration, suffix = '') {
+        if (this.prefersReducedMotion()) {
+            element.textContent = end + suffix;
+            return;
+        }
+        
         const startTime = performance.now();
         
         const animate = (currentTime) => {
+            if (!this.isVisible) return; // Pause if not visible
+            
             const elapsed = currentTime - startTime;
             const progress = Math.min(elapsed / duration, 1);
             
@@ -107,92 +134,65 @@ class BrainGamesMenu {
         return 1 - (--t) * t * t * t;
     }
 
-    startFloatingElements() {
-        const createFloatingElement = () => {
-            const element = document.createElement('div');
-            const icons = ['🧠', '🎮', '🎯', '🏆', '⭐', '💡', '🔥', '⚡'];
-            element.textContent = icons[Math.floor(Math.random() * icons.length)];
-            element.style.position = 'absolute';
-            element.style.fontSize = Math.random() * 20 + 15 + 'px';
-            element.style.opacity = Math.random() * 0.3 + 0.1;
-            element.style.left = Math.random() * 100 + '%';
-            element.style.top = '100%';
-            element.style.pointerEvents = 'none';
-            element.style.zIndex = '0';
-            element.style.animation = `floatUp ${Math.random() * 10 + 15}s linear infinite`;
-            
-            this.floatingElementsEl.appendChild(element);
-            
-            setTimeout(() => {
-                if (element.parentNode) {
-                    element.parentNode.removeChild(element);
-                }
-            }, 25000);
-        };
-        
-        // Create floating elements periodically
-        createFloatingElement();
-        setInterval(createFloatingElement, 3000);
-        
-        // Add CSS for floating animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes floatUp {
-                0% {
-                    transform: translateY(0) rotate(0deg);
-                    opacity: 0;
-                }
-                10% {
-                    opacity: 0.3;
-                }
-                90% {
-                    opacity: 0.3;
-                }
-                100% {
-                    transform: translateY(-100vh) rotate(360deg);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
     playSound(type) {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
+        if (!this.isVisible) return;
+        
+        // Reuse AudioContext for better performance
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+        
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
         
         oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+        gainNode.connect(this.audioContext.destination);
         
         let frequency, duration;
         
         switch(type) {
             case 'hover':
                 frequency = 440;
-                duration = 0.1;
+                duration = 0.05; // Reduced duration
                 break;
             case 'click':
                 frequency = 550;
-                duration = 0.2;
+                duration = 0.1; // Reduced duration
                 break;
             default:
                 frequency = 440;
-                duration = 0.1;
+                duration = 0.05;
         }
         
-        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
         oscillator.type = 'sine';
         
-        gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+        gainNode.gain.setValueAtTime(0.03, this.audioContext.currentTime); // Reduced volume
+        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
         
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + duration);
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration);
+    }
+
+    cleanup() {
+        if (this.audioContext) {
+            this.audioContext.close();
+        }
     }
 }
 
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (window.brainGamesMenu) {
+        window.brainGamesMenu.cleanup();
+    }
+});
+
 // Initialize menu when page loads
 window.addEventListener('load', () => {
-    new BrainGamesMenu();
+    window.brainGamesMenu = new BrainGamesMenu();
 });
