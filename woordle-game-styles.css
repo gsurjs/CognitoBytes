@@ -420,69 +420,68 @@ body {
         height: 100vh;
         height: 100dvh;
         max-width: none;
-        padding: 0.5rem;
+        padding: 0.8rem;
     }
     
     .title {
-        font-size: 1.4rem;
-        margin-bottom: 0.1rem;
-        margin-top: 0rem;
+        font-size: 1.6rem;
+        margin-bottom: 0.4rem;
     }
     
     .navigation {
-        margin-bottom: 0.3rem;
+        margin-bottom: 0.6rem;
         gap: 0.3rem;
     }
     
     .nav-button {
-        padding: 0.2rem 0.45rem;
-        font-size: 0.65rem;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
     }
     
     .game-mode-selector {
-        margin-bottom: 0.3rem;
+        margin-bottom: 0.6rem;
         gap: 0.3rem;
     }
     
     .mode-button {
-        padding: 0.3rem 0.6rem;
-        font-size: 0.7rem;
+        padding: 0.35rem 0.7rem;
+        font-size: 0.75rem;
     }
     
     .game-info {
-        margin-bottom: 0.4rem;
-        padding: 0.4rem;
+        margin-bottom: 0.6rem;
+        padding: 0.5rem;
     }
     
     .attempts-left {
-        font-size: 0.8rem;
+        font-size: 0.85rem;
     }
     
     .word-length {
-        font-size: 0.65rem;
+        font-size: 0.7rem;
     }
     
     .game-board {
-        max-width: 290px;
-        gap: 4px;
-        margin-bottom: 0.5rem;
+        max-width: 300px;
+        gap: 5px;
+        margin-bottom: 0.8rem;
     }
     
     .guess-row {
-        gap: 4px;
+        gap: 5px;
     }
     
     .letter-tile {
         width: 55px;
         height: 55px;
-        font-size: 1.1rem;
+        font-size: 1.2rem;
     }
     
     .message {
-        font-size: 0.75rem;
-        padding: 0.4rem;
-        margin-bottom: 0.4rem;
-        min-height: 30px;
+        font-size: 0.8rem;
+        padding: 0.5rem;
+        margin-bottom: 0.6rem;
+        min-height: 35px;
     }
     
     .keyboard {
@@ -506,36 +505,36 @@ body {
     }
     
     .bottom-section {
-        padding-bottom: 200px;
+        padding-bottom: 160px;
     }
     
     .stats {
-        gap: 0.4rem;
-        margin-bottom: 0.5rem;
+        gap: 0.6rem;
+        margin-bottom: 0.8rem;
     }
     
     .stat-item {
-        padding: 0.3rem 0.4rem;
-        min-width: 60px;
+        padding: 0.35rem 0.5rem;
+        min-width: 65px;
     }
     
     .stat-value {
-        font-size: 0.9rem;
+        font-size: 1rem;
     }
     
     .stat-label {
-        font-size: 0.55rem;
+        font-size: 0.6rem;
     }
     
     .new-game-button {
-        padding: 0.6rem 1rem;
-        font-size: 0.8rem;
-        margin-bottom: 0.5rem;
+        padding: 0.7rem 1.2rem;
+        font-size: 0.85rem;
+        margin-bottom: 0.8rem;
     }
     .share-button {
-        padding: 0.6rem 1rem;
-        font-size: 0.8rem;
-        margin: 0 0.5rem 0.5rem 0;
+        padding: 0.7rem 1.2rem;
+        font-size: 0.85rem;
+        margin: 0 0.5rem 0.8rem 0;
     }
 }
 
