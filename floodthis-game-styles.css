@@ -359,11 +359,11 @@ body {
     
     .title {
         font-size: 1.6rem;
-        margin-bottom: 0.2rem;
+        margin-bottom: 0.4rem;
     }
     
     .navigation {
-        margin-bottom: 0.3rem;
+        margin-bottom: 0.6rem;
         gap: 0.3rem;
     }
     
@@ -373,7 +373,7 @@ body {
     }
     
     .difficulty-selector {
-        margin-bottom: 0.3rem;
+        margin-bottom: 0.6rem;
         gap: 0.3rem;
         flex-wrap: wrap;
     }
@@ -389,7 +389,7 @@ body {
     }
     
     .game-info {
-        margin-bottom: 0.2rem;
+        margin-bottom: 0.6rem;
         padding: 0.5rem;
     }
     
@@ -423,8 +423,8 @@ body {
     
     .message {
         font-size: 0.8rem;
-        padding: 0.2rem;
-        margin-bottom: 0.2rem;
+        padding: 0.5rem;
+        margin-bottom: 0.6rem;
         min-height: 35px;
     }
     
@@ -534,7 +534,7 @@ body {
     }
     
     .game-info {
-        margin-bottom: 0.2rem;
+        margin-bottom: 0.4rem;
         padding: 0.4rem;
     }
     
