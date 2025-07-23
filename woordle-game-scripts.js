@@ -184,6 +184,13 @@ class WoordleGame {
             key.style.visibility = 'visible';
             key.disabled = false;
         });
+
+        // Hide share button and new game button
+        const shareButton = document.getElementById('shareButton');
+        if (shareButton) {
+            shareButton.style.display = 'none';
+        }
+        this.newGameButton.style.display = 'none';
         
         // Select target word
         if (this.gameMode === 'daily') {
@@ -195,7 +202,6 @@ class WoordleGame {
         }
         
         this.updateAttemptsDisplay();
-        this.newGameButton.style.display = 'none';
         
         console.log('Target word:', this.targetWord); // For debugging
     }
@@ -227,7 +233,7 @@ class WoordleGame {
         if (!this.gameActive) return;
         
         const key = e.key.toUpperCase();
-        
+
         // We only care about Enter, Backspace, and single letters.
         if (key === 'ENTER' || key === 'BACKSPACE' || /^[A-Z]$/.test(key)) {
             e.preventDefault(); // Prevent any unwanted default browser action.
@@ -421,6 +427,9 @@ class WoordleGame {
         
         setTimeout(() => {
             this.newGameButton.style.display = 'inline-block';
+            if (this.gameMode === 'daily') {
+                this.showShareButton();
+            }
         }, 2000);
     }
 
@@ -568,6 +577,131 @@ class WoordleGame {
         this.gamesWon.textContent = stats.gamesWon;
         this.gamesPlayed.textContent = stats.gamesPlayed;
         this.winStreak.textContent = stats.currentStreak;
+    }
+
+    showShareButton() {
+        // Create share button if it doesn't exist
+        let shareButton = document.getElementById('shareButton');
+        if (!shareButton) {
+            shareButton = document.createElement('button');
+            shareButton.id = 'shareButton';
+            shareButton.className = 'share-button';
+            shareButton.innerHTML = '💬 Share';
+            shareButton.addEventListener('click', () => this.shareResults());
+            
+            // Insert before new game button
+            const newGameButton = document.getElementById('newGameButton');
+            newGameButton.parentNode.insertBefore(shareButton, newGameButton);
+        }
+        shareButton.style.display = 'inline-block';
+    }
+
+    shareResults() {
+        const shareText = this.generateShareText();
+        
+        // Try to use native sharing if available (mobile)
+        if (navigator.share) {
+            navigator.share({
+                text: shareText
+            }).catch(err => {
+                console.log('Error sharing:', err);
+                this.fallbackShare(shareText);
+            });
+        } else {
+            // Fallback to copying to clipboard
+            this.fallbackShare(shareText);
+        }
+    }
+
+    fallbackShare(text) {
+        // Copy to clipboard
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                this.updateMessage('📋 Results copied to clipboard!', 'success');
+                setTimeout(() => {
+                    this.updateMessage(`🎉 Excellent! You got it in ${this.currentRow + 1} attempt${this.currentRow + 1 === 1 ? '' : 's'}!`, "success");
+                }, 2000);
+            }).catch(err => {
+                console.log('Failed to copy:', err);
+                this.showShareText(text);
+            });
+        } else {
+            // Show the text for manual copying
+            this.showShareText(text);
+        }
+    }
+
+    showShareText(text) {
+        // Create a modal-like overlay to show the share text
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        `;
+        
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 90%;
+            text-align: center;
+            color: #333;
+        `;
+        
+        modal.innerHTML = `
+            <h3 style="margin-bottom: 15px; color: #333;">Share Your Results</h3>
+            <pre style="background: #f0f0f0; padding: 15px; border-radius: 8px; font-family: monospace; white-space: pre-wrap; word-wrap: break-word; color: #333;">${text}</pre>
+            <p style="margin: 15px 0; color: #666;">Copy the text above to share your results!</p>
+            <button onclick="this.parentElement.parentElement.remove()" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer;">Close</button>
+        `;
+        
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        
+        // Close on overlay click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
+            }
+        });
+    }
+
+    generateShareText() {
+        const today = new Date();
+        const daysSinceEpoch = Math.floor(today.getTime() / (1000 * 60 * 60 * 24));
+        const attempts = this.currentRow + 1;
+        
+        let shareText = `Woordle ${daysSinceEpoch} ${attempts}/6\n\n`;
+        
+        // Generate the emoji grid
+        for (let row = 0; row <= this.currentRow; row++) {
+            let rowText = '';
+            for (let col = 0; col < this.wordLength; col++) {
+                const tile = document.getElementById(`tile-${row}-${col}`);
+                if (tile.classList.contains('correct')) {
+                    rowText += '🟩';
+                } else if (tile.classList.contains('present')) {
+                    rowText += '🟨';
+                } else if (tile.classList.contains('absent')) {
+                    rowText += '⬛';
+                }
+            }
+            shareText += rowText + '\n';
+        }
+        
+        shareText += '\nPlay at: ' + window.location.href;
+        
+        return shareText;
     }
 }
 
