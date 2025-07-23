@@ -397,7 +397,7 @@ body {
         max-width: 320px;
         width: 320px;
         height: 320px;
-        gap: 1px;
+        gap: 0px;
         margin-bottom: 0.8rem;
         padding: 2px;
     }
@@ -534,6 +534,7 @@ body {
         max-width: 260px;
         width: 260px;
         height: 260px;
+        gap: 0px;
     }
 
     .cell {
