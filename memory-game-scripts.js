@@ -278,22 +278,18 @@ class MemoryGame {
     }
 
     createSimpleSuccessAnimation() {
-        if (!this.isVisible) return;
-        
-        // Much simpler animation
-        for (let i = 0; i < 6; i++) { // Reduced from 20
+        //create floating sparkles
+        for (let i = 0; i < 20; i++) {
             setTimeout(() => {
                 const sparkle = document.createElement('div');
                 sparkle.textContent = '👟';
-                sparkle.style.cssText = `
-                    position: fixed;
-                    left: ${Math.random() * 100}%;
-                    top: ${Math.random() * 100}%;
-                    font-size: 1.5rem;
-                    pointer-events: none;
-                    z-index: 9999;
-                    animation: simpleSparkle 1.5s ease-out forwards;
-                `;
+                sparkle.style.position = 'fixed';
+                sparkle.style.left = Math.random() * 100 + '%';
+                sparkle.style.top = Math.random() * 100 + '%';
+                sparkle.style.fontSize = '2rem';
+                sparkle.style.pointerEvents = 'none';
+                sparkle.style.zIndex = '9999';
+                sparkle.style.animation = 'sparkle 3s ease-out forwards';
                 
                 document.body.appendChild(sparkle);
                 
@@ -301,8 +297,8 @@ class MemoryGame {
                     if (sparkle.parentNode) {
                         sparkle.parentNode.removeChild(sparkle);
                     }
-                }, 1500);
-            }, i * 200);
+                }, 3000);
+            }, i * 100);
         }
     }
 
