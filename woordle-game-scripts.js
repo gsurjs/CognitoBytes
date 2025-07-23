@@ -476,11 +476,28 @@ class WoordleGame {
         this.updateStatsDisplay();
         
         setTimeout(() => {
+            // Create button row container if it doesn't exist
+            let buttonRow = document.querySelector('.button-row');
+            if (!buttonRow) {
+                buttonRow = document.createElement('div');
+                buttonRow.className = 'button-row';
+                // Insert before stats
+                const stats = document.querySelector('.stats');
+                stats.parentNode.insertBefore(buttonRow, stats);
+            }
+            
             if (this.gameMode === 'daily') {
                 this.showShareButton();
-            } //always show definition button in both modes
+            }
+            // Always show definition button in both modes
             this.showDefinitionButton();
-            this.newGameButton.style.display = 'inline-block'
+            
+            // Add new game button to button row
+            const newGameButton = document.getElementById('newGameButton');
+            if (newGameButton && !buttonRow.contains(newGameButton)) {
+                buttonRow.appendChild(newGameButton);
+            }
+            newGameButton.style.display = 'inline-block';
         }, 2000);
     }
 
