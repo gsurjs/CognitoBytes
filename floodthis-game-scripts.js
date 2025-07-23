@@ -7,11 +7,17 @@ class FloodThisGame {
         this.gameActive = true;
         this.board = [];
         this.difficulty = 'easy';
+
+        // Performance optimizations
+        this.audioContext = null;
+        this.isVisible = true;
+        this.animationFrameId = null;
         
         this.initializeElements();
         this.setupEventListeners();
         this.loadStats();
         this.startNewGame();
+        this.setupVisibilityHandling();
     }
 
     initializeElements() {
@@ -33,6 +39,16 @@ class FloodThisGame {
         this.mediumMode.addEventListener('click', () => this.setDifficulty('medium'));
         this.hardMode.addEventListener('click', () => this.setDifficulty('hard'));
         this.newGameButton.addEventListener('click', () => this.startNewGame());
+    }
+
+    setupVisibilityHandling() {
+        // Pause/resume when tab visibility changes
+        document.addEventListener('visibilitychange', () => {
+            this.isVisible = !document.hidden;
+            if (!this.isVisible && this.audioContext) {
+                this.audioContext.suspend();
+            }
+        });
     }
 
     setDifficulty(difficulty) {
@@ -89,6 +105,8 @@ class FloodThisGame {
     }
 
     createGameBoard() {
+        // Use DocumentFragment for better performance
+        const fragment = document.createDocumentFragment();
         this.gameBoard.innerHTML = '';
         this.gameBoard.style.gridTemplateColumns = `repeat(${this.boardSize}, 1fr)`;
         
@@ -98,37 +116,42 @@ class FloodThisGame {
                 cell.className = `cell color-${this.board[row][col]}`;
                 cell.dataset.row = row;
                 cell.dataset.col = col;
-                this.gameBoard.appendChild(cell);
+                fragment.appendChild(cell);
             }
         }
+        
+        this.gameBoard.appendChild(fragment);
     }
 
     createColorPalette() {
+        const fragment = document.createDocumentFragment();
         this.colorPalette.innerHTML = '';
         
         for (let i = 0; i < this.numColors; i++) {
             const button = document.createElement('div');
             button.className = `color-button color-${i}`;
             button.dataset.color = i;
-            button.addEventListener('click', () => this.floodFill(i));
-            this.colorPalette.appendChild(button);
+            button.addEventListener('click', () => this.floodFill(i), { passive: true });
+            fragment.appendChild(button);
         }
+        
+        this.colorPalette.appendChild(fragment);
     }
 
     floodFill(newColor) {
-        if (!this.gameActive) return;
+        if (!this.gameActive || !this.isVisible) return;
         
         const startColor = this.board[0][0];
-        if (startColor === newColor) return; // No change needed
+        if (startColor === newColor) return;
         
         this.currentMoves++;
         this.updateMovesDisplay();
         
-        // Perform flood fill
+        // Perform flood fill without animations for better performance
         const visited = Array(this.boardSize).fill().map(() => Array(this.boardSize).fill(false));
         this.floodFillRecursive(0, 0, startColor, newColor, visited);
         
-        // Update visual board
+        // Single DOM update instead of individual cell updates
         this.updateVisualBoard();
         
         // Check win condition
@@ -146,18 +169,6 @@ class FloodThisGame {
         visited[row][col] = true;
         this.board[row][col] = newColor;
         
-        // Mark cell for animation
-        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-        if (cell) {
-            setTimeout(() => {
-                cell.classList.add('flooded');
-                cell.className = `cell color-${newColor} flooded`;
-                setTimeout(() => {
-                    cell.classList.remove('flooded');
-                }, 300);
-            }, Math.random() * 200);
-        }
-        
         // Recursively flood neighboring cells
         this.floodFillRecursive(row + 1, col, oldColor, newColor, visited);
         this.floodFillRecursive(row - 1, col, oldColor, newColor, visited);
@@ -166,12 +177,17 @@ class FloodThisGame {
     }
 
     updateVisualBoard() {
+        // Batch DOM updates for better performance
+        const cells = this.gameBoard.children;
+        let index = 0;
+        
         for (let row = 0; row < this.boardSize; row++) {
             for (let col = 0; col < this.boardSize; col++) {
-                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                const cell = cells[index];
                 if (cell) {
                     cell.className = `cell color-${this.board[row][col]}`;
                 }
+                index++;
             }
         }
     }
@@ -192,7 +208,9 @@ class FloodThisGame {
         this.gameActive = false;
         this.updateMessage(`🎉 Excellent! You flooded the board in ${this.currentMoves} moves!`, "success");
         this.playSound('win');
-        this.createConfetti();
+
+        // Simplified confetti - less intensive
+        this.createSimpleConfetti();
         
         // Update stats
         const stats = this.getStats();
@@ -235,22 +253,25 @@ class FloodThisGame {
         }
     }
 
-    createConfetti() {
-        const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#e91e63'];
+    createSimpleConfetti() {
+        // Much simpler confetti that won't overheat
+        const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'];
         
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 10; i++) { // Reduced from 50 to 10
             setTimeout(() => {
                 const confetti = document.createElement('div');
-                confetti.style.position = 'fixed';
-                confetti.style.width = '10px';
-                confetti.style.height = '10px';
-                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                confetti.style.left = Math.random() * 100 + '%';
-                confetti.style.top = '-10px';
-                confetti.style.borderRadius = '50%';
-                confetti.style.pointerEvents = 'none';
-                confetti.style.zIndex = '9999';
-                confetti.style.animation = 'confettiFall 3s linear forwards';
+                confetti.style.cssText = `
+                    position: fixed;
+                    width: 8px;
+                    height: 8px;
+                    background: ${colors[Math.floor(Math.random() * colors.length)]};
+                    left: ${Math.random() * 100}%;
+                    top: -10px;
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 9999;
+                    animation: simpleFall 2s linear forwards;
+                `;
                 
                 document.body.appendChild(confetti);
                 
@@ -258,47 +279,53 @@ class FloodThisGame {
                     if (confetti.parentNode) {
                         confetti.parentNode.removeChild(confetti);
                     }
-                }, 3000);
-            }, i * 50);
+                }, 2000);
+            }, i * 100);
         }
     }
 
     playSound(type) {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
+        if (!this.isVisible) return;
+        
+        // Reuse AudioContext instead of creating new ones
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+        
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
         
         oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+        gainNode.connect(this.audioContext.destination);
         
         let frequency, duration;
         
         switch(type) {
             case 'win':
                 frequency = 523.25;
-                duration = 0.5;
+                duration = 0.3; // Shortened
                 break;
             case 'lose':
                 frequency = 220;
-                duration = 0.8;
-                break;
-            case 'move':
-                frequency = 440;
-                duration = 0.1;
+                duration = 0.5; // Shortened
                 break;
             default:
                 frequency = 440;
-                duration = 0.2;
+                duration = 0.1;
         }
         
-        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
         oscillator.type = 'sine';
         
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+        gainNode.gain.setValueAtTime(0.05, this.audioContext.currentTime); // Reduced volume
+        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
         
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + duration);
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration);
     }
 
     getStats() {
@@ -308,12 +335,20 @@ class FloodThisGame {
             bestScore: null
         };
         
-        const saved = localStorage.getItem('flood-it-stats');
-        return saved ? JSON.parse(saved) : defaultStats;
+        try {
+            const saved = localStorage.getItem('flood-it-stats');
+            return saved ? JSON.parse(saved) : defaultStats;
+        } catch (error) {
+            return defaultStats;
+        }
     }
 
     saveStats(stats) {
-        localStorage.setItem('flood-it-stats', JSON.stringify(stats));
+        try {
+            localStorage.setItem('flood-it-stats', JSON.stringify(stats));
+        } catch (error) {
+            console.warn('Could not save stats:', error);
+        }
     }
 
     loadStats() {
@@ -326,20 +361,38 @@ class FloodThisGame {
         this.gamesPlayed.textContent = stats.gamesPlayed;
         this.bestScore.textContent = stats.bestScore !== null ? stats.bestScore : '∞';
     }
+
+    // Cleanup method for when page unloads
+    cleanup() {
+        if (this.audioContext) {
+            this.audioContext.close();
+        }
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+        }
+    }
 }
 
-// CSS for confetti animation
+// Add simple CSS animation
 const style = document.createElement('style');
 style.textContent = `
-    @keyframes confettiFall {
+    @keyframes simpleFall {
         to {
-            transform: translateY(100vh) rotate(360deg);
+            transform: translateY(100vh);
+            opacity: 0;
         }
     }
 `;
 document.head.appendChild(style);
 
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (window.floodItGame) {
+        window.floodItGame.cleanup();
+    }
+});
+
 // Initialize game when page loads
 window.addEventListener('load', () => {
-    new FloodThisGame();
+    window.floodItGame = new FloodThisGame();
 });
