@@ -43,13 +43,7 @@ body {
     width: 200%;
     height: 200%;
     background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    animation: shimmer 3s infinite;
     pointer-events: none;
-}
-
-@keyframes shimmer {
-    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
 }
 
 .header {
@@ -256,8 +250,8 @@ body {
 }
 
 .letter-tile.present {
-    background: linear-gradient(45deg, #f39c12, #e67e22);
-    border-color: #f39c12;
+    background: linear-gradient(45deg, #d1c93f, #d1c93f);
+    border-color: #f3fa00;
     animation: bounce 0.5s ease-in-out;
 }
 
@@ -326,7 +320,7 @@ body {
 }
 
 .key.present {
-    background: linear-gradient(45deg, #f39c12, #e67e22);
+    background: linear-gradient(45deg, #d1c93f, #d1c93f);
 }
 
 .key.absent {
@@ -478,8 +472,8 @@ body {
     }
     
     .letter-tile {
-        width: 50px;
-        height: 50px;
+        width: 55px;
+        height: 55px;
         font-size: 1.2rem;
     }
     
@@ -491,7 +485,7 @@ body {
     }
     
     .keyboard {
-        padding: 0.6rem;
+        padding: 0.2rem;
     }
     
     .keyboard-row {
@@ -500,13 +494,13 @@ body {
     }
     
     .key {
-        padding: 10px 6px;
-        font-size: 0.75rem;
+        padding: 15px 10px;
+        font-size: 1.5rem;
         min-width: 28px;
     }
     
     .key.wide {
-        min-width: 50px;
+        min-width: 60px;
         font-size: 0.65rem;
     }
     
@@ -537,7 +531,6 @@ body {
         font-size: 0.85rem;
         margin-bottom: 0.8rem;
     }
-    
     .share-button {
         padding: 0.7rem 1.2rem;
         font-size: 0.85rem;
