@@ -678,7 +678,7 @@ class WoordleGame {
 
     generateShareText() {
         //set epoch to January 22, 2025 (day of game creation)
-        const epoch = new Date('2025-01-22T00:00:00');
+        const epoch = new Date('2025-07-22T00:00:00');
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
