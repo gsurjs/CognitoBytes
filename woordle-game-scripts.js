@@ -20,8 +20,8 @@ class WoordleGame {
 
     async initializeGame() {
         try {
-            // Load words from file
-            await this.loadWordsFromFile();
+            // Load both word lists
+            await this.loadWordsFromFiles();
             
             // Initialize elements and setup (existing code)
             this.initializeElements();
@@ -60,11 +60,11 @@ class WoordleGame {
         }
     }
 
-    async loadWordsFromFile() {
+    async loadWordsFromFiles() {
         // Load answer words from wordle-answers-alphabetical.txt
-        const response = await fetch('wordle-answers-alphabetical.txt');
+        const answerResponse = await fetch('wordle-answers-alphabetical.txt');
         if (!answerResponse.ok) {
-            throw new Error(`HTTP error! status: ${answerResponse.status}`);
+            throw new Error(`HTTP error loading answers! status: ${answerResponse.status}`);
         }
         
         const answerText = await answerResponse.text();
@@ -175,7 +175,7 @@ class WoordleGame {
     startNewGame() {
         // Make sure words are loaded before starting
         if (this.answerWords.length === 0) {
-            console.error('Cannot start game: word list not loaded');
+            console.error('Cannot start game: answer word list not loaded');
             return;
         }
 
@@ -208,7 +208,7 @@ class WoordleGame {
         }
         this.newGameButton.style.display = 'none';
         
-        // Select target word
+        // Select target word from answer words only
         if (this.gameMode === 'daily') {
             this.targetWord = this.getDailyWord();
             this.updateMessage("Solve today's daily Woordle!", "info");
