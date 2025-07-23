@@ -11,6 +11,7 @@ class BrainGamesMenu {
         
         // Removed floating elements for better performance
         // this.startFloatingElements();
+        this.setupStatsRefresh();
     }
 
     setupVisibilityHandling() {
@@ -18,8 +19,20 @@ class BrainGamesMenu {
             this.isVisible = !document.hidden;
             if (!this.isVisible && this.audioContext) {
                 this.audioContext.suspend();
+            } else if (this.isVisible) {
+                // Refresh stats when returning to the page
+                this.loadAndDisplayStats();
             }
         });
+    }
+
+    setupStatsRefresh() {
+        // Refresh stats every 2 seconds when page is visible
+        setInterval(() => {
+            if (this.isVisible) {
+                this.loadAndDisplayStats();
+            }
+        }, 2000);
     }
 
     initializeElements() {
@@ -59,25 +72,26 @@ class BrainGamesMenu {
             
         const winRate = totalPlayed > 0 ? Math.round((totalWon / totalPlayed) * 100) : 0;
 
-        // Update display immediately (no animation to reduce performance overhead)
-        this.totalGamesPlayedEl.textContent = totalPlayed;
-        this.totalGamesWonEl.textContent = totalWon;
-        this.winPercentageEl.textContent = winRate + '%';
+        const currentPlayed = parseInt(this.totalGamesPlayedEl.textContent) || 0;
+        const currentWon = parseInt(this.totalGamesWonEl.textContent) || 0;
+        const currentRate = parseInt(this.winPercentageEl.textContent.replace('%', '')) || 0;
 
-        // Optional: Add subtle animation only if user prefers motion
-        if (this.prefersReducedMotion()) {
-            // No animations for users who prefer reduced motion
-            this.totalGamesPlayedEl.textContent = totalPlayed;
-            this.totalGamesWonEl.textContent = totalWon;
-            this.winPercentageEl.textContent = winRate + '%';
-        } else {
-            // Simplified, faster animations
-            this.animateValue(this.totalGamesPlayedEl, 0, totalPlayed, 1000);
-            this.animateValue(this.totalGamesWonEl, 0, totalWon, 1200);
-            
-            setTimeout(() => {
-                this.animateValue(this.winPercentageEl, 0, winRate, 800, '%');
-            }, 500);
+        if (currentPlayed !== totalPlayed || currentWon !== totalWon || currentRate !== winRate) {
+            // Update display with animation only if user prefers motion
+            if (this.prefersReducedMotion()) {
+                // No animations for users who prefer reduced motion
+                this.totalGamesPlayedEl.textContent = totalPlayed;
+                this.totalGamesWonEl.textContent = totalWon;
+                this.winPercentageEl.textContent = winRate + '%';
+            } else {
+                // Simplified, faster animations
+                this.animateValue(this.totalGamesPlayedEl, currentPlayed, totalPlayed, 800);
+                this.animateValue(this.totalGamesWonEl, currentWon, totalWon, 800);
+                
+                setTimeout(() => {
+                    this.animateValue(this.winPercentageEl, currentRate, winRate, 600, '%');
+                }, 200);
+            }
         }
     }
 
@@ -96,7 +110,16 @@ class BrainGamesMenu {
             const saved = localStorage.getItem(key);
             if (saved) {
                 const parsed = JSON.parse(saved);
-                return parsed;
+                
+                // Validate that the parsed data has expected structure
+                if (typeof parsed === 'object' && parsed !== null) {
+                    return {
+                        gamesWon: parseInt(parsed.gamesWon) || 0,
+                        gamesPlayed: parseInt(parsed.gamesPlayed) || parseInt(parsed.totalGames) || 0,
+                        totalGames: parseInt(parsed.totalGames) || parseInt(parsed.gamesPlayed) || 0,
+                        ...parsed // Include any other fields
+                    };
+                }
             }
         } catch (error) {
             console.error(`Error loading stats for ${key}:`, error);
@@ -106,7 +129,7 @@ class BrainGamesMenu {
     }
 
     animateValue(element, start, end, duration, suffix = '') {
-        if (this.prefersReducedMotion()) {
+        if (this.prefersReducedMotion() || start === end) {
             element.textContent = end + suffix;
             return;
         }
@@ -178,12 +201,32 @@ class BrainGamesMenu {
         oscillator.stop(this.audioContext.currentTime + duration);
     }
 
+    // Method to manually refresh stats (can be called from other scripts)
+    refreshStats() {
+        this.loadAndDisplayStats();
+    }
+
+    // Method to reset all stats (for testing purposes)
+    resetAllStats() {
+        if (confirm('Are you sure you want to reset all game statistics? This cannot be undone.')) {
+            localStorage.removeItem('number-game-stats');
+            localStorage.removeItem('memory-game-stats');
+            localStorage.removeItem('woordle-stats');
+            localStorage.removeItem('flood-it-stats');
+            this.loadAndDisplayStats();
+            console.log('All stats have been reset');
+        }
+    }
+
     cleanup() {
         if (this.audioContext) {
             this.audioContext.close();
         }
     }
 }
+
+// Make the menu instance globally available so games can call refreshStats
+window.brainGamesMenu = null;
 
 // Cleanup on page unload
 window.addEventListener('beforeunload', () => {
@@ -195,4 +238,11 @@ window.addEventListener('beforeunload', () => {
 // Initialize menu when page loads
 window.addEventListener('load', () => {
     window.brainGamesMenu = new BrainGamesMenu();
+});
+
+// Also refresh stats when the page gains focus (user returns to tab)
+window.addEventListener('focus', () => {
+    if (window.brainGamesMenu) {
+        window.brainGamesMenu.refreshStats();
+    }
 });
