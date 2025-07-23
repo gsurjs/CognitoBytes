@@ -35,6 +35,7 @@ class MemoryGame {
         this.initializeElements();
         this.setupEventListeners();
         this.setupVisibilityHandling();
+        this.loadStats();
     }
 
     setupVisibilityHandling() {
@@ -63,6 +64,9 @@ class MemoryGame {
         this.gameOverTitle = document.getElementById('gameOverTitle');
         this.gameOverMessage = document.getElementById('gameOverMessage');
         this.playAgainButton = document.getElementById('playAgainButton');
+
+        this.gamesWonEl = document.getElementById('memoryGamesWon');
+        this.gamesPlayedEl = document.getElementById('memoryGamesPlayed');
     }
 
     setupEventListeners() {
@@ -249,6 +253,10 @@ class MemoryGame {
         this.gameBoard.style.display = 'none';
         this.gameInfo.style.display = 'none';
         this.gameOver.style.display = 'block';
+
+        // Update stats BEFORE showing results
+        const stats = this.getStats();
+        stats.gamesPlayed++;
         
         if (success) {
             this.gameOver.className = 'game-over success';
@@ -262,6 +270,10 @@ class MemoryGame {
             this.gameOverMessage.textContent = `Game over! You found ${this.matchesFound} out of ${this.numPairs} pairs.`;
             this.playSound('lose');
         }
+
+        // Save updated stats
+        this.saveStats(stats);
+        this.updateStatsDisplay();
     }
 
     createSuccessAnimation() {
@@ -370,6 +382,22 @@ class MemoryGame {
             localStorage.setItem('memory-game-stats', JSON.stringify(stats));
         } catch (error) {
             console.warn('Could not save stats:', error);
+        }
+    }
+
+    loadStats() {
+        this.updateStatsDisplay();
+    }
+
+    updateStatsDisplay() {
+        const stats = this.getStats();
+        
+        // Update stat displays if elements exist
+        if (this.gamesWonEl) {
+            this.gamesWonEl.textContent = stats.gamesWon;
+        }
+        if (this.gamesPlayedEl) {
+            this.gamesPlayedEl.textContent = stats.gamesPlayed;
         }
     }
 

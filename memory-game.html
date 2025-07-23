@@ -36,6 +36,24 @@
                 
                 <button class="start-button" id="startButton">START 🧠 GAME</button>
             </div>
+            <!-- Game stats section in setup -->
+            <div class="setup-stats">
+                <div class="stats-title">🏆 Your Memory Game Stats</div>
+                <div class="setup-stats-grid">
+                    <div class="setup-stat-item">
+                        <div class="setup-stat-value" id="memoryGamesWon">0</div>
+                        <div class="setup-stat-label">Games Won</div>
+                    </div>
+                    <div class="setup-stat-item">
+                        <div class="setup-stat-value" id="memoryGamesPlayed">0</div>
+                        <div class="setup-stat-label">Games Played</div>
+                    </div>
+                    <div class="setup-stat-item">
+                        <div class="setup-stat-value" id="memoryWinRate">0%</div>
+                        <div class="setup-stat-label">Win Rate</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="memorization-phase" id="memorizationPhase">
@@ -66,6 +84,20 @@
         <div class="game-over" id="gameOver">
             <h2 id="gameOverTitle">🙌 Congratulations!</h2>
             <p id="gameOverMessage">You completed the game!</p>
+            <div class="final-stats">
+                <div class="final-stat-item">
+                    <div class="final-stat-value" id="finalGamesWon">0</div>
+                    <div class="final-stat-label">Total Wins</div>
+                </div>
+                <div class="final-stat-item">
+                    <div class="final-stat-value" id="finalGamesPlayed">0</div>
+                    <div class="final-stat-label">Total Games</div>
+                </div>
+                <div class="final-stat-item">
+                    <div class="final-stat-value" id="finalWinRate">0%</div>
+                    <div class="final-stat-label">Win Rate</div>
+                </div>
+            </div>
             <button class="play-again-button" id="playAgainButton">PLAY AGAIN?</button>
         </div>
     </div>

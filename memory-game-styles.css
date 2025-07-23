@@ -105,6 +105,52 @@ select {
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
+/* Setup Stats Section */
+.setup-stats {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stats-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: #ffd700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+
+.setup-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.setup-stat-item {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.8rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.setup-stat-value {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.setup-stat-label {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 0.3rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
 .game-setup::before,
 .game-info::before {
     content: '';
@@ -342,6 +388,40 @@ select {
     margin-bottom: 1rem;
 }
 
+/* Final Stats in Game Over Screen */
+.final-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.final-stat-item {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.8rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.final-stat-value {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.final-stat-label {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 0.3rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
 .play-again-button {
     padding: 1rem 2rem;
     font-size: 1.1rem;
@@ -405,6 +485,23 @@ select {
     .start-button {
         padding: 0.8rem 1.5rem;
         font-size: 1rem;
+    }
+
+    .setup-stats {
+        padding: 1rem;
+    }
+
+    .setup-stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 0.8rem;
+    }
+
+    .setup-stat-value {
+        font-size: 1.2rem;
+    }
+
+    .setup-stat-label {
+        font-size: 0.75rem;
     }
     
     .game-info {
@@ -473,6 +570,22 @@ select {
     .game-over h2 {
         font-size: 1.5rem;
     }
+
+    .final-stats {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 0.8rem;
+        margin: 1rem 0;
+        padding: 0.8rem;
+    }
+
+    .final-stat-value {
+        font-size: 1.2rem;
+    }
+
+    .final-stat-label {
+        font-size: 0.75rem;
+    }
+
     
     .play-again-button {
         padding: 0.8rem 1.5rem;
