@@ -71,7 +71,7 @@ class FloodThisGame {
         this.createGameBoard();
         this.createColorPalette();
         this.updateMovesDisplay();
-        this.updateMessage("Flood the board with one color from top left to bottom right!", "info");
+        this.updateMessage("Flood the board from top left to bottom right!", "info");
         
         // Update difficulty display
         const difficultyEl = document.querySelector('.difficulty');
