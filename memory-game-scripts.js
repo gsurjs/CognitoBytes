@@ -11,12 +11,12 @@ class MemoryGame {
         this.canFlip = false;
         this.gameActive = false;
         this.timerInterval = null;
-        
+
         // Performance optimizations
         this.audioContext = null;
         this.isVisible = true;
         
-        // Reduced image paths for better performance
+        //image paths for cards
         this.imagePaths = [
             'images/img01.jpg',
             'images/img02.jpg', 
@@ -66,18 +66,18 @@ class MemoryGame {
     }
 
     setupEventListeners() {
-        this.startButton.addEventListener('click', () => this.startGame(), { passive: true });
-        this.playAgainButton.addEventListener('click', () => this.resetGame(), { passive: true });
+        this.startButton.addEventListener('click', () => this.startGame());
+        this.playAgainButton.addEventListener('click', () => this.resetGame());
         
         this.difficultySelect.addEventListener('change', (e) => {
             this.difficulty = e.target.value;
             this.memorizationTime = e.target.value === 'easy' ? 3 : e.target.value === 'medium' ? 5 : 8;
-        }, { passive: true });
+        });
         
         this.pairsSelect.addEventListener('change', (e) => {
             this.numPairs = parseInt(e.target.value);
             this.gameTime = this.numPairs === 8 ? 120 : this.numPairs === 10 ? 150 : 180;
-        }, { passive: true });
+        });
     }
 
     startGame() {
@@ -90,27 +90,24 @@ class MemoryGame {
     }
 
     createGameBoard() {
-        const fragment = document.createDocumentFragment();
         this.gameBoard.innerHTML = '';
         this.gameBoard.className = `game-board grid-${this.numPairs}`;
         
-        // Create card pairs
+        //create card pairs
         const cardPairs = [];
         for (let i = 0; i < this.numPairs; i++) {
             const imagePath = this.imagePaths[i];
             cardPairs.push(imagePath, imagePath);
         }
         
-        // Shuffle cards
+        //shuffle cars
         this.shuffleArray(cardPairs);
         
-        // Create card elements with fragment for better performance
+        //create card elements
         cardPairs.forEach((imagePath, index) => {
             const card = this.createCard(imagePath, index);
-            fragment.appendChild(card);
+            this.gameBoard.appendChild(card);
         });
-        
-        this.gameBoard.appendChild(fragment);
     }
 
     createCard(imagePath, index) {
@@ -119,16 +116,15 @@ class MemoryGame {
         card.dataset.image = imagePath;
         card.dataset.index = index;
         
-        // Simplified card structure for better performance
         card.innerHTML = `
             <div class="card-face card-back">${index + 1}</div>
             <div class="card-face card-front">
                 <img src="${imagePath}" alt="Memory Card" class="card-image" 
-                     onerror="this.parentElement.innerHTML='<div style=&quot;display:flex;align-items:center;justify-content:center;height:100%;font-size:0.8rem;color:#666;text-align:center;&quot;>🖼️</div>'">
+                     onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=&quot;display:flex;align-items:center;justify-content:center;height:100%;font-size:0.8rem;color:#666;text-align:center;&quot;>Image<br>Missing</div>'">
             </div>
         `;
         
-        card.addEventListener('click', () => this.flipCard(card), { passive: true });
+        card.addEventListener('click', () => this.flipCard(card));
         return card;
     }
 
@@ -140,10 +136,11 @@ class MemoryGame {
     }
 
     startMemorizationPhase() {
+        //visible during memorization
         this.gameBoard.style.display = 'grid';
 
-        // Show all cards during memorization
-        const cards = this.gameBoard.querySelectorAll('.card');
+        //show all cards during memorization
+        const cards = document.querySelectorAll('.card');
         cards.forEach(card => card.classList.add('flipped'));
         
         let timeLeft = this.memorizationTime;
@@ -161,16 +158,16 @@ class MemoryGame {
     }
 
     startGamePlay() {
-        // Hide all cards efficiently
-        const cards = this.gameBoard.querySelectorAll('.card');
+        //hide all cards
+        const cards = document.querySelectorAll('.card');
         cards.forEach(card => card.classList.remove('flipped'));
         
-        // Show game interface
+        //show game interface
         this.memorizationPhase.style.display = 'none';
         this.gameInfo.style.display = 'block';
         this.gameBoard.style.display = 'grid';
         
-        // Enable card flipping and start timer
+        //enable card flipping start timer
         this.canFlip = true;
         this.gameActive = true;
         this.currentTimer = this.gameTime;
@@ -181,8 +178,6 @@ class MemoryGame {
         this.updateTimerDisplay();
         
         this.timerInterval = setInterval(() => {
-            if (!this.isVisible) return; // Pause when not visible
-            
             this.currentTimer--;
             this.updateTimerDisplay();
             
@@ -203,8 +198,7 @@ class MemoryGame {
     }
 
     flipCard(card) {
-        if (!this.canFlip || !this.gameActive || !this.isVisible || 
-            card.classList.contains('flipped') || card.classList.contains('matched')) {
+        if (!this.canFlip || !this.gameActive || card.classList.contains('flipped') || card.classList.contains('matched')) {
             return;
         }
         
@@ -216,7 +210,7 @@ class MemoryGame {
             this.attempts++;
             this.attemptsEl.textContent = this.attempts;
             
-            setTimeout(() => this.checkMatch(), 800); // Reduced timing
+            setTimeout(() => this.checkMatch(), 1000);
         }
     }
 
@@ -224,20 +218,20 @@ class MemoryGame {
         const [card1, card2] = this.flippedCards;
         
         if (card1.dataset.image === card2.dataset.image) {
-            // Match found
+            //match found
             card1.classList.add('matched');
             card2.classList.add('matched');
-            card1.classList.add('flipped');
-            card2.classList.add('flipped');
+            card1.classList.add('flipped'); //keep flipped after match
+            card2.classList.add('flipped'); //keep flipped after match
             this.matchesFound++;
             this.matchesFoundEl.textContent = this.matchesFound;
             this.playSound('match');
             
             if (this.matchesFound === this.numPairs) {
-                setTimeout(() => this.endGame(true), 300); // Reduced timing
+                setTimeout(() => this.endGame(true), 500);
             }
         } else {
-            // No match
+            //no match
             card1.classList.remove('flipped');
             card2.classList.remove('flipped');
             this.playSound('nomatch');
@@ -256,28 +250,21 @@ class MemoryGame {
         this.gameInfo.style.display = 'none';
         this.gameOver.style.display = 'block';
         
-        // Update and save stats
-        const stats = this.getStats();
-        stats.gamesPlayed++;
-        
         if (success) {
-            stats.gamesWon++;
             this.gameOver.className = 'game-over success';
             this.gameOverTitle.textContent = '🎉 Congratulations!';
             this.gameOverMessage.textContent = `You completed the game in ${this.attempts} attempts with ${this.currentTimer} seconds remaining!`;
             this.playSound('win');
-            this.createSimpleSuccessAnimation();
+            this.createSuccessAnimation();
         } else {
             this.gameOver.className = 'game-over failure';
             this.gameOverTitle.textContent = '⏰ Time\'s Up!';
             this.gameOverMessage.textContent = `Game over! You found ${this.matchesFound} out of ${this.numPairs} pairs.`;
             this.playSound('lose');
         }
-        
-        this.saveStats(stats);
     }
 
-    createSimpleSuccessAnimation() {
+    createSuccessAnimation() {
         //create floating sparkles
         for (let i = 0; i < 20; i++) {
             setTimeout(() => {
@@ -323,54 +310,45 @@ class MemoryGame {
     }
 
     playSound(type) {
-        if (!this.isVisible) return;
-        
-        if (!this.audioContext) {
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        
-        if (this.audioContext.state === 'suspended') {
-            this.audioContext.resume();
-        }
-        
-        const oscillator = this.audioContext.createOscillator();
-        const gainNode = this.audioContext.createGain();
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
         
         oscillator.connect(gainNode);
-        gainNode.connect(this.audioContext.destination);
+        gainNode.connect(audioContext.destination);
         
         let frequency, duration;
-        
+        //sound tone types
         switch(type) {
             case 'match':
                 frequency = 523.25;
-                duration = 0.2;
+                duration = 0.3;
                 break;
             case 'nomatch':
                 frequency = 220;
-                duration = 0.15;
+                duration = 0.2;
                 break;
             case 'win':
                 frequency = 659.25;
-                duration = 0.3;
+                duration = 0.5;
                 break;
             case 'lose':
                 frequency = 196;
-                duration = 0.4;
+                duration = 0.8;
                 break;
             default:
                 frequency = 440;
-                duration = 0.1;
+                duration = 0.2;
         }
         
-        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
         oscillator.type = 'sine';
         
-        gainNode.gain.setValueAtTime(0.05, this.audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
         
-        oscillator.start(this.audioContext.currentTime);
-        oscillator.stop(this.audioContext.currentTime + duration);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + duration);
     }
 
     getStats() {
@@ -405,10 +383,10 @@ class MemoryGame {
     }
 }
 
-// Add simple CSS animations
+//styling for sparkle animation
 const style = document.createElement('style');
 style.textContent = `
-    @keyframes simpleSparkle {
+    @keyframes sparkle {
         0% {
             opacity: 0;
             transform: scale(0) rotate(0deg);
@@ -432,7 +410,7 @@ window.addEventListener('beforeunload', () => {
     }
 });
 
-// Initialize game when page loads
+//init game when page loads
 window.addEventListener('load', () => {
     window.memoryGame = new MemoryGame();
 });
