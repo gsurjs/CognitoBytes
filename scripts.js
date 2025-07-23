@@ -26,9 +26,10 @@ class BrainGamesMenu {
         const numberGameStats = this.getGameStats('number-game-stats');
         const memoryGameStats = this.getGameStats('memory-game-stats');
         const woordleStats = this.getGameStats('woordle-stats');
+        const floodItStats = this.getGameStats('flood-it-stats');
 
-        const totalPlayed = numberGameStats.totalGames + memoryGameStats.gamesPlayed + woordleStats.gamesPlayed;
-        const totalWon = numberGameStats.gamesWon + memoryGameStats.gamesWon + woordleStats.gamesWon;
+        const totalPlayed = numberGameStats.totalGames + memoryGameStats.gamesPlayed + woordleStats.gamesPlayed + floodItStats.gamesPlayed;
+        const totalWon = numberGameStats.gamesWon + memoryGameStats.gamesWon + woordleStats.gamesWon + floodItStats.gamesWon;
         const winRate = totalPlayed > 0 ? Math.round((totalWon / totalPlayed) * 100) : 0;
 
         this.totalGamesPlayedEl.textContent = totalPlayed;
