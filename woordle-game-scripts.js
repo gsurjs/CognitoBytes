@@ -514,10 +514,7 @@ class WoordleGame {
         this.updateStatsDisplay();
         
         setTimeout(() => {
-            // Show share, definition, and new game buttons after loss
-            if (this.gameMode === "daily" && this.shareButton) {
-                this.shareButton.style.display = 'inline-block';
-            }
+            // Show definition and new game buttons after loss
             if (this.definitionButton) {
                 this.definitionButton.style.display = 'inline-block';
             }
@@ -689,11 +686,7 @@ class WoordleGame {
             navigator.clipboard.writeText(text).then(() => {
                 this.updateMessage('📋 Results copied to clipboard!', 'success');
                 setTimeout(() => {
-                    if (this.currentWord === this.targetWord) {
-                        this.updateMessage(`🎉 Excellent! You got it in ${this.currentRow + 1} attempt${this.currentRow + 1 === 1 ? '' : 's'}!`, "success");
-                    } else {
-                        this.updateMessage(`💀 Game Over! The word was "${this.targetWord}".`, "error");
-                    }
+                    this.updateMessage(`🎉 Excellent! You got it in ${this.currentRow + 1} attempt${this.currentRow + 1 === 1 ? '' : 's'}!`, "success");
                 }, 2000);
             }).catch(err => {
                 console.log('Failed to copy:', err);
@@ -760,14 +753,10 @@ class WoordleGame {
         const daysSinceEpoch = Math.floor((today.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24)) + 1;
         const attempts = this.currentRow + 1;
 
-        //check if user won or lost
-        const userWon = this.currentWord === this.targetWord;
-        const attempts = userWon ? this.currentRow + 1 : 'X';
-
         //edge case to make sure we never show a number less than 1
         const puzzleNumber = Math.max(1, daysSinceEpoch);
         
-        let shareText = `Alpha-Bit ${puzzleNumber} ${attempts}/6\n\n`;
+        let shareText = `Alpha-bit ${puzzleNumber} ${attempts}/6\n\n`;
         
         // Generate the emoji grid
         for (let row = 0; row <= this.currentRow; row++) {
