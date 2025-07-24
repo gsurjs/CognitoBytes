@@ -377,14 +377,16 @@ class WoordleGame {
         await this.checkGuess();
         
         if (this.currentWord === this.targetWord) {
+            this.gameActive = false; // Set game inactive before saving state
+            this.saveGameState(); 
             setTimeout(() => {
                 this.handleWin();
-                this.saveGameState(); 
             }, this.wordLength * 100 + 200);
         } else if (this.currentRow >= this.maxAttempts - 1) {
+            this.gameActive = false; // Set game inactive before saving state
+            this.saveGameState(); 
             setTimeout(() => {
                 this.handleLoss();
-                this.saveGameState(); 
             }, this.wordLength * 100 + 200);
         } else {
             this.currentRow++;
@@ -473,11 +475,15 @@ class WoordleGame {
         this.createConfetti();
         
         const stats = this.getStats();
-        stats.gamesWon++;
-        stats.gamesPlayed++;
-        stats.currentStreak++;
-        stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
-        this.saveStats(stats);
+        // Check if stats for this game have already been recorded
+        if (stats.lastGamePlayed !== this.targetWord) {
+            stats.gamesWon++;
+            stats.gamesPlayed++;
+            stats.currentStreak++;
+            stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
+            stats.lastGamePlayed = this.targetWord; // Mark this game as recorded
+            this.saveStats(stats);
+        }
         this.updateStatsDisplay();
         
         setTimeout(() => {
@@ -499,9 +505,13 @@ class WoordleGame {
         this.playSound('lose');
         
         const stats = this.getStats();
-        stats.gamesPlayed++;
-        stats.currentStreak = 0;
-        this.saveStats(stats);
+         // Check if stats for this game have already been recorded
+        if (stats.lastGamePlayed !== this.targetWord) {
+            stats.gamesPlayed++;
+            stats.currentStreak = 0;
+            stats.lastGamePlayed = this.targetWord; // Mark this game as recorded
+            this.saveStats(stats);
+        }
         this.updateStatsDisplay();
         
         setTimeout(() => {
@@ -516,16 +526,24 @@ class WoordleGame {
     
     saveGameState() {
         const boardState = [];
-        for (let row = 0; row < this.currentRow; row++) {
-            let guess = '';
-            for (let col = 0; col < this.wordLength; col++) {
-                const tile = document.getElementById(`tile-${row}-${col}`);
-                if (tile && tile.textContent) {
-                    guess += tile.textContent;
+        // Determine the correct number of rows to save.
+        // If the game is over, we need to include the last row (currentRow + 1).
+        // If it's active, we only save the completed rows (up to currentRow).
+        const loopEnd = this.gameActive ? this.currentRow : this.currentRow + 1;
+
+        for (let row = 0; row < loopEnd; row++) {
+            // Check if the row exists to prevent errors
+            if (document.getElementById(`row-${row}`)) {
+                let guess = '';
+                for (let col = 0; col < this.wordLength; col++) {
+                    const tile = document.getElementById(`tile-${row}-${col}`);
+                    if (tile && tile.textContent) {
+                        guess += tile.textContent;
+                    }
                 }
-            }
-            if (guess.length === this.wordLength) {
-                boardState.push(guess);
+                if (guess.length === this.wordLength) {
+                    boardState.push(guess);
+                }
             }
         }
 
@@ -538,6 +556,7 @@ class WoordleGame {
         };
         localStorage.setItem(`woordle-gameState-${this.gameMode}`, JSON.stringify(state));
     }
+
 
     loadGameState() {
         const savedStateJSON = localStorage.getItem(`woordle-gameState-${this.gameMode}`);
@@ -701,7 +720,7 @@ class WoordleGame {
     }
 
     getStats() {
-        const defaultStats = { gamesWon: 0, gamesPlayed: 0, currentStreak: 0, maxStreak: 0 };
+        const defaultStats = { gamesWon: 0, gamesPlayed: 0, currentStreak: 0, maxStreak: 0, lastGamePlayed: null };
         const saved = localStorage.getItem('woordle-stats');
         return saved ? JSON.parse(saved) : defaultStats;
     }
