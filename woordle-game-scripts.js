@@ -491,25 +491,35 @@ class WoordleGame {
     updateKeyboard() {
         document.querySelectorAll('.key').forEach(key => {
             const letter = key.dataset.key;
-            if (this.keyboardState[letter]) {
-                key.classList.remove('correct', 'present', 'absent');
+            const state = this.keyboardState[letter];
+
+            // Always remove previous state classes first
+            key.classList.remove('correct', 'present', 'absent');
+
+            if (state) {
+                // Add the new state class (e.g., 'correct', 'present', 'absent')
+                key.classList.add(state);
                 
-                if (this.keyboardState[letter] === 'absent') {
-                    // Make absent letters disappear from keyboard
-                    key.style.visibility = 'hidden';
+                if (state === 'absent') {
+                    // If a letter is absent, disable it and hide it
                     key.disabled = true;
+                    key.style.visibility = 'hidden';
                 } else {
-                    // Show correct and present letters normally
-                    key.classList.add(this.keyboardState[letter]);
-                    key.style.visibility = 'visible';
+                    // If it's correct or present, make sure it's enabled and visible
                     key.disabled = false;
+                    key.style.visibility = 'visible';
                 }
+            } else {
+                // If a key has no state (hasn't been guessed yet), ensure it's enabled and visible
+                key.disabled = false;
+                key.style.visibility = 'visible';
             }
         });
     }
 
     handleWin() {
         this.gameActive = false;
+        this.isSubmitting = false;
         const attempts = this.currentRow + 1;
         this.updateMessage(`🎉 Excellent! You got it in ${attempts} attempt${attempts === 1 ? '' : 's'}!`, "success");
         this.playSound('win');
@@ -539,6 +549,7 @@ class WoordleGame {
 
     handleLoss() {
         this.gameActive = false;
+        this.isSubmitting = false;
         this.updateMessage(`💀 Game Over! The word was "${this.targetWord}".`, "error");
         this.playSound('lose');
         
