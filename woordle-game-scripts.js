@@ -145,7 +145,7 @@ class WoordleGame {
         localStorage.setItem('woordle-gameMode', mode); // Save selected mode
         this.dailyMode.classList.toggle('active', mode === 'daily');
         this.infiniteMode.classList.toggle('active', mode === 'infinite');
-        this.startNewGame(true); // Force a new game when switching modes
+        this.startNewGame(); // Allows loading a saved game instead of forcing a new one
     }
 
     createGameBoard() {
