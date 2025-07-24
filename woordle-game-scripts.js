@@ -596,6 +596,7 @@ class WoordleGame {
             }
         } else {
              this.updateMessage("Welcome back!", "info");
+             this.hideAllButtons(); // This is the fix
         }
 
         return true;
