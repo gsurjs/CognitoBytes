@@ -925,14 +925,36 @@ class WoordleGame {
         if (!this.gameActive) {
             // Game is finished - disable all keys but keep visual state
             document.querySelectorAll('.key').forEach(key => {
+                key.disabled = false;
+                key.style.opacity = '';
+                key.style.cursor = '';
+                key.style.visibility = 'visible';
+            });
+        }
+
+        // Handle keyboard state based on game status
+        if (!this.gameActive) {
+            // Game is finished - disable all keys but keep visual state
+            document.querySelectorAll('.key').forEach(key => {
                 key.disabled = true;
                 key.style.opacity = '0.6';
                 key.style.cursor = 'not-allowed';
             });
+
         } else {
             // Game is active - ensure keys are properly enabled/disabled
             document.querySelectorAll('.key').forEach(key => {
                 const letter = key.dataset.key;
+
+                // Skip non-letter keys (ENTER, BACKSPACE)
+                if (letter === 'ENTER' || letter === 'BACKSPACE') {
+                    key.disabled = false;
+                    key.style.opacity = '';
+                    key.style.cursor = '';
+                    key.style.visibility = 'visible';
+                    return;
+                }
+
                 
                 // Only disable keys that are marked as absent
                 if (this.keyboardState[letter] === 'absent') {
