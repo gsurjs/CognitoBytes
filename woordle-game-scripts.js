@@ -34,9 +34,16 @@ class WoordleGame {
             // Create game board and keyboard (existing code)
             this.createGameBoard();
             this.createKeyboard();
+
+            // Check if there's a saved game state
+            const savedState = this.loadGameState();
+            if (savedState) {
+                this.restoreGameState(savedState);
+            } else {
+                // Start the first game
+                this.startNewGame();
+            }
             
-            // Start the first game
-            this.startNewGame();
             
         } catch (error) {
             console.error('Failed to load words:', error);
@@ -225,6 +232,8 @@ class WoordleGame {
         this.keyboardState = {};
         this.isSubmitting = false; // Reset submission flag
         this.lastKeyTime = 0; // Reset debounce timer
+
+        this.guesses = [];
         
         // Clear the board
         for (let row = 0; row < this.maxAttempts; row++) {
@@ -877,8 +886,10 @@ class WoordleGame {
         this.gameActive = state.gameActive;
         this.keyboardState = state.keyboardState || {};
         
-        // Set the correct game mode
-        this.setGameMode(state.gameMode);
+        // Just update the UI without calling setGameMode
+        this.gameMode = state.gameMode;
+        this.dailyMode.classList.toggle('active', state.gameMode === 'daily');
+        this.infiniteMode.classList.toggle('active', state.gameMode === 'infinite');
         
         // Restore the board
         this.guesses.forEach((guess, row) => {
