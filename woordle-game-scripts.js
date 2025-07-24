@@ -15,8 +15,7 @@ class WoordleGame {
         // Word lists - will be loaded from files
         this.answerWords = []; // Words that can be answers (from wordle-answers-alphabetical.txt)
         this.validWords = []; // All valid guesses (from valid-wordle-words.txt)
-        this.guesses = [];
-
+        
         // Initialize the game after loading words
         this.initializeGame();
     }
@@ -34,16 +33,9 @@ class WoordleGame {
             // Create game board and keyboard (existing code)
             this.createGameBoard();
             this.createKeyboard();
-
-            // Check if there's a saved game state
-            const savedState = this.loadGameState();
-            if (savedState) {
-                this.restoreGameState(savedState);
-            } else {
-                // Start the first game
-                this.startNewGame();
-            }
             
+            // Start the first game
+            this.startNewGame();
             
         } catch (error) {
             console.error('Failed to load words:', error);
@@ -66,15 +58,7 @@ class WoordleGame {
             this.loadStats();
             this.createGameBoard();
             this.createKeyboard();
-            // Check if there's a saved game state
-            const savedState = this.loadGameState();
-            if (savedState) {
-                this.restoreGameState(savedState);
-            } else {
-                // Start the first game
-                this.startNewGame();
-            }
-
+            this.startNewGame();
         }
     }
 
@@ -150,15 +134,9 @@ class WoordleGame {
     }
 
     setGameMode(mode) {
-        // Save current game state before switching modes
-        this.saveGameState();
-        
         this.gameMode = mode;
         this.dailyMode.classList.toggle('active', mode === 'daily');
         this.infiniteMode.classList.toggle('active', mode === 'infinite');
-        
-        // Clear the saved state for the new mode and start fresh
-        this.clearGameState();
         this.startNewGame();
     }
 
@@ -232,8 +210,6 @@ class WoordleGame {
         this.keyboardState = {};
         this.isSubmitting = false; // Reset submission flag
         this.lastKeyTime = 0; // Reset debounce timer
-
-        this.guesses = [];
         
         // Clear the board
         for (let row = 0; row < this.maxAttempts; row++) {
@@ -249,9 +225,6 @@ class WoordleGame {
             key.className = key.classList.contains('wide') ? 'key wide' : 'key';
             key.style.visibility = 'visible';
             key.disabled = false;
-            //reset keyboard visual state
-            key.style.opacity = '';
-            key.style.cursor = '';
         });
 
         this.hideAllButtons();
@@ -266,8 +239,6 @@ class WoordleGame {
         }
         
         this.updateAttemptsDisplay();
-        // Clear any existing saved state when starting a new game
-        this.clearGameState();
         
         console.log('Target word:', this.targetWord); // For debugging
     }
@@ -384,7 +355,6 @@ class WoordleGame {
         if (this.currentWord.length !== this.wordLength) {
             this.updateMessage("Not enough letters!", "error");
             this.playSound('error');
-            this.shakeRow(this.currentRow);
             return;
         }
         
@@ -410,27 +380,24 @@ class WoordleGame {
         // Check the guess and process results
         this.checkGuess();
         
-        // 3. Set up the consequences of the guess after the animation
-        const animationDuration = this.wordLength * 100 + 200;
-
-        setTimeout(() => {
-            // Check for win
-            if (this.currentWord === this.targetWord) {
+        if (this.currentWord === this.targetWord) {
+            setTimeout(() => {
                 this.handleWin();
-            }
-            // Check for loss
-            else if (this.currentRow >= this.maxAttempts - 1) {
+            }, this.wordLength * 100 + 200);
+        } else if (this.currentRow >= this.maxAttempts - 1) {
+            setTimeout(() => {
                 this.handleLoss();
-            }
-            // Otherwise, move to the next row
-            else {
+            }, this.wordLength * 100 + 200);
+        } else {
+            // Move to next row after animation completes
+            setTimeout(() => {
                 this.currentRow++;
                 this.currentCol = 0;
                 this.currentWord = '';
                 this.updateAttemptsDisplay();
-                this.isSubmitting = false; // <-- CRITICAL: Unlock input for the next turn
-            }
-        }, animationDuration);
+                this.isSubmitting = false; // Reset submitting flag
+            }, this.wordLength * 100 + 100);
+        }
     }
 
     isValidWord(word) {
@@ -458,11 +425,6 @@ class WoordleGame {
                 targetLetters[targetLetters.indexOf(guessLetters[i])] = null;
             }
         }
-        // Store this guess
-        this.guesses.push({
-            word: this.currentWord,
-            results: results
-        });
         
         // Animate tiles and update keyboard state
         for (let i = 0; i < this.wordLength; i++) {
@@ -485,8 +447,6 @@ class WoordleGame {
         // Update keyboard after all tiles are processed
         setTimeout(() => {
             this.updateKeyboard();
-            //save game state after each guess
-            this.saveGameState();
         }, this.wordLength * 100);
         
         this.playSound('flip');
@@ -495,35 +455,25 @@ class WoordleGame {
     updateKeyboard() {
         document.querySelectorAll('.key').forEach(key => {
             const letter = key.dataset.key;
-            const state = this.keyboardState[letter];
-
-            // Always remove previous state classes first
-            key.classList.remove('correct', 'present', 'absent');
-
-            if (state) {
-                // Add the new state class (e.g., 'correct', 'present', 'absent')
-                key.classList.add(state);
+            if (this.keyboardState[letter]) {
+                key.classList.remove('correct', 'present', 'absent');
                 
-                if (state === 'absent') {
-                    // If a letter is absent, disable it and hide it
-                    key.disabled = true;
+                if (this.keyboardState[letter] === 'absent') {
+                    // Make absent letters disappear from keyboard
                     key.style.visibility = 'hidden';
+                    key.disabled = true;
                 } else {
-                    // If it's correct or present, make sure it's enabled and visible
-                    key.disabled = false;
+                    // Show correct and present letters normally
+                    key.classList.add(this.keyboardState[letter]);
                     key.style.visibility = 'visible';
+                    key.disabled = false;
                 }
-            } else {
-                // If a key has no state (hasn't been guessed yet), ensure it's enabled and visible
-                key.disabled = false;
-                key.style.visibility = 'visible';
             }
         });
     }
 
     handleWin() {
         this.gameActive = false;
-        this.isSubmitting = false;
         const attempts = this.currentRow + 1;
         this.updateMessage(`🎉 Excellent! You got it in ${attempts} attempt${attempts === 1 ? '' : 's'}!`, "success");
         this.playSound('win');
@@ -553,7 +503,6 @@ class WoordleGame {
 
     handleLoss() {
         this.gameActive = false;
-        this.isSubmitting = false;
         this.updateMessage(`💀 Game Over! The word was "${this.targetWord}".`, "error");
         this.playSound('lose');
         
@@ -828,191 +777,6 @@ class WoordleGame {
         shareText += '\nPlay at: ' + window.location.href;
         
         return shareText;
-    }
-    // Save/Load game state methods
-    saveGameState() {
-        if (!this.gameActive && this.currentWord === this.targetWord) {
-            // Game is won, save the completed state
-            const state = {
-                gameMode: this.gameMode,
-                targetWord: this.targetWord,
-                guesses: this.guesses,
-                currentRow: this.currentRow,
-                currentCol: this.currentCol,
-                gameActive: this.gameActive,
-                keyboardState: this.keyboardState,
-                completed: true,
-                timestamp: Date.now()
-            };
-            
-            const key = this.gameMode === 'daily' ? 'woordle-daily-state' : 'woordle-infinite-state';
-            localStorage.setItem(key, JSON.stringify(state));
-        } else if (this.gameActive) {
-            // Game is still active, save current progress
-            const state = {
-                gameMode: this.gameMode,
-                targetWord: this.targetWord,
-                guesses: this.guesses,
-                currentRow: this.currentRow,
-                currentCol: this.currentCol,
-                currentWord: this.currentWord,
-                gameActive: this.gameActive,
-                keyboardState: this.keyboardState,
-                completed: false,
-                timestamp: Date.now()
-            };
-            
-            const key = this.gameMode === 'daily' ? 'woordle-daily-state' : 'woordle-infinite-state';
-            localStorage.setItem(key, JSON.stringify(state));
-        }
-    }
-
-    loadGameState() {
-        const key = this.gameMode === 'daily' ? 'woordle-daily-state' : 'woordle-infinite-state';
-        const savedState = localStorage.getItem(key);
-        
-        if (!savedState) return null;
-        
-        try {
-            const state = JSON.parse(savedState);
-            
-            // For daily mode, check if it's still the same day
-            if (this.gameMode === 'daily') {
-                const savedDate = new Date(state.timestamp);
-                const today = new Date();
-                
-                // If it's a different day, clear the saved state
-                if (savedDate.toDateString() !== today.toDateString()) {
-                    this.clearGameState();
-                    return null;
-                }
-            }
-            
-            return state;
-        } catch (error) {
-            console.error('Error loading saved state:', error);
-            return null;
-        }
-    }
-
-    restoreGameState(state) {
-        this.targetWord = state.targetWord;
-        this.guesses = state.guesses || [];
-        this.currentRow = state.currentRow;
-        this.currentCol = state.currentCol;
-        this.currentWord = state.currentWord || '';
-        this.gameActive = state.gameActive;
-
-        //if game completed, make sure gameActive is false
-        if (state.completed || !state.gameActive) {
-            this.gameActive = false;
-        }
-
-        this.keyboardState = state.keyboardState || {};
-        
-        // Just update the UI without calling setGameMode
-        this.gameMode = state.gameMode;
-        this.dailyMode.classList.toggle('active', state.gameMode === 'daily');
-        this.infiniteMode.classList.toggle('active', state.gameMode === 'infinite');
-        
-        // Restore the board
-        this.guesses.forEach((guess, row) => {
-            for (let col = 0; col < this.wordLength; col++) {
-                const tile = document.getElementById(`tile-${row}-${col}`);
-                tile.textContent = guess.word[col];
-                tile.classList.add('filled', guess.results[col]);
-            }
-        });
-        
-        // Restore current word if game is active
-        if (this.gameActive && this.currentWord) {
-            for (let col = 0; col < this.currentCol; col++) {
-                const tile = document.getElementById(`tile-${this.currentRow}-${col}`);
-                tile.textContent = this.currentWord[col];
-                tile.classList.add('filled');
-            }
-        }
-        
-        // Update keyboard - this will handle both active and inactive games properly
-        this.updateKeyboard();
-
-        // Handle keyboard state based on game status
-        if (!this.gameActive) {
-            // Game is finished - disable all keys but keep visual state
-            document.querySelectorAll('.key').forEach(key => {
-                key.disabled = true;
-                key.style.opacity = '0.6';
-                key.style.cursor = 'not-allowed';
-            });
-
-        } else {
-            // Game is active - ensure keys are properly enabled/disabled
-            document.querySelectorAll('.key').forEach(key => {
-                const letter = key.dataset.key;
-
-                // Skip non-letter keys (ENTER, BACKSPACE)
-                if (letter === 'ENTER' || letter === 'BACKSPACE') {
-                    key.disabled = false;
-                    key.style.opacity = '';
-                    key.style.cursor = '';
-                    key.style.visibility = 'visible';
-                    return;
-                }
-
-                
-                // Only disable keys that are marked as absent
-                if (this.keyboardState[letter] === 'absent') {
-                    key.disabled = true;
-                    key.style.visibility = 'hidden';
-                } else {
-                    key.disabled = false;
-                    key.style.opacity = '';
-                    key.style.cursor = '';
-                    key.style.visibility = 'visible';
-                }
-            });
-        }
-        
-        // Update UI
-        this.updateAttemptsDisplay();
-        
-        // Show appropriate message and buttons
-        if (state.completed) {
-            const attempts = this.currentRow + 1;
-            this.updateMessage(`🎉 Excellent! You got it in ${attempts} attempt${attempts === 1 ? '' : 's'}!`, "success");
-            
-            if (this.gameMode === 'daily' && this.shareButton) {
-                this.shareButton.style.display = 'inline-block';
-            }
-            if (this.definitionButton) {
-                this.definitionButton.style.display = 'inline-block';
-            }
-            if (this.newGameButton) {
-                this.newGameButton.style.display = 'inline-block';
-            }
-        } else if (!this.gameActive) {
-            // Game was lost
-            this.updateMessage(`💀 Game Over! The word was "${this.targetWord}".`, "error");
-            
-            if (this.definitionButton) {
-                this.definitionButton.style.display = 'inline-block';
-            }
-            if (this.newGameButton) {
-                this.newGameButton.style.display = 'inline-block';
-            }
-        } else {
-            // Game is still active
-            if (this.gameMode === 'daily'){
-                this.updateMessage("Continue solving today's daily word!", "info");
-            } else {
-                this.updateMessage("Continue your game!", "info");
-            }
-        }
-    }
-
-    clearGameState() {
-        const key = this.gameMode === 'daily' ? 'woordle-daily-state' : 'woordle-infinite-state';
-        localStorage.removeItem(key);
     }
 }
 
