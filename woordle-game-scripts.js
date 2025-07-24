@@ -15,7 +15,8 @@ class WoordleGame {
         // Word lists - will be loaded from files
         this.answerWords = []; // Words that can be answers (from wordle-answers-alphabetical.txt)
         this.validWords = []; // All valid guesses (from valid-wordle-words.txt)
-        
+        this.guesses = [];
+
         // Initialize the game after loading words
         this.initializeGame();
     }
@@ -58,7 +59,15 @@ class WoordleGame {
             this.loadStats();
             this.createGameBoard();
             this.createKeyboard();
-            this.startNewGame();
+            // Check if there's a saved game state
+            const savedState = this.loadGameState();
+            if (savedState) {
+                this.restoreGameState(savedState);
+            } else {
+                // Start the first game
+                this.startNewGame();
+            }
+
         }
     }
 
@@ -134,9 +143,15 @@ class WoordleGame {
     }
 
     setGameMode(mode) {
+        // Save current game state before switching modes
+        this.saveGameState();
+        
         this.gameMode = mode;
         this.dailyMode.classList.toggle('active', mode === 'daily');
         this.infiniteMode.classList.toggle('active', mode === 'infinite');
+        
+        // Clear the saved state for the new mode and start fresh
+        this.clearGameState();
         this.startNewGame();
     }
 
@@ -239,6 +254,8 @@ class WoordleGame {
         }
         
         this.updateAttemptsDisplay();
+        // Clear any existing saved state when starting a new game
+        this.clearGameState();
         
         console.log('Target word:', this.targetWord); // For debugging
     }
@@ -425,6 +442,11 @@ class WoordleGame {
                 targetLetters[targetLetters.indexOf(guessLetters[i])] = null;
             }
         }
+        // Store this guess
+        this.guesses.push({
+            word: this.currentWord,
+            results: results
+        });
         
         // Animate tiles and update keyboard state
         for (let i = 0; i < this.wordLength; i++) {
@@ -447,6 +469,8 @@ class WoordleGame {
         // Update keyboard after all tiles are processed
         setTimeout(() => {
             this.updateKeyboard();
+            //save game state after each guess
+            this.saveGameState();
         }, this.wordLength * 100);
         
         this.playSound('flip');
@@ -777,6 +801,142 @@ class WoordleGame {
         shareText += '\nPlay at: ' + window.location.href;
         
         return shareText;
+    }
+    // Save/Load game state methods
+    saveGameState() {
+        if (!this.gameActive && this.currentWord === this.targetWord) {
+            // Game is won, save the completed state
+            const state = {
+                gameMode: this.gameMode,
+                targetWord: this.targetWord,
+                guesses: this.guesses,
+                currentRow: this.currentRow,
+                currentCol: this.currentCol,
+                gameActive: this.gameActive,
+                keyboardState: this.keyboardState,
+                completed: true,
+                timestamp: Date.now()
+            };
+            
+            const key = this.gameMode === 'daily' ? 'woordle-daily-state' : 'woordle-infinite-state';
+            localStorage.setItem(key, JSON.stringify(state));
+        } else if (this.gameActive) {
+            // Game is still active, save current progress
+            const state = {
+                gameMode: this.gameMode,
+                targetWord: this.targetWord,
+                guesses: this.guesses,
+                currentRow: this.currentRow,
+                currentCol: this.currentCol,
+                currentWord: this.currentWord,
+                gameActive: this.gameActive,
+                keyboardState: this.keyboardState,
+                completed: false,
+                timestamp: Date.now()
+            };
+            
+            const key = this.gameMode === 'daily' ? 'woordle-daily-state' : 'woordle-infinite-state';
+            localStorage.setItem(key, JSON.stringify(state));
+        }
+    }
+
+    loadGameState() {
+        const key = this.gameMode === 'daily' ? 'woordle-daily-state' : 'woordle-infinite-state';
+        const savedState = localStorage.getItem(key);
+        
+        if (!savedState) return null;
+        
+        try {
+            const state = JSON.parse(savedState);
+            
+            // For daily mode, check if it's still the same day
+            if (this.gameMode === 'daily') {
+                const savedDate = new Date(state.timestamp);
+                const today = new Date();
+                
+                // If it's a different day, clear the saved state
+                if (savedDate.toDateString() !== today.toDateString()) {
+                    this.clearGameState();
+                    return null;
+                }
+            }
+            
+            return state;
+        } catch (error) {
+            console.error('Error loading saved state:', error);
+            return null;
+        }
+    }
+
+    restoreGameState(state) {
+        this.targetWord = state.targetWord;
+        this.guesses = state.guesses || [];
+        this.currentRow = state.currentRow;
+        this.currentCol = state.currentCol;
+        this.currentWord = state.currentWord || '';
+        this.gameActive = state.gameActive;
+        this.keyboardState = state.keyboardState || {};
+        
+        // Set the correct game mode
+        this.setGameMode(state.gameMode);
+        
+        // Restore the board
+        this.guesses.forEach((guess, row) => {
+            for (let col = 0; col < this.wordLength; col++) {
+                const tile = document.getElementById(`tile-${row}-${col}`);
+                tile.textContent = guess.word[col];
+                tile.classList.add('filled', guess.results[col]);
+            }
+        });
+        
+        // Restore current word if game is active
+        if (this.gameActive && this.currentWord) {
+            for (let col = 0; col < this.currentCol; col++) {
+                const tile = document.getElementById(`tile-${this.currentRow}-${col}`);
+                tile.textContent = this.currentWord[col];
+                tile.classList.add('filled');
+            }
+        }
+        
+        // Update keyboard
+        this.updateKeyboard();
+        
+        // Update UI
+        this.updateAttemptsDisplay();
+        
+        // Show appropriate message and buttons
+        if (state.completed) {
+            const attempts = this.currentRow + 1;
+            this.updateMessage(`🎉 Excellent! You got it in ${attempts} attempt${attempts === 1 ? '' : 's'}!`, "success");
+            
+            if (this.gameMode === 'daily' && this.shareButton) {
+                this.shareButton.style.display = 'inline-block';
+            }
+            if (this.definitionButton) {
+                this.definitionButton.style.display = 'inline-block';
+            }
+            if (this.newGameButton) {
+                this.newGameButton.style.display = 'inline-block';
+            }
+        } else if (!this.gameActive) {
+            // Game was lost
+            this.updateMessage(`💀 Game Over! The word was "${this.targetWord}".`, "error");
+            
+            if (this.definitionButton) {
+                this.definitionButton.style.display = 'inline-block';
+            }
+            if (this.newGameButton) {
+                this.newGameButton.style.display = 'inline-block';
+            }
+        } else {
+            // Game is still active
+            this.updateMessage("Continue your game!", "info");
+        }
+    }
+
+    clearGameState() {
+        const key = this.gameMode === 'daily' ? 'woordle-daily-state' : 'woordle-infinite-state';
+        localStorage.removeItem(key);
     }
 }
 
