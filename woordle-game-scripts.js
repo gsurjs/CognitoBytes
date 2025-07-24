@@ -925,17 +925,6 @@ class WoordleGame {
         if (!this.gameActive) {
             // Game is finished - disable all keys but keep visual state
             document.querySelectorAll('.key').forEach(key => {
-                key.disabled = false;
-                key.style.opacity = '';
-                key.style.cursor = '';
-                key.style.visibility = 'visible';
-            });
-        }
-
-        // Handle keyboard state based on game status
-        if (!this.gameActive) {
-            // Game is finished - disable all keys but keep visual state
-            document.querySelectorAll('.key').forEach(key => {
                 key.disabled = true;
                 key.style.opacity = '0.6';
                 key.style.cursor = 'not-allowed';
