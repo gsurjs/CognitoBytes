@@ -232,7 +232,7 @@ class WoordleGame {
         // Select target word from answer words only
         if (this.gameMode === 'daily') {
             this.targetWord = this.getDailyWord();
-            this.updateMessage("Solve today's daily Woordle!", "info");
+            this.updateMessage("Solve today's daily Word!", "info");
         } else {
             this.targetWord = this.getRandomWord();
             this.updateMessage("Guess the 5-letter word!", "info");
