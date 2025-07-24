@@ -884,6 +884,12 @@ class WoordleGame {
         this.currentCol = state.currentCol;
         this.currentWord = state.currentWord || '';
         this.gameActive = state.gameActive;
+
+        //if game completed, make sure gameActive is false
+        if (state.completed || !state.gameActive) {
+            this.gameActive = false;
+        }
+
         this.keyboardState = state.keyboardState || {};
         
         // Just update the UI without calling setGameMode
@@ -911,6 +917,15 @@ class WoordleGame {
         
         // Update keyboard
         this.updateKeyboard();
+
+        //if game isn't active, disable keyboard
+        if (!this.gameActive) {
+            document.querySelectorAll('.key').forEach(key => {
+                key.disabled = true;
+                key.style.opacity = '0.5';
+                key.style.cursor = 'not-allowed';
+            })
+        }
         
         // Update UI
         this.updateAttemptsDisplay();
