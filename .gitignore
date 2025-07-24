@@ -1,0 +1,251 @@
+# ===========================
+# Sensitive & Private Data
+# ===========================
+
+# Analytics configuration files
+analytics-config.js
+analytics-config-local.js
+analytics-private.js
+*-analytics-key.js
+*.analytics.config.js
+
+# Environment variables
+.env
+.env.*
+.env.local
+.env.development
+.env.production
+
+# API keys and secrets
+api-keys.js
+secrets.js
+config/private/*
+*-private.js
+*-secret.js
+
+# Google Analytics specific
+ga-config.js
+gtag-config.js
+measurement-id.txt
+
+# ===========================
+# Operating System Files
+# ===========================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ===========================
+# Development & IDE Files
+# ===========================
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+*.code-workspace
+.history/
+*.vsix
+
+# JetBrains IDEs (WebStorm, IntelliJ)
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.idea_modules/
+
+# Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+sftp-config.json
+sftp-config-alt*.json
+Package Control.last-run
+Package Control.ca-list
+Package Control.ca-bundle
+Package Control.system-ca-bundle
+Package Control.cache/
+Package Control.ca-certs/
+Package Control.merged-ca-bundle
+Package Control.user-ca-bundle
+oscrypto-ca-bundle.crt
+bh_unicode_properties.cache
+GitHub.sublime-settings
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+Sessionx.vim
+.netrwhist
+tags
+[._]*.un~
+
+# ===========================
+# Build & Dependencies
+# ===========================
+
+# Node.js (if you add any npm packages later)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+.npm
+.yarn-integrity
+
+# Build outputs
+dist/
+build/
+out/
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.vuepress/dist/
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port
+.vscode-test
+
+# ===========================
+# Testing & Coverage
+# ===========================
+
+# Test coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Testing
+.grunt/
+bower_components/
+jspm_packages/
+web_modules/
+*.pid
+*.seed
+*.pid.lock
+
+# ===========================
+# Logs & Temporary Files
+# ===========================
+
+# Logs
+logs/
+*.log
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+pids/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*~
+
+# ===========================
+# Project Specific
+# ===========================
+
+# Local development files
+*.local.js
+*.local.css
+*.local.html
+dev-test/
+scratch/
+playground/
+
+# User-specific game data (if stored locally)
+user-data/
+save-games/
+local-storage-backup/
+
+# Analytics data exports
+analytics-reports/
+*.csv
+analytics-export/
+
+# Backup files
+backup/
+*.backup
+*.old
+
+# ===========================
+# Security & SSL
+# ===========================
+
+# SSL Certificates
+*.pem
+*.key
+*.crt
+*.csr
+*.der
+*.p7b
+*.p12
+*.pfx
+
+# ===========================
+# Optional: Files to Consider
+# ===========================
+
+# If you want to keep these private:
+# word-lists/*-private.txt
+# custom-words.txt
+# test-data/
+
+# ===========================
+# DO NOT IGNORE
+# ===========================
+
+# Keep these files in the repository:
+# !.gitignore
+# !README.md
+# !LICENSE
+# !package.json (if you have one)
+# !.github/workflows/* (if using GitHub Actions)
