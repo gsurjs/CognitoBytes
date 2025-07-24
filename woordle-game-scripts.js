@@ -249,6 +249,9 @@ class WoordleGame {
             key.className = key.classList.contains('wide') ? 'key wide' : 'key';
             key.style.visibility = 'visible';
             key.disabled = false;
+            //reset keyboard visual state
+            key.style.opacity = '';
+            key.style.cursor = '';
         });
 
         this.hideAllButtons();
@@ -915,16 +918,33 @@ class WoordleGame {
             }
         }
         
-        // Update keyboard
+        // Update keyboard - this will handle both active and inactive games properly
         this.updateKeyboard();
 
-        //if game isn't active, disable keyboard
+        // Handle keyboard state based on game status
         if (!this.gameActive) {
+            // Game is finished - disable all keys but keep visual state
             document.querySelectorAll('.key').forEach(key => {
                 key.disabled = true;
-                key.style.opacity = '0.5';
+                key.style.opacity = '0.6';
                 key.style.cursor = 'not-allowed';
-            })
+            });
+        } else {
+            // Game is active - ensure keys are properly enabled/disabled
+            document.querySelectorAll('.key').forEach(key => {
+                const letter = key.dataset.key;
+                
+                // Only disable keys that are marked as absent
+                if (this.keyboardState[letter] === 'absent') {
+                    key.disabled = true;
+                    key.style.visibility = 'hidden';
+                } else {
+                    key.disabled = false;
+                    key.style.opacity = '';
+                    key.style.cursor = '';
+                    key.style.visibility = 'visible';
+                }
+            });
         }
         
         // Update UI
@@ -956,7 +976,11 @@ class WoordleGame {
             }
         } else {
             // Game is still active
-            this.updateMessage("Continue your game!", "info");
+            if (this.gameMode === 'daily'){
+                this.updateMessage("Continue solving today's daily word!", "info");
+            } else {
+                this.updateMessage("Continue your game!", "info");
+            }
         }
     }
 
