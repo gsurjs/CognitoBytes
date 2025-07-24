@@ -384,6 +384,7 @@ class WoordleGame {
         if (this.currentWord.length !== this.wordLength) {
             this.updateMessage("Not enough letters!", "error");
             this.playSound('error');
+            this.shakeRow(this.currentRow);
             return;
         }
         
@@ -409,24 +410,27 @@ class WoordleGame {
         // Check the guess and process results
         this.checkGuess();
         
-        if (this.currentWord === this.targetWord) {
-            setTimeout(() => {
+        // 3. Set up the consequences of the guess after the animation
+        const animationDuration = this.wordLength * 100 + 200;
+
+        setTimeout(() => {
+            // Check for win
+            if (this.currentWord === this.targetWord) {
                 this.handleWin();
-            }, this.wordLength * 100 + 200);
-        } else if (this.currentRow >= this.maxAttempts - 1) {
-            setTimeout(() => {
+            }
+            // Check for loss
+            else if (this.currentRow >= this.maxAttempts - 1) {
                 this.handleLoss();
-            }, this.wordLength * 100 + 200);
-        } else {
-            // Move to next row after animation completes
-            setTimeout(() => {
+            }
+            // Otherwise, move to the next row
+            else {
                 this.currentRow++;
                 this.currentCol = 0;
                 this.currentWord = '';
                 this.updateAttemptsDisplay();
-                this.isSubmitting = false; // Reset submitting flag
-            }, this.wordLength * 100 + 100);
-        }
+                this.isSubmitting = false; // <-- CRITICAL: Unlock input for the next turn
+            }
+        }, animationDuration);
     }
 
     isValidWord(word) {
