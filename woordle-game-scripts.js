@@ -512,7 +512,7 @@ class WoordleGame {
             if (this.definitionButton) {
                 this.definitionButton.style.display = 'inline-block';
             }
-            if (this.newGameButton) {
+            if (this.newGameButton && this.gameMode !== 'daily') {
                 this.newGameButton.style.display = 'inline-block';
             }
         }, 2000);
@@ -537,7 +537,7 @@ class WoordleGame {
             if (this.definitionButton) {
                 this.definitionButton.style.display = 'inline-block';
             }
-            if (this.newGameButton) {
+            if (this.newGameButton && this.gameMode !== 'daily') {
                 this.newGameButton.style.display = 'inline-block';
             }
         }, 2000);
