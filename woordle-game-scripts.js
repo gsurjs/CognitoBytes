@@ -796,22 +796,49 @@ class WoordleGame {
     }
 
     showShareText(text) {
+        //prevent main page from scrolling while the modal is open
+        document.body.style.overflow = 'hidden';
+
         const overlay = document.createElement('div');
-        overlay.style.cssText = `...`; // styling omitted for brevity
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); display: flex;
+            align-items: center; justify-content: center; z-index: 1000;
+        `;
         
         const modal = document.createElement('div');
-        modal.style.cssText = `...`; // styling omitted for brevity
-        
-        modal.innerHTML = `...`; // content omitted for brevity
-        
+        modal.style.cssText = `
+            background: #2c2c2c; padding: 20px; border-radius: 8px;
+            width: 90%; max-width: 400px; text-align: center;
+            color: #fff;
+        `;
+
+        // Function to close the modal and restore page styles
+        const closeModal = () => {
+            document.body.removeChild(overlay);
+            // This is the critical step that fixes the bug
+            document.body.style.overflow = '';
+        };
+
+        modal.innerHTML = `
+            <h3 style="margin-top:0;">Copy to Clipboard</h3>
+            <textarea readonly style="width: 100%; height: 120px; background: #1e1e1e; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 10px; box-sizing: border-box; resize: none;">${text}</textarea>
+            <button class="modal-close-button" style="width: 100%; padding: 10px; margin-top: 15px; background: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer;">Close</button>
+        `;
+
+        // Add event listener to the new close button
+        modal.querySelector('.modal-close-button').addEventListener('click', closeModal);
+
+        // Allow closing by clicking the dark background
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                closeModal();
+            }
+        });
+                
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
         
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                overlay.remove();
-            }
-        });
     }
 
     generateShareText() {
