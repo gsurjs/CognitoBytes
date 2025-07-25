@@ -242,6 +242,8 @@ class WoordleGame {
             this.endGameTimeoutId = null;
         }
 
+        this.hideAllButtons();
+
         // Make sure words are loaded before starting
         if (this.answerWords.length === 0) {
             console.error('Cannot start game: answer word list not loaded');
@@ -269,8 +271,6 @@ class WoordleGame {
         
         // Reset keyboard visuals
         this.resetKeyboard();
-
-        this.hideAllButtons();
 
         // Select target word from answer words only
         if (this.gameMode === 'daily') {
