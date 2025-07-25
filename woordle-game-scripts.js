@@ -11,6 +11,7 @@ class WoordleGame {
         this.keyboardState = {};
         this.isSubmitting = false; // Prevent multiple rapid submissions
         this.lastKeyTime = 0; // For debouncing
+        this.showButtonsTimeoutId = null;
         
         // Word lists - will be loaded from files
         this.answerWords = []; // Words that can be answers (from wordle-answers-alphabetical.txt)
@@ -209,6 +210,11 @@ class WoordleGame {
     }
     
     startNewGame(forceNew = false) {
+        if (this.showButtonsTimeoutId) {
+            clearTimeout(this.showButtonsTimeoutId);
+            this.showButtonsTimeoutId = null;
+        }
+
         // Make sure words are loaded before starting
         if (this.answerWords.length === 0) {
             console.error('Cannot start game: answer word list not loaded');
@@ -499,7 +505,7 @@ class WoordleGame {
         }
         this.updateStatsDisplay();
         
-        setTimeout(() => {
+        this.showButtonsTimeoutId = setTimeout(() => {
             if (this.gameMode === 'daily' && this.shareButton) {
                 this.shareButton.style.display = 'inline-block';
             }
@@ -527,7 +533,7 @@ class WoordleGame {
         }
         this.updateStatsDisplay();
         
-        setTimeout(() => {
+        this.showButtonsTimeoutId = setTimeout(() => {
             if (this.definitionButton) {
                 this.definitionButton.style.display = 'inline-block';
             }
