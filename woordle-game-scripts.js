@@ -167,6 +167,8 @@ class WoordleGame {
         this.dailyMode.classList.toggle('active', mode === 'daily');
         this.infiniteMode.classList.toggle('active', mode === 'infinite');
 
+        this.updateStatsDisplay();
+
         // Explicitly reset the keyboard's visual state before loading/starting the new game
         this.resetKeyboard();
 
@@ -766,19 +768,29 @@ class WoordleGame {
     }
 
     getStats() {
-        const defaultStats = { gamesWon: 0, gamesPlayed: 0, currentStreak: 0, maxStreak: 0, lastGamePlayed: null, guessDistribution: [0, 0, 0, 0, 0, 0]};
-        const saved = localStorage.getItem('woordle-stats-v2');
+        const key = `woordle-stats-v2-${this.gameMode}`; // Create a dynamic key
+        const defaultStats = {
+            gamesWon: 0,
+            gamesPlayed: 0,
+            currentStreak: 0,
+            maxStreak: 0,
+            lastGamePlayed: null,
+            guessDistribution: [0, 0, 0, 0, 0, 0]
+        };
+
+        const saved = localStorage.getItem(key); 
         const stats = saved ? JSON.parse(saved) : defaultStats;
+
         if (!stats.guessDistribution) {
             stats.guessDistribution = defaultStats.guessDistribution;
         }
 
         return stats;
-
     }
 
     saveStats(stats) {
-        localStorage.setItem('woordle-stats-v2', JSON.stringify(stats));
+        const key = `woordle-stats-v2-${this.gameMode}`; // Create the same dynamic key
+        localStorage.setItem(key, JSON.stringify(stats));
     }
 
     loadStats() {
