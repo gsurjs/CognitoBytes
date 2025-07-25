@@ -264,9 +264,10 @@ class WoordleGame {
 
     getDailyWord() {
         const today = new Date();
-        const dateString = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+        const dateString = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
         const seed = this.hashCode(dateString);
-        const index = Math.abs(seed) % this.answerWords.length;
+        const pseudoRandomValue = this.seededRandom(seed);
+        const index = Math.floor(pseudoRandomValue * this.answerWords.length);
         return this.answerWords[index];
     }
 
@@ -282,6 +283,14 @@ class WoordleGame {
             hash = hash & hash; // Convert to 32bit integer
         }
         return hash;
+    }
+
+    seededRandom(seed) {
+        // A simple but effective pseudo-random number generator (mulberry32)
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
     }
 
     handleKeyPress(e) {
