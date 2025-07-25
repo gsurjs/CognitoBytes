@@ -545,7 +545,7 @@ class WoordleGame {
             if (this.gameMode !== 'daily' && this.newGameButton) {
                 this.newGameButton.style.display = 'inline-block';
             }
-        }, 1500);
+        }, 500);
     }
 
     handleLoss() {
@@ -570,7 +570,7 @@ class WoordleGame {
             if (this.gameMode !== 'daily' && this.newGameButton) {
                 this.newGameButton.style.display = 'inline-block';
             }
-        }, 1500);
+        }, 500);
     }
     
     saveGameState() {
