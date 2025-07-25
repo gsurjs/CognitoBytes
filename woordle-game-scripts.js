@@ -11,6 +11,7 @@ class WoordleGame {
         this.keyboardState = {};
         this.isSubmitting = false; // Prevent multiple rapid submissions
         this.lastKeyTime = 0; // For debouncing
+        this.endGameTimeoutId = null;
         
         // Word lists - will be loaded from files
         this.answerWords = []; // Words that can be answers (from wordle-answers-alphabetical.txt)
@@ -235,6 +236,11 @@ class WoordleGame {
     }
     
     startNewGame(forceNew = false) {
+
+        if (this.endGameTimeoutId) {
+            clearTimeout(this.endGameTimeoutId);
+            this.endGameTimeoutId = null;
+        }
 
         // Make sure words are loaded before starting
         if (this.answerWords.length === 0) {
@@ -529,27 +535,14 @@ class WoordleGame {
 
 
         
-        // Capture the context of the game that was just won
-        const winningWord = this.targetWord;
-        const originalGameMode = this.gameMode;
-
-        setTimeout(() => {
-            // Before showing buttons, check if the game context has changed
-            if (this.targetWord !== winningWord) {
-                return; // A new game has started, so do nothing.
-            }
-            
-            // Show buttons based on the mode of the COMPLETED game
+        // Store the timer ID when it's created
+        this.endGameTimeoutId = setTimeout(() => {
             if (this.statsButton) this.statsButton.style.display = 'inline-block';
-            
-            // Correctly show share button only for daily mode wins
-            if (originalGameMode === 'daily' && this.shareButton) {
+            if (this.gameMode === 'daily' && this.shareButton) {
                 this.shareButton.style.display = 'inline-block';
             }
-
             if (this.definitionButton) this.definitionButton.style.display = 'inline-block';
-            
-            if (originalGameMode !== 'daily' && this.newGameButton) {
+            if (this.gameMode !== 'daily' && this.newGameButton) {
                 this.newGameButton.style.display = 'inline-block';
             }
         }, 1500);
@@ -570,20 +563,11 @@ class WoordleGame {
         }
         this.updateStatsDisplay();
         
-        // Capture the context of the game that was just lost
-        const losingWord = this.targetWord;
-        const originalGameMode = this.gameMode;
-
-        setTimeout(() => {
-            // Before showing buttons, check if the game context has changed
-            if (this.targetWord !== losingWord) {
-                return; // A new game has started, so do nothing.
-            }
-
-            // Show buttons based on the mode of the COMPLETED game
+        // Store the timer ID when it's created
+        this.endGameTimeoutId = setTimeout(() => {
             if (this.statsButton) this.statsButton.style.display = 'inline-block';
             if (this.definitionButton) this.definitionButton.style.display = 'inline-block';
-            if (originalGameMode !== 'daily' && this.newGameButton) {
+            if (this.gameMode !== 'daily' && this.newGameButton) {
                 this.newGameButton.style.display = 'inline-block';
             }
         }, 1500);
