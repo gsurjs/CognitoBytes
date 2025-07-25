@@ -768,7 +768,7 @@ class WoordleGame {
     getStats() {
         const defaultStats = { gamesWon: 0, gamesPlayed: 0, currentStreak: 0, maxStreak: 0, lastGamePlayed: null, guessDistribution: [0, 0, 0, 0, 0, 0]};
         const saved = localStorage.getItem('woordle-stats');
-        return saved ? JSON.parse(saved) : defaultStats;
+        const stats = saved ? JSON.parse(saved) : defaultStats;
         if (!stats.guessDistribution) {
             stats.guessDistribution = defaultStats.guessDistribution;
         }
