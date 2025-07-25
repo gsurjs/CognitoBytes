@@ -599,12 +599,12 @@ class WoordleGame {
             gameActive: this.gameActive,
             keyboardState: this.keyboardState
         };
-        localStorage.setItem(`woordle-gameState-${this.gameMode}`, JSON.stringify(state));
+        localStorage.setItem(`woordle-gameState-${this.gameMode}-v2`, JSON.stringify(state));
     }
 
 
     loadGameState() {
-        const savedStateJSON = localStorage.getItem(`woordle-gameState-${this.gameMode}`);
+        const savedStateJSON = localStorage.getItem(`woordle-gameState-${this.gameMode}-v2`);
         if (!savedStateJSON) return false;
 
         const savedState = JSON.parse(savedStateJSON);
@@ -674,7 +674,7 @@ class WoordleGame {
     }
 
     clearGameState() {
-        localStorage.removeItem(`woordle-gameState-${this.gameMode}`);
+        localStorage.removeItem(`woordle-gameState-${this.gameMode}-v2`);
     }
 
 
@@ -767,7 +767,7 @@ class WoordleGame {
 
     getStats() {
         const defaultStats = { gamesWon: 0, gamesPlayed: 0, currentStreak: 0, maxStreak: 0, lastGamePlayed: null, guessDistribution: [0, 0, 0, 0, 0, 0]};
-        const saved = localStorage.getItem('woordle-stats');
+        const saved = localStorage.getItem('woordle-stats-v2');
         const stats = saved ? JSON.parse(saved) : defaultStats;
         if (!stats.guessDistribution) {
             stats.guessDistribution = defaultStats.guessDistribution;
@@ -778,7 +778,7 @@ class WoordleGame {
     }
 
     saveStats(stats) {
-        localStorage.setItem('woordle-stats', JSON.stringify(stats));
+        localStorage.setItem('woordle-stats-v2', JSON.stringify(stats));
     }
 
     loadStats() {
