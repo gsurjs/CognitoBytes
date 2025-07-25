@@ -122,6 +122,7 @@ class WoordleGame {
         this.newGameButton = document.getElementById('newGameButton');
         this.shareButton = document.getElementById('shareButton');
         this.definitionButton = document.getElementById('definitionButton');
+        this.statsButton = document.getElementById('statsButton');
     }
 
     setupEventListeners() {
@@ -135,6 +136,25 @@ class WoordleGame {
     
     if (this.definitionButton) {
         this.definitionButton.addEventListener('click', () => this.searchDefinition());
+    }
+
+    if (this.statsButton) {
+        this.statsButton.addEventListener('click', () => this.showStatsModal());
+    }
+
+    const statsModal = document.getElementById('statsModal');
+    if (statsModal) {
+        const closeModalButton = statsModal.querySelector('.modal-close-button');
+        const closeModal = () => statsModal.style.display = 'none';
+
+        if (closeModalButton) {
+            closeModalButton.addEventListener('click', closeModal);
+        }
+        statsModal.addEventListener('click', (e) => {
+            if (e.target === statsModal) {
+                closeModal();
+            }
+        });
     }
         
         document.addEventListener('keydown', (e) => this.handleKeyPress(e));
@@ -198,6 +218,10 @@ class WoordleGame {
     }
 
     hideAllButtons() {
+        if (this.statsButton) { 
+            this.statsButton.style.display = 'none';
+        }
+
         if (this.shareButton) {
             this.shareButton.style.display = 'none';
         }
@@ -500,22 +524,24 @@ class WoordleGame {
             stats.gamesPlayed++;
             stats.currentStreak++;
             stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
+            stats.guessDistribution[this.currentRow]++ // record winning guess
             stats.lastGamePlayed = this.targetWord; // Mark this game as recorded
             this.saveStats(stats);
         }
         this.updateStatsDisplay();
+
+
         
         this.showButtonsTimeoutId = setTimeout(() => {
-            if (this.gameMode === 'daily' && this.shareButton) {
+            if (this.statsButton) this.statsButton.style.display = 'inline-block';
+
+            if (this.gameMode === 'daily' && this.shareButton) this.shareButton.style.display = 'inline-block';
                 this.shareButton.style.display = 'inline-block';
-            }
-            if (this.definitionButton) {
-                this.definitionButton.style.display = 'inline-block';
-            }
-            if (this.newGameButton && this.gameMode !== 'daily') {
-                this.newGameButton.style.display = 'inline-block';
-            }
-        }, 2000);
+
+            if (this.definitionButton) this.definitionButton.style.display = 'inline-block';
+        
+            if (this.newGameButton && this.gameMode !== 'daily') this.newGameButton.style.display = 'inline-block';
+        }, 1500);
     }
 
     handleLoss() {
@@ -534,13 +560,13 @@ class WoordleGame {
         this.updateStatsDisplay();
         
         this.showButtonsTimeoutId = setTimeout(() => {
-            if (this.definitionButton) {
-                this.definitionButton.style.display = 'inline-block';
-            }
-            if (this.newGameButton && this.gameMode !== 'daily') {
-                this.newGameButton.style.display = 'inline-block';
-            }
-        }, 2000);
+            if (this.statsButton) this.statsButton.style.display = 'inline-block';
+
+            if (this.definitionButton) this.definitionButton.style.display = 'inline-block';
+
+            if (this.newGameButton && this.gameMode !== 'daily') this.newGameButton.style.display = 'inline-block';
+
+        }, 1500);
     }
     
     saveGameState() {
@@ -740,9 +766,15 @@ class WoordleGame {
     }
 
     getStats() {
-        const defaultStats = { gamesWon: 0, gamesPlayed: 0, currentStreak: 0, maxStreak: 0, lastGamePlayed: null };
+        const defaultStats = { gamesWon: 0, gamesPlayed: 0, currentStreak: 0, maxStreak: 0, lastGamePlayed: null, guessDistribution: [0, 0, 0, 0, 0, 0]};
         const saved = localStorage.getItem('woordle-stats');
         return saved ? JSON.parse(saved) : defaultStats;
+        if (!stats.guessDistribution) {
+            stats.guessDistribution = defaultStats.guessDistribution;
+        }
+
+        return stats;
+
     }
 
     saveStats(stats) {
@@ -759,6 +791,49 @@ class WoordleGame {
         this.gamesPlayed.textContent = stats.gamesPlayed;
         this.winStreak.textContent = stats.currentStreak;
     }
+
+     showStatsModal(winningRow = -1) { // winningRow is 1-based index
+        const stats = this.getStats();
+        const modal = document.getElementById('statsModal');
+        if (!modal) return;
+
+        // Populate Stats
+        document.getElementById('statsPlayed').textContent = stats.gamesPlayed;
+        const winRate = stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
+        document.getElementById('statsWinRate').textContent = winRate;
+        document.getElementById('statsCurrentStreak').textContent = stats.currentStreak;
+        document.getElementById('statsMaxStreak').textContent = stats.maxStreak;
+
+        // Populate Guess Distribution
+        const distributionContainer = document.getElementById('guessDistribution');
+        distributionContainer.innerHTML = ''; // Clear previous bars
+        const totalWins = stats.guessDistribution.reduce((a, b) => a + b, 0);
+
+        stats.guessDistribution.forEach((count, index) => {
+            const row = document.createElement('div');
+            row.className = 'dist-item';
+
+            const bar = document.createElement('div');
+            bar.className = 'dist-bar';
+            bar.textContent = count;
+
+            if ((index + 1) === winningRow) {
+                bar.classList.add('highlight');
+            }
+
+            const width = totalWins > 0 ? (count / Math.max(...stats.guessDistribution)) * 100 : 0;
+            bar.style.width = `${Math.max(width, 5)}%`; // Use a minimum width for visibility
+
+            const label = document.createElement('span');
+            label.textContent = index + 1;
+
+            row.appendChild(label);
+            row.appendChild(bar);
+            distributionContainer.appendChild(row);
+        });
+
+        modal.style.display = 'flex';
+    }   
 
     searchDefinition() {
         const searchQuery = `${this.targetWord.toLowerCase()} definition meaning`;
