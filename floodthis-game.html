@@ -14,12 +14,25 @@
             <div class="navigation">
                 <a href="index.html" class="nav-button">🕹️ Back to Games</a>
             </div>
-            
-            <div class="difficulty-selector">
-                <button class="difficulty-button active" id="easyMode">🟢 Easy</button>
-                <button class="difficulty-button" id="mediumMode">🟡 Medium</button>
-                <button class="difficulty-button" id="hardMode">🔴 Hard</button>
-                <button class="new-game-button" id="newGameButton">NEW GAME</button>
+
+            <div class="game-mode-selector">
+                <button class="mode-button" id="dailyMode">📅 Daily</button>
+                <button class="mode-button active" id="classicMode">♾️ Classic</button>
+            </div>
+
+            <div id="controlsContainer">
+                <div class="difficulty-selector">
+                        <button class="difficulty-button active" id="easyMode">🟢 Easy</button>
+                        <button class="difficulty-button" id="mediumMode">🟡 Medium</button>
+                        <button class="difficulty-button" id="hardMode">🔴 Hard</button>
+                        <button class="new-game-button" id="newGameButton">NEW GAME</button>
+                </div>
+
+                <div class="end-game-buttons" id="endGameButtons" style="display: none;">
+                    <button id="shareDailyButton" class="control-button share-button">💬 Share</button>
+                    <button id="statsDailyButton" class="control-button stats-button">📊 Stats</button>
+                </div>
+
             </div>
         </div>
 
@@ -27,6 +40,21 @@
             <div class="game-info">
                 <div class="moves-left" id="movesLeft">20 moves left</div>
                 <div class="difficulty">14x14 Grid</div>
+            </div>
+
+            <div class="stats-section" id="dailyStatsSection" style="display: none;">
+                <div class="stat-item">
+                    <div class="stat-value" id="dailyGamesWon">0</div>
+                    <div class="stat-label">Wins</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="dailyGamesPlayed">0</div>
+                    <div class="stat-label">Played</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="dailyWinStreak">0</div>
+                    <div class="stat-label">Streak</div>
+                </div>
             </div>
 
             <div class="message" id="message">
