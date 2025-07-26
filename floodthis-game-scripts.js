@@ -7,7 +7,6 @@ class FloodThisGame {
         this.gameActive = true;
         this.board = [];
         this.difficulty = 'easy';
-        this.seed = 0;
 
         // Performance optimizations
         this.audioContext = null;
@@ -29,7 +28,6 @@ class FloodThisGame {
         this.gamesWon = document.getElementById('gamesWon');
         this.gamesPlayed = document.getElementById('gamesPlayed');
         this.bestScore = document.getElementById('bestScore');
-        this.dailyMode = document.getElementById('dailyMode');
         this.easyMode = document.getElementById('easyMode');
         this.mediumMode = document.getElementById('mediumMode');
         this.hardMode = document.getElementById('hardMode');
@@ -37,7 +35,6 @@ class FloodThisGame {
     }
 
     setupEventListeners() {
-        this.dailyMode.addEventListener('click', () => this.setDifficulty('daily'));
         this.easyMode.addEventListener('click', () => this.setDifficulty('easy'));
         this.mediumMode.addEventListener('click', () => this.setDifficulty('medium'));
         this.hardMode.addEventListener('click', () => this.setDifficulty('hard'));
@@ -56,18 +53,12 @@ class FloodThisGame {
 
     setDifficulty(difficulty) {
         this.difficulty = difficulty;
-        this.dailyMode.classList.toggle('active', difficulty === 'daily');
         this.easyMode.classList.toggle('active', difficulty === 'easy');
         this.mediumMode.classList.toggle('active', difficulty === 'medium');
         this.hardMode.classList.toggle('active', difficulty === 'hard');
         
         // Set difficulty parameters
         switch(difficulty) {
-            case 'daily':
-                this.boardSize = 14;
-                this.maxMoves = 25;
-                this.numColors = 5;
-                break;
             case 'easy':
                 this.boardSize = 14;
                 this.maxMoves = 25;
@@ -91,13 +82,6 @@ class FloodThisGame {
     startNewGame() {
         this.currentMoves = 0;
         this.gameActive = true;
-
-        if (this.difficulty === 'daily') {
-            const today = new Date();
-            this.seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-        } else {
-            this.seed = Math.random();
-        }
         
         this.generateBoard();
         this.createGameBoard();
@@ -108,11 +92,6 @@ class FloodThisGame {
         // Update difficulty display
         const difficultyEl = document.querySelector('.difficulty');
         difficultyEl.textContent = `${this.boardSize}x${this.boardSize} Grid`;
-    }
-
-    seededRandom() {
-        const x = Math.sin(this.seed++) * 10000;
-        return x - Math.floor(x);
     }
 
     generateBoard() {
