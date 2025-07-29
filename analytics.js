@@ -1,20 +1,37 @@
-// analytics.js - Google Analytics Integration
+// analytics.js - Google Analytics Integration (Simplified)
 class Analytics {
     constructor() {
+        // Get measurement ID from environment or hardcode for static deployment
         this.measurementId = this.getMeasurementId();
         this.isProduction = window.location.hostname !== 'localhost' && 
                           window.location.hostname !== '127.0.0.1';
         
         if (this.measurementId && this.isProduction) {
             this.initializeGA();
+        } else {
+            console.log('Analytics disabled (development mode or no measurement ID)');
         }
     }
 
     getMeasurementId() {
-        return window.location.hostname === 'localhost' || 
-               window.location.hostname === '127.0.0.1' 
-               ? null 
-               : 'GA_MEASUREMENT_ID_PLACEHOLDER'; // This will be replaced by Vercel
+        // For static deployment, you'll need to replace this with your actual measurement ID
+        // Or use a different approach that doesn't require build-time environment variables
+        
+        // Option 1: Hardcode your measurement ID (not ideal but works)
+        // return 'G-XXXXXXXXXX'; // Replace with your actual measurement ID
+        
+        // Option 2: Use a meta tag approach
+        const metaTag = document.querySelector('meta[name="ga-measurement-id"]');
+        if (metaTag) {
+            return metaTag.getAttribute('content');
+        }
+        
+        // Option 3: Check for a global variable set elsewhere
+        if (window.GA_MEASUREMENT_ID) {
+            return window.GA_MEASUREMENT_ID;
+        }
+        
+        return null; // Analytics will be disabled
     }
 
     initializeGA() {
@@ -38,7 +55,7 @@ class Analytics {
         // Make gtag globally available
         window.gtag = gtag;
         
-        console.log('Google Analytics initialized');
+        console.log('Google Analytics initialized with ID:', this.measurementId);
     }
 
     // Track page views
