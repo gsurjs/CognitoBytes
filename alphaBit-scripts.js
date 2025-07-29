@@ -538,7 +538,6 @@ class WoordleGame {
         this.updateMessage(`🎉 Excellent! You got it in ${attempts} attempt${attempts === 1 ? '' : 's'}!`, "success");
         this.playSound('win');
 
-        const attempts = this.currentRow + 1;
         this.gameAnalytics.trackGameEnd(true, attempts);
 
         this.createConfetti();
