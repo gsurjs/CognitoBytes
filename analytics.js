@@ -1,114 +1,154 @@
-// analytics.js - Google Analytics Integration (Simplified)
-class Analytics {
-    constructor() {
-        // Get measurement ID from environment or hardcode for static deployment
-        this.measurementId = this.getMeasurementId();
-        this.isProduction = window.location.hostname !== 'localhost' && 
-                          window.location.hostname !== '127.0.0.1';
-        
-        if (this.measurementId && this.isProduction) {
-            this.initializeGA();
-        } else {
-            console.log('Analytics disabled (development mode or no measurement ID)');
-        }
+// analytics.js - Secure Google Analytics Implementation
+(function() {
+    // Get measurement ID from meta tag (set by build process)
+    const metaTag = document.querySelector('meta[name="ga-measurement-id"]');
+    const MEASUREMENT_ID = metaTag ? metaTag.getAttribute('content') : null;
+    
+    // Check if we should load analytics
+    const isProduction = window.location.hostname !== 'localhost' && 
+                        window.location.hostname !== '127.0.0.1' &&
+                        window.location.hostname !== '';
+    
+    console.log('Analytics Debug Info:');
+    console.log('- Hostname:', window.location.hostname);
+    console.log('- Is Production:', isProduction);
+    console.log('- Measurement ID found:', MEASUREMENT_ID ? 'Yes' : 'No');
+    
+    if (!isProduction) {
+        console.log('🚫 Analytics disabled - development environment');
+        createMockAnalytics();
+        return;
     }
-
-    getMeasurementId() {
-        // For static deployment, you'll need to replace this with your actual measurement ID
-        // Or use a different approach that doesn't require build-time environment variables
-        
-        // Option 1: Hardcode your measurement ID (not ideal but works)
-        // return 'G-XXXXXXXXXX'; // Replace with your actual measurement ID
-        
-        // Option 2: Use a meta tag approach
-        const metaTag = document.querySelector('meta[name="ga-measurement-id"]');
-        if (metaTag) {
-            return metaTag.getAttribute('content');
-        }
-        
-        // Option 3: Check for a global variable set elsewhere
-        if (window.GA_MEASUREMENT_ID) {
-            return window.GA_MEASUREMENT_ID;
-        }
-        
-        return null; // Analytics will be disabled
+    
+    if (!MEASUREMENT_ID) {
+        console.error('❌ Google Analytics Measurement ID not found in meta tag!');
+        console.log('📝 Please ensure meta tag is set: <meta name="ga-measurement-id" content="G-...">');
+        createMockAnalytics();
+        return;
     }
-
-    initializeGA() {
-        // Load Google Analytics script
-        const script = document.createElement('script');
-        script.async = true;
-        script.src = `https://www.googletagmanager.com/gtag/js?id=${this.measurementId}`;
-        document.head.appendChild(script);
-
-        // Initialize gtag
+    
+    // Load Google Analytics
+    console.log('🔄 Loading Google Analytics...');
+    
+    // Create and load the gtag script
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;
+    script.onload = function() {
+        console.log('✅ Google Analytics script loaded');
+        initializeGoogleAnalytics();
+    };
+    script.onerror = function() {
+        console.error('❌ Failed to load Google Analytics script');
+        createMockAnalytics();
+    };
+    document.head.appendChild(script);
+    
+    function initializeGoogleAnalytics() {
+        // Initialize dataLayer
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
+        window.gtag = gtag;
+        
         gtag('js', new Date());
-        gtag('config', this.measurementId, {
+        gtag('config', MEASUREMENT_ID, {
             // Privacy-friendly settings
             anonymize_ip: true,
             allow_google_signals: false,
-            allow_ad_personalization_signals: false
+            allow_ad_personalization_signals: false,
+            send_page_view: true
         });
-
-        // Make gtag globally available
-        window.gtag = gtag;
         
-        console.log('Google Analytics initialized with ID:', this.measurementId);
+        console.log('✅ Google Analytics initialized successfully!');
+        
+        // Create the analytics wrapper
+        createWorkingAnalytics();
+        
+        // Send initial page view
+        window.analytics.trackPageView(document.title, window.location.href);
     }
-
-    // Track page views
-    trackPageView(page_title, page_location) {
-        if (!this.isInitialized()) return;
-
-        gtag('event', 'page_view', {
-            page_title: page_title,
-            page_location: page_location
-        });
+    
+    function createWorkingAnalytics() {
+        window.analytics = {
+            // Track page views
+            trackPageView: function(page_title, page_location) {
+                console.log('📊 Page View:', page_title);
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'page_view', {
+                        page_title: page_title,
+                        page_location: page_location
+                    });
+                }
+            },
+            
+            // Track game events
+            trackGameEvent: function(action, game_name, additional_params = {}) {
+                console.log('🎮 Game Event:', action, game_name, additional_params);
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', action, {
+                        event_category: 'game',
+                        game_name: game_name,
+                        ...additional_params
+                    });
+                }
+            },
+            
+            // Track game start
+            trackGameStart: function(game_name, difficulty = null) {
+                console.log('🚀 Game Start:', game_name, difficulty);
+                this.trackGameEvent('game_start', game_name, { difficulty });
+            },
+            
+            // Track game completion
+            trackGameComplete: function(game_name, success, score = null, time_played = null) {
+                console.log('🏁 Game Complete:', game_name, success, score, time_played);
+                this.trackGameEvent('game_complete', game_name, {
+                    success: success,
+                    score: score,
+                    time_played: time_played
+                });
+            },
+            
+            // Track button clicks
+            trackButtonClick: function(button_name, location) {
+                console.log('🖱️ Button Click:', button_name, location);
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'click', {
+                        event_category: 'button',
+                        button_name: button_name,
+                        location: location
+                    });
+                }
+            },
+            
+            // Check if Analytics is properly initialized
+            isInitialized: function() {
+                return typeof gtag !== 'undefined';
+            }
+        };
     }
-
-    // Track game events
-    trackGameEvent(action, game_name, additional_params = {}) {
-        if (!this.isInitialized()) return;
-
-        gtag('event', action, {
-            event_category: 'game',
-            game_name: game_name,
-            ...additional_params
-        });
+    
+    function createMockAnalytics() {
+        // Create mock analytics for development/fallback
+        window.analytics = {
+            trackPageView: function(page_title, page_location) {
+                console.log('🔇 Mock Analytics - Page View:', page_title);
+            },
+            trackGameEvent: function(action, game_name, additional_params = {}) {
+                console.log('🔇 Mock Analytics - Game Event:', action, game_name);
+            },
+            trackGameStart: function(game_name, difficulty = null) {
+                console.log('🔇 Mock Analytics - Game Start:', game_name, difficulty);
+            },
+            trackGameComplete: function(game_name, success, score = null, time_played = null) {
+                console.log('🔇 Mock Analytics - Game Complete:', game_name, success);
+            },
+            trackButtonClick: function(button_name, location) {
+                console.log('🔇 Mock Analytics - Button Click:', button_name, location);
+            },
+            isInitialized: function() {
+                return false;
+            }
+        };
     }
-
-    // Track game start
-    trackGameStart(game_name, difficulty = null) {
-        this.trackGameEvent('game_start', game_name, { difficulty });
-    }
-
-    // Track game completion
-    trackGameComplete(game_name, success, score = null, time_played = null) {
-        this.trackGameEvent('game_complete', game_name, {
-            success: success,
-            score: score,
-            time_played: time_played
-        });
-    }
-
-    // Track button clicks
-    trackButtonClick(button_name, location) {
-        if (!this.isInitialized()) return;
-
-        gtag('event', 'click', {
-            event_category: 'button',
-            button_name: button_name,
-            location: location
-        });
-    }
-
-    // Check if Analytics is properly initialized
-    isInitialized() {
-        return this.measurementId && this.isProduction && typeof gtag !== 'undefined';
-    }
-}
-
-// Initialize Analytics globally
-window.analytics = new Analytics();
+})();
