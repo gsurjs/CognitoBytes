@@ -397,45 +397,13 @@ body {
     transform: scale(0.95);
 }
 
-/* Enhanced color definitions with better contrast and visual appeal */
-.color-0 { 
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); /* Rich Red */
-}
-.color-1 { 
-    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); /* Bright Blue */
-}
-.color-2 { 
-    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); /* Vibrant Green */
-}
-.color-3 { 
-    background: linear-gradient(135deg, #f39c12 0%, #d68910 100%); /* Golden Orange */
-}
-.color-4 { 
-    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); /* Deep Purple */
-}
-.color-5 { 
-    background: linear-gradient(135deg, #e91e63 0%, #ad1457 100%); /* Hot Pink */
-}
-
-/* Color button specific gradients for better visibility */
-.color-button.color-0 { 
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-}
-.color-button.color-1 { 
-    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-}
-.color-button.color-2 { 
-    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-}
-.color-button.color-3 { 
-    background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
-}
-.color-button.color-4 { 
-    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-}
-.color-button.color-5 { 
-    background: linear-gradient(135deg, #e91e63 0%, #ad1457 100%);
-}
+/* Color definitions */
+.color-0 { background-color: #dc2626; } /* Bright Red */
+.color-1 { background-color: #2563eb; } /* Bright Blue */
+.color-2 { background-color: #16a34a; } /* Bright Green */
+.color-3 { background-color: #ea580c; } /* Bright Orange */
+.color-4 { background-color: #7c3aed; } /* Bright Purple */
+.color-5 { background-color: #db2777; } /* Bright Pink */
 
 /* Mobile optimizations */
 @media (max-width: 600px) {
