@@ -1,6 +1,6 @@
-// analytics.js - Dynamic Google Analytics Implementation
+// analytics.js - Fixed Google Analytics Implementation
 (function() {
-    // Get measurement ID from a global variable that will be set in HTML
+    // Your actual measurement ID
     const MEASUREMENT_ID = "G-NKEJC02883";
     
     // Check if we should load analytics
@@ -12,7 +12,6 @@
     console.log('- Hostname:', window.location.hostname);
     console.log('- Is Production:', isProduction);
     console.log('- Measurement ID:', MEASUREMENT_ID);
-    console.log('- Is Placeholder:', MEASUREMENT_ID === 'G-NKEJC02883');
     
     if (!isProduction) {
         console.log('🚫 Analytics disabled - development environment');
@@ -20,9 +19,9 @@
         return;
     }
     
-    if (!MEASUREMENT_ID || MEASUREMENT_ID === "G-NKEJC02883") {
-        console.error('❌ Google Analytics Measurement ID not found!');
-        console.log('📝 Please ensure GA_MEASUREMENT_ID is set in the script tag');
+    if (!MEASUREMENT_ID || MEASUREMENT_ID === 'G-XXXXXXXXXX') {
+        console.error('❌ Google Analytics Measurement ID not configured!');
+        console.log('📝 Please replace G-XXXXXXXXXX with your real measurement ID');
         createMockAnalytics();
         return;
     }
@@ -59,7 +58,7 @@
             send_page_view: true
         });
         
-        console.log('✅ Google Analytics initialized successfully!');
+        console.log('✅ Google Analytics initialized successfully with ID:', MEASUREMENT_ID);
         
         // Create the analytics wrapper
         createWorkingAnalytics();
