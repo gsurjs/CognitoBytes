@@ -1,8 +1,7 @@
-// analytics.js - Secure Google Analytics Implementation
+// analytics.js - Dynamic Google Analytics Implementation
 (function() {
-    // Get measurement ID from meta tag (set by build process)
-    const metaTag = document.querySelector('meta[name="ga-measurement-id"]');
-    const MEASUREMENT_ID = metaTag ? metaTag.getAttribute('content') : null;
+    // Get measurement ID from a global variable that will be set in HTML
+    const MEASUREMENT_ID = window.GA_MEASUREMENT_ID || null;
     
     // Check if we should load analytics
     const isProduction = window.location.hostname !== 'localhost' && 
@@ -21,8 +20,8 @@
     }
     
     if (!MEASUREMENT_ID) {
-        console.error('❌ Google Analytics Measurement ID not found in meta tag!');
-        console.log('📝 Please ensure meta tag is set: <meta name="ga-measurement-id" content="G-...">');
+        console.error('❌ Google Analytics Measurement ID not found!');
+        console.log('📝 Please ensure GA_MEASUREMENT_ID is set in the script tag');
         createMockAnalytics();
         return;
     }
