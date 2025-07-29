@@ -403,7 +403,7 @@ body {
 .color-2 { background-color: #2ecc71; } /* Green */
 .color-3 { background-color: #f39c12; } /* Orange */
 .color-4 { background-color: #9b59b6; } /* Purple */
-.color-5 { background-color: #e91e63; } /* Pink */
+.color-5 { background-color: #fa4180; } /* Pink */
 
 /* Mobile optimizations */
 @media (max-width: 600px) {
