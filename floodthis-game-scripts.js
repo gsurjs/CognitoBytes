@@ -16,9 +16,24 @@ class FloodThisGame {
         this.initializeElements();
         this.setupEventListeners();
         this.loadStats();
-        this.startNewGame();
         this.setupVisibilityHandling();
+
+        this.initializeGame();
     }
+
+    initializeGame() {
+        // Load saved difficulty setting
+        const savedDifficulty = localStorage.getItem('flood-this-difficulty');
+        if (savedDifficulty) {
+            this.setDifficulty(savedDifficulty, false); // false = don't start new game yet
+        }
+        
+        // Try to load saved game state first, otherwise start new game
+        if (!this.loadGameState()) {
+            this.startNewGame();
+        }
+    }
+
 
     initializeElements() {
         this.gameBoard = document.getElementById('gameBoard');
@@ -38,7 +53,7 @@ class FloodThisGame {
         this.easyMode.addEventListener('click', () => this.setDifficulty('easy'));
         this.mediumMode.addEventListener('click', () => this.setDifficulty('medium'));
         this.hardMode.addEventListener('click', () => this.setDifficulty('hard'));
-        this.newGameButton.addEventListener('click', () => this.startNewGame());
+        this.newGameButton.addEventListener('click', () => this.startNewGame(true)); //force new game
     }
 
     setupVisibilityHandling() {
@@ -51,12 +66,16 @@ class FloodThisGame {
         });
     }
 
-    setDifficulty(difficulty) {
+    setDifficulty(difficulty, startNew = true) {
+        // If difficulty hasn't changed, don't do anything
+        if (this.difficulty === difficulty && startNew) return;
+        
         this.difficulty = difficulty;
+        localStorage.setItem('flood-this-difficulty', difficulty); // Save difficulty preference
+        
         this.easyMode.classList.toggle('active', difficulty === 'easy');
         this.mediumMode.classList.toggle('active', difficulty === 'medium');
-        this.hardMode.classList.toggle('active', difficulty === 'hard');
-        
+        this.hardMode.classList.toggle('active', difficulty === 'hard');        
         // Set difficulty parameters
         switch(difficulty) {
             case 'easy':
@@ -71,15 +90,25 @@ class FloodThisGame {
                 break;
             case 'hard':
                 this.boardSize = 14;
-                this.maxMoves = 20;
+                this.maxMoves = 23;
                 this.numColors = 6;
                 break;
         }
         
-        this.startNewGame();
+        if (startNew) {
+            this.startNewGame();
+        }
     }
 
-    startNewGame() {
+    startNewGame(forceNew = false) {
+        // Try to load state unless a new game is forced
+        if (!forceNew && this.loadGameState()) {
+            console.log("Loaded saved game state.");
+            return;
+        }
+
+        // If no saved state or new game is forced, reset everything
+        this.clearGameState();
         this.currentMoves = 0;
         this.gameActive = true;
         
@@ -92,6 +121,9 @@ class FloodThisGame {
         // Update difficulty display
         const difficultyEl = document.querySelector('.difficulty');
         difficultyEl.textContent = `${this.boardSize}x${this.boardSize} Grid`;
+
+        // Save the initial state of the new game
+        this.saveGameState();
     }
 
     generateBoard() {
@@ -153,6 +185,9 @@ class FloodThisGame {
         
         // Single DOM update instead of individual cell updates
         this.updateVisualBoard();
+
+        // Save state after each move
+        this.saveGameState();
         
         // Check win condition
         if (this.checkWin()) {
@@ -206,6 +241,7 @@ class FloodThisGame {
 
     handleWin() {
         this.gameActive = false;
+        this.saveGameState(); // Save final game state
         this.updateMessage(`🎉 Excellent! You flooded the board in ${this.currentMoves} moves!`, "success");
         this.playSound('win');
 
@@ -214,25 +250,101 @@ class FloodThisGame {
         
         // Update stats
         const stats = this.getStats();
-        stats.gamesWon++;
-        stats.gamesPlayed++;
-        if (stats.bestScore === null || this.currentMoves < stats.bestScore) {
-            stats.bestScore = this.currentMoves;
+        // Check if stats for this game have already been recorded
+        const gameStateKey = this.getGameStateKey();
+        if (stats.lastGameCompleted !== gameStateKey) {
+            stats.gamesWon++;
+            stats.gamesPlayed++;
+            if (stats.bestScore === null || this.currentMoves < stats.bestScore) {
+                stats.bestScore = this.currentMoves;
+            }
+            stats.lastGameCompleted = gameStateKey;
+            this.saveStats(stats);
         }
-        this.saveStats(stats);
         this.updateStatsDisplay();
     }
 
     handleLoss() {
         this.gameActive = false;
+        this.saveGameState(); // Save final game state
         this.updateMessage(`💀 Game Over! You ran out of moves. Try again!`, "error");
         this.playSound('lose');
         
         // Update stats
         const stats = this.getStats();
-        stats.gamesPlayed++;
-        this.saveStats(stats);
+        // Check if stats for this game have already been recorded
+        const gameStateKey = this.getGameStateKey();
+        if (stats.lastGameCompleted !== gameStateKey) {
+            stats.gamesPlayed++;
+            stats.lastGameCompleted = gameStateKey;
+            this.saveStats(stats);
+        }
         this.updateStatsDisplay();
+    }
+
+    saveGameState() {
+        const state = {
+            board: this.board,
+            currentMoves: this.currentMoves,
+            gameActive: this.gameActive,
+            difficulty: this.difficulty,
+            boardSize: this.boardSize,
+            maxMoves: this.maxMoves,
+            numColors: this.numColors
+        };
+        localStorage.setItem(`flood-this-gameState-${this.difficulty}-v1`, JSON.stringify(state));
+    }
+
+    loadGameState() {
+        const savedStateJSON = localStorage.getItem(`flood-this-gameState-${this.difficulty}-v1`);
+        if (!savedStateJSON) return false;
+
+        try {
+            const savedState = JSON.parse(savedStateJSON);
+            
+            // Restore game parameters
+            this.board = savedState.board;
+            this.currentMoves = savedState.currentMoves;
+            this.gameActive = savedState.gameActive;
+            this.boardSize = savedState.boardSize;
+            this.maxMoves = savedState.maxMoves;
+            this.numColors = savedState.numColors;
+            
+            // Rebuild the visual board
+            this.createGameBoard();
+            this.createColorPalette();
+            this.updateMovesDisplay();
+            
+            // Update difficulty display
+            const difficultyEl = document.querySelector('.difficulty');
+            difficultyEl.textContent = `${this.boardSize}x${this.boardSize} Grid`;
+            
+            if (!this.gameActive) {
+                // Game was completed, show final message
+                if (this.checkWin()) {
+                    this.updateMessage(`🎉 Excellent! You flooded the board in ${this.currentMoves} moves!`, "success");
+                } else {
+                    this.updateMessage(`💀 Game Over! You ran out of moves. Try again!`, "error");
+                }
+            } else {
+                this.updateMessage("Welcome back! Continue flooding the board!", "info");
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Failed to load game state:', error);
+            this.clearGameState();
+            return false;
+        }
+    }
+
+    clearGameState() {
+        localStorage.removeItem(`flood-this-gameState-${this.difficulty}-v1`);
+    }
+
+    getGameStateKey() {
+        // Create a unique key for this game based on initial board state
+        return `${this.difficulty}-${this.boardSize}-${this.maxMoves}-${this.numColors}`;
     }
 
     updateMessage(text, type) {
@@ -329,23 +441,33 @@ class FloodThisGame {
     }
 
     getStats() {
+        const key = `flood-this-stats-v1-${this.difficulty}`;
         const defaultStats = {
             gamesWon: 0,
             gamesPlayed: 0,
-            bestScore: null
+            bestScore: null,
+            lastGameCompleted: null
         };
         
         try {
-            const saved = localStorage.getItem('flood-it-stats');
-            return saved ? JSON.parse(saved) : defaultStats;
+            const saved = localStorage.getItem(key);
+            const stats = saved ? JSON.parse(saved) : defaultStats;
+            
+            // Ensure lastGameCompleted exists
+            if (!stats.hasOwnProperty('lastGameCompleted')) {
+                stats.lastGameCompleted = null;
+            }
+            
+            return stats;
         } catch (error) {
             return defaultStats;
         }
     }
 
     saveStats(stats) {
+        const key = `flood-this-stats-v1-${this.difficulty}`;
         try {
-            localStorage.setItem('flood-it-stats', JSON.stringify(stats));
+            localStorage.setItem(key, JSON.stringify(stats));
         } catch (error) {
             console.warn('Could not save stats:', error);
         }
