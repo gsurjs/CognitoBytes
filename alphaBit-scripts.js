@@ -12,14 +12,17 @@ class WoordleGame {
         this.isSubmitting = false; // Prevent multiple rapid submissions
         this.lastKeyTime = 0; // For debouncing
         this.endGameTimeoutId = null;
-        this.gameAnalytics = new GameAnalytics('alpha_bit');
+
         
         // Word lists - will be loaded from files
         this.answerWords = []; // Words that can be answers (from wordle-answers-alphabetical.txt)
         this.validWords = []; // All valid guesses (from valid-wordle-words.txt)
         
+        this.gameAnalytics = new GameAnalytics('alpha_bit');
+
         // Initialize the game after loading words
         this.initializeGame();
+
     }
 
     async initializeGame() {
@@ -72,6 +75,12 @@ class WoordleGame {
             this.createGameBoard();
             this.createKeyboard();
             this.startNewGame();
+
+
+            // Track page view even with fallback
+            if (window.analytics) {
+                window.analytics.trackPageView('Alpha-Bit Game', window.location.href);
+            }
         }
     }
 
