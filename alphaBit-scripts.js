@@ -12,6 +12,7 @@ class WoordleGame {
         this.isSubmitting = false; // Prevent multiple rapid submissions
         this.lastKeyTime = 0; // For debouncing
         this.endGameTimeoutId = null;
+        this.gameAnalytics = new GameAnalytics('alpha_bit');
         
         // Word lists - will be loaded from files
         this.answerWords = []; // Words that can be answers (from wordle-answers-alphabetical.txt)
@@ -43,6 +44,11 @@ class WoordleGame {
 
             // Start the first game
             this.startNewGame();
+
+            // Track page view
+            if (window.analytics) {
+                window.analytics.trackPageView('Alpha-Bit Game', window.location.href);
+            }
             
         } catch (error) {
             console.error('Failed to load words:', error);
@@ -173,6 +179,8 @@ class WoordleGame {
         this.resetKeyboard();
 
         this.startNewGame(); // Allows loading a saved game instead of forcing a new one
+
+        this.gameAnalytics.trackGameAction('game_mode_change', { mode: mode });
     }
 
     createGameBoard() {
@@ -285,6 +293,8 @@ class WoordleGame {
         this.saveGameState(); // Save the initial state of the new game
         
         console.log('Target word:', this.targetWord); // For debugging
+
+        this.gameAnalytics.trackGameStart(this.gameMode);
     }
 
     resetKeyboard() {
@@ -411,7 +421,7 @@ class WoordleGame {
         }
         
         if (!this.isValidWord(this.currentWord)) {
-            this.updateMessage("Not a valid word!", "error");
+            this.updateMessage("Not in word list!", "error");
             this.playSound('error');
             this.shakeRow(this.currentRow);
             
@@ -518,6 +528,10 @@ class WoordleGame {
         const attempts = this.currentRow + 1;
         this.updateMessage(`🎉 Excellent! You got it in ${attempts} attempt${attempts === 1 ? '' : 's'}!`, "success");
         this.playSound('win');
+
+        const attempts = this.currentRow + 1;
+        this.gameAnalytics.trackGameEnd(true, attempts);
+
         this.createConfetti();
         
         const stats = this.getStats();
@@ -552,6 +566,8 @@ class WoordleGame {
         this.gameActive = false;
         this.updateMessage(`💀 Game Over! The word was "${this.targetWord}".`, "error");
         this.playSound('lose');
+
+        this.gameAnalytics.trackGameEnd(false, this.currentRow + 1);
         
         const stats = this.getStats();
          // Check if stats for this game have already been recorded
@@ -809,6 +825,10 @@ class WoordleGame {
      showStatsModal(winningRow = -1) { // winningRow is 1-based index
         const stats = this.getStats();
         const modal = document.getElementById('statsModal');
+
+        this.gameAnalytics.trackButtonClick('show_stats');
+
+
         if (!modal) return;
 
         // Populate Stats
@@ -851,12 +871,19 @@ class WoordleGame {
 
     searchDefinition() {
         const searchQuery = `${this.targetWord.toLowerCase()} definition meaning`;
+
+        this.gameAnalytics.trackButtonClick('search_definition');
+
+
         const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
         window.open(googleSearchUrl, '_blank');
     }
 
     shareResults() {
         const shareText = this.generateShareText();
+
+        this.gameAnalytics.trackButtonClick('share_results');
+
         if (navigator.share) {
             navigator.share({ text: shareText }).catch(err => {
                 console.log('Error sharing:', err);
@@ -968,6 +995,40 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+class GameAnalytics {
+    constructor(gameName) {
+        this.gameName = gameName;
+        this.gameStartTime = null;
+    }
+
+    trackGameStart(difficulty = null) {
+        this.gameStartTime = Date.now();
+        if (window.analytics) {
+            window.analytics.trackGameStart(this.gameName, difficulty);
+        }
+    }
+
+    trackGameEnd(success, score = null) {
+        const timePlayed = this.gameStartTime ? Math.round((Date.now() - this.gameStartTime) / 1000) : null;
+        if (window.analytics) {
+            window.analytics.trackGameComplete(this.gameName, success, score, timePlayed);
+        }
+    }
+
+    trackGameAction(action, additionalParams = {}) {
+        if (window.analytics) {
+            window.analytics.trackGameEvent(action, this.gameName, additionalParams);
+        }
+    }
+
+    trackButtonClick(buttonName) {
+        if (window.analytics) {
+            window.analytics.trackButtonClick(buttonName, this.gameName);
+        }
+    }
+}
+
 
 // Initialize game when page loads
 window.addEventListener('load', () => {
