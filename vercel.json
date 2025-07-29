@@ -38,8 +38,8 @@
   ],
   "redirects": [
     {
-      "source": "/wordle-game.html",
-      "destination": "/woordle-game.html",
+      "source": "/alphaBit-game.html",
+      "destination": "/alphaBit-game.html",
       "permanent": true
     }
   ],
