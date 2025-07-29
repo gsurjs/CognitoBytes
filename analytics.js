@@ -1,7 +1,7 @@
 // analytics.js - Dynamic Google Analytics Implementation
 (function() {
     // Get measurement ID from a global variable that will be set in HTML
-    const MEASUREMENT_ID = window.GA_MEASUREMENT_ID || null;
+    const MEASUREMENT_ID = "G-NKEJC02883";
     
     // Check if we should load analytics
     const isProduction = window.location.hostname !== 'localhost' && 
@@ -19,7 +19,7 @@
         return;
     }
     
-    if (!MEASUREMENT_ID) {
+    if (!MEASUREMENT_ID || MEASUREMENT_ID === "G-NKEJC02883") {
         console.error('❌ Google Analytics Measurement ID not found!');
         console.log('📝 Please ensure GA_MEASUREMENT_ID is set in the script tag');
         createMockAnalytics();

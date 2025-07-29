@@ -2,9 +2,6 @@
   "name": "cognito-bytes-games",
   "version": "1.0.0",
   "description": "Mini games collection with brain training puzzles",
-  "scripts": {
-    "build": "node build.js"
-  },
   "devDependencies": {
     "prettier": "^3.6.2"
   }
