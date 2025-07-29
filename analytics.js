@@ -11,7 +11,8 @@
     console.log('Analytics Debug Info:');
     console.log('- Hostname:', window.location.hostname);
     console.log('- Is Production:', isProduction);
-    console.log('- Measurement ID found:', MEASUREMENT_ID ? 'Yes' : 'No');
+    console.log('- Measurement ID:', MEASUREMENT_ID);
+    console.log('- Is Placeholder:', MEASUREMENT_ID === 'G-NKEJC02883');
     
     if (!isProduction) {
         console.log('🚫 Analytics disabled - development environment');
