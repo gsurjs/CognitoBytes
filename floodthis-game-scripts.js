@@ -443,7 +443,7 @@ class FloodThisGame {
     }
 
     clearGameState() {
-        localStorage.removeItem(`flood-this-gameState-${this.difficulty}-v2`);
+        localStorage.removeItem(`flood-this-gameState-${this.gameMode}-v2`);
     }
 
     getGameStateKey() {
@@ -551,7 +551,7 @@ class FloodThisGame {
     }
 
     getStats() {
-        const key = `flood-this-stats-v2-${this.difficulty}`;
+        const key = `flood-this-stats-v2-${this.gameMode}`;
         const defaultStats = {
             gamesWon: 0,
             gamesPlayed: 0,
@@ -575,7 +575,7 @@ class FloodThisGame {
     }
 
     saveStats(stats) {
-        const key = `flood-this-stats-v2-${this.difficulty}`;
+        const key = `flood-this-stats-v2-${this.gameMode}`;
         try {
             localStorage.setItem(key, JSON.stringify(stats));
         } catch (error) {
