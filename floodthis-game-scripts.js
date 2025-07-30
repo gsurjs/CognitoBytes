@@ -358,15 +358,16 @@ class FloodThisGame {
         // Simplified confetti - less intensive
         this.createSimpleConfetti();
         
-        // Update stats
+        // Update stats - simplified approach like Alpha-Bit
         const stats = this.getStats();
-        // Check if stats for this game have already been recorded
         const gameStateKey = this.getGameStateKey();
+        
+        // Check if stats for this game have already been recorded
         if (stats.lastGameCompleted !== gameStateKey) {
             stats.gamesWon++;
             stats.gamesPlayed++;
-            stats.currentStreak = (stats.currentStreak || 0) + 1;
-            stats.maxStreak = Math.max(stats.maxStreak || 0, stats.currentStreak);
+            stats.currentStreak++;
+            stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
             
             if (stats.bestScore === null || this.currentMoves < stats.bestScore) {
                 stats.bestScore = this.currentMoves;
@@ -378,11 +379,8 @@ class FloodThisGame {
             }
             stats.scoreDistribution[this.currentMoves] = (stats.scoreDistribution[this.currentMoves] || 0) + 1;
             
-            stats.lastGameCompleted = gameStateKey;
+            stats.lastGameCompleted = gameStateKey; // Mark this game as recorded
             this.saveStats(stats);
-            console.log('Stats updated after win:', stats); // Debug log
-        } else {
-            console.log('Stats already recorded for this game:', gameStateKey); // Debug log
         }
         this.updateStatsDisplay();
 
@@ -404,18 +402,16 @@ class FloodThisGame {
         this.updateMessage(`💀 Game Over! You ran out of moves. Try again!`, "error");
         this.playSound('lose');
         
-        // Update stats
+        // Update stats - simplified approach like Alpha-Bit
         const stats = this.getStats();
-        // Check if stats for this game have already been recorded
         const gameStateKey = this.getGameStateKey();
+        
+        // Check if stats for this game have already been recorded
         if (stats.lastGameCompleted !== gameStateKey) {
             stats.gamesPlayed++;
             stats.currentStreak = 0; // Reset streak on loss
-            stats.lastGameCompleted = gameStateKey;
+            stats.lastGameCompleted = gameStateKey; // Mark this game as recorded
             this.saveStats(stats);
-            console.log('Stats updated after loss:', stats); // Debug log
-        } else {
-            console.log('Stats already recorded for this game:', gameStateKey); // Debug log
         }
         this.updateStatsDisplay();
 
@@ -660,7 +656,7 @@ class FloodThisGame {
     }
 
     getStats() {
-        const key = `flood-this-stats-v2-${this.gameMode}`; // Fixed: was this.difficulty
+        const key = `flood-this-stats-v2-${this.gameMode}`;
         const defaultStats = {
             gamesWon: 0,
             gamesPlayed: 0,
@@ -670,46 +666,20 @@ class FloodThisGame {
             maxStreak: 0,
             scoreDistribution: {}
         };
-        
-        try {
-            const saved = localStorage.getItem(key);
-            const stats = saved ? JSON.parse(saved) : defaultStats;
-            
-            // Ensure all properties exist
-            if (!stats.hasOwnProperty('lastGameCompleted')) {
-                stats.lastGameCompleted = null;
-            }
-            if (!stats.hasOwnProperty('currentStreak')) {
-                stats.currentStreak = 0;
-            }
-            if (!stats.hasOwnProperty('maxStreak')) {
-                stats.maxStreak = 0;
-            }
-            if (!stats.hasOwnProperty('scoreDistribution')) {
-                stats.scoreDistribution = {};
-            }
-            
-            console.log(`Getting stats for ${this.gameMode}:`, stats); // Debug log
-            return stats;
-        } catch (error) {
-            console.error('Error getting stats:', error); // Debug log
-            return defaultStats;
+
+        const saved = localStorage.getItem(key); 
+        const stats = saved ? JSON.parse(saved) : defaultStats;
+
+        if (!stats.scoreDistribution) {
+            stats.scoreDistribution = defaultStats.scoreDistribution;
         }
+
+        return stats;
     }
 
     saveStats(stats) {
-        const key = `flood-this-stats-v2-${this.gameMode}`; // Fixed: was this.difficulty
-        try {
-            localStorage.setItem(key, JSON.stringify(stats));
-            console.log(`Saved stats for ${this.gameMode}:`, stats); // Debug log
-            // Verify the save worked
-            const saved = localStorage.getItem(key);
-            const parsed = JSON.parse(saved);
-            console.log(`Verified saved stats for ${this.gameMode}:`, parsed); // Debug log
-
-        } catch (error) {
-            console.warn('Could not save stats:', error);
-        }
+        const key = `flood-this-stats-v2-${this.gameMode}`;
+        localStorage.setItem(key, JSON.stringify(stats));
     }
 
     loadStats() {
