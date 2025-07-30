@@ -336,7 +336,8 @@ body {
     margin-top: 0.25rem;
 }
 
-.difficulty-selector {
+/* Combined game mode and difficulty selector */
+.game-mode-selector {
     position: relative;
     z-index: 1;
     margin-bottom: 0.8rem;
@@ -345,6 +346,31 @@ body {
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
+}
+
+/* Mode button for daily mode - styled like Alpha-Bit */
+.mode-button {
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.mode-button.active {
+    background: linear-gradient(45deg, #27ae60, #2ecc71);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transform: scale(1.05);
+}
+
+.mode-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
 .difficulty-button {
