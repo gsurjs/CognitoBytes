@@ -426,6 +426,8 @@ class FloodThisGame {
     }
 
     saveGameState() {
+        const today = new Date();
+        const dateString = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
         const state = {
             board: this.board,
             currentMoves: this.currentMoves,
@@ -434,6 +436,7 @@ class FloodThisGame {
             boardSize: this.boardSize,
             maxMoves: this.maxMoves,
             numColors: this.numColors
+            savedDate: this.gameMode === 'daily' ? dateString : null
         };
         localStorage.setItem(`flood-this-gameState-${this.gameMode}-v2`, JSON.stringify(state)); // Fixed: was this.difficulty
     }
@@ -449,35 +452,10 @@ class FloodThisGame {
             if (this.gameMode === 'daily') {
                 const today = new Date();
                 const dateString = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
-                const todaysSeed = this.hashCode(dateString);
                 
-                // Generate today's board to compare
-                const todaysBoard = [];
-                let rng = new SeededRandom(todaysSeed);
-                for (let row = 0; row < this.boardSize; row++) {
-                    todaysBoard[row] = [];
-                    for (let col = 0; col < this.boardSize; col++) {
-                        todaysBoard[row][col] = Math.floor(rng.random() * this.numColors);
-                    }
-                }
-                
-                // Check if the saved board matches today's board at the start positions
-                let isToday = true;
-                if (savedState.board.length !== todaysBoard.length) {
-                    isToday = false;
-                } else {
-                    // Check a few positions to see if this matches today's puzzle
-                    for (let checkRow = 0; checkRow < Math.min(3, this.boardSize) && isToday; checkRow++) {
-                        for (let checkCol = 0; checkCol < Math.min(3, this.boardSize) && isToday; checkCol++) {
-                            // We need to be smart about this check since the board might be partially flooded
-                            // For now, let's just check if the dimensions match and trust the date-based validation
-                        }
-                    }
-                }
-                
-                if (!isToday) {
-                    this.clearGameState();
-                    return false;
+                if (savedState.savedDate !== dateString) {
+                    this.clearGameState(); // It's a new day, clear the old state
+                    return false; // Force a new game
                 }
             }
             
@@ -539,10 +517,6 @@ class FloodThisGame {
             this.clearGameState();
             return false;
         }
-    }
-
-    clearGameState() {
-        localStorage.removeItem(`flood-this-gameState-${this.gameMode}-v2`); // Fixed: was this.difficulty
     }
 
     getGameStateKey() {
