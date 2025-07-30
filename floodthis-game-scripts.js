@@ -699,50 +699,97 @@ class FloodThisGame {
 
         if (!modal) return;
 
-        // Populate Stats
-        document.getElementById('statsPlayed').textContent = stats.gamesPlayed;
+        // Populate Stats - using the same approach as Alpha-Bit
+        const statsPlayed = document.getElementById('statsPlayed');
+        const statsWinRate = document.getElementById('statsWinRate');
+        const statsBestScore = document.getElementById('statsBestScore');
+        const statsCurrentStreak = document.getElementById('statsCurrentStreak');
+
+        if (statsPlayed) statsPlayed.textContent = stats.gamesPlayed;
+        
         const winRate = stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
-        document.getElementById('statsWinRate').textContent = winRate;
-        document.getElementById('statsBestScore').textContent = stats.bestScore !== null ? stats.bestScore : '∞';
-        document.getElementById('statsCurrentStreak').textContent = stats.currentStreak || 0;
+        if (statsWinRate) statsWinRate.textContent = winRate;
+        
+        if (statsBestScore) statsBestScore.textContent = stats.bestScore !== null ? stats.bestScore : '∞';
+        if (statsCurrentStreak) statsCurrentStreak.textContent = stats.currentStreak || 0;
 
         // Populate Score Distribution
         const distributionContainer = document.getElementById('scoreDistribution');
-        distributionContainer.innerHTML = ''; // Clear previous bars
-        
-        if (stats.scoreDistribution && Object.keys(stats.scoreDistribution).length > 0) {
-            const scores = Object.keys(stats.scoreDistribution).map(Number).sort((a, b) => a - b);
-            const maxCount = Math.max(...Object.values(stats.scoreDistribution));
+        if (distributionContainer) {
+            distributionContainer.innerHTML = ''; // Clear previous bars
+            
+            if (stats.scoreDistribution && Object.keys(stats.scoreDistribution).length > 0) {
+                const scores = Object.keys(stats.scoreDistribution).map(Number).sort((a, b) => a - b);
+                const maxCount = Math.max(...Object.values(stats.scoreDistribution));
 
-            scores.forEach((score) => {
-                const count = stats.scoreDistribution[score];
-                const row = document.createElement('div');
-                row.className = 'dist-item';
+                scores.forEach((score) => {
+                    const count = stats.scoreDistribution[score];
+                    const row = document.createElement('div');
+                    row.className = 'dist-item';
 
-                const bar = document.createElement('div');
-                bar.className = 'dist-bar';
-                bar.textContent = count;
+                    const label = document.createElement('span');
+                    label.textContent = score;
 
-                // Highlight current game's score if it was just completed
-                if (!this.gameActive && this.checkWin() && score === this.currentMoves) {
-                    bar.classList.add('highlight');
-                }
+                    const bar = document.createElement('div');
+                    bar.className = 'dist-bar';
+                    bar.textContent = count;
 
-                const width = maxCount > 0 ? (count / maxCount) * 100 : 0;
-                bar.style.width = `${Math.max(width, 10)}%`; // Use a minimum width for visibility
+                    // Highlight current game's score if it was just completed
+                    if (!this.gameActive && this.checkWin() && score === this.currentMoves) {
+                        bar.classList.add('highlight');
+                    }
 
-                const label = document.createElement('span');
-                label.textContent = score;
+                    const width = maxCount > 0 ? (count / maxCount) * 100 : 0;
+                    bar.style.width = `${Math.max(width, 10)}%`; // Use a minimum width for visibility
 
-                row.appendChild(label);
-                row.appendChild(bar);
-                distributionContainer.appendChild(row);
-            });
-        } else {
-            distributionContainer.innerHTML = '<p style="color: #ccc; font-size: 0.8rem; text-align: center;">No games completed yet</p>';
+                    row.appendChild(label);
+                    row.appendChild(bar);
+                    distributionContainer.appendChild(row);
+                });
+            } else {
+                distributionContainer.innerHTML = '<p style="color: #ccc; font-size: 0.8rem; text-align: center;">No games completed yet</p>';
+            }
         }
 
         modal.style.display = 'flex';
+    }
+
+        // Method to reset all stats - useful for debugging
+    resetAllStats() {
+        const modes = ['daily', 'easy', 'medium', 'hard'];
+        modes.forEach(mode => {
+            localStorage.removeItem(`flood-this-stats-v2-${mode}`);
+            localStorage.removeItem(`flood-this-gameState-${mode}-v2`);
+        });
+        
+        // Also clear old format stats if they exist
+        modes.forEach(mode => {
+            localStorage.removeItem(`flood-this-stats-${mode}`);
+            localStorage.removeItem(`flood-this-gameState-${mode}`);
+            localStorage.removeItem(`flood-this-stats-v1-${mode}`);
+            localStorage.removeItem(`flood-this-gameState-${mode}-v1`);
+        });
+        
+        console.log('All Flood-This stats and game states cleared');
+        this.updateStatsDisplay();
+    }
+
+    // Debug method to check localStorage
+    debugStats() {
+        console.log('=== FLOOD-THIS DEBUG INFO ===');
+        console.log('Current game mode:', this.gameMode);
+        console.log('Current stats:', this.getStats());
+        console.log('Game state key:', this.getGameStateKey());
+        
+        // Check all localStorage keys
+        const modes = ['daily', 'easy', 'medium', 'hard'];
+        modes.forEach(mode => {
+            const statsKey = `flood-this-stats-v2-${mode}`;
+            const gameKey = `flood-this-gameState-${mode}-v2`;
+            console.log(`${mode} stats:`, localStorage.getItem(statsKey));
+            console.log(`${mode} game state:`, localStorage.getItem(gameKey));
+        });
+        console.log('=== END DEBUG INFO ===');
     }
 
     shareResults() {
