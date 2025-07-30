@@ -140,7 +140,7 @@ class FloodThisGame {
                 break;
             case 'hard':
                 this.boardSize = 14;
-                this.maxMoves = 20;
+                this.maxMoves = 23;
                 this.numColors = 6;
                 break;
         }
@@ -358,33 +358,40 @@ class FloodThisGame {
         // Simplified confetti - less intensive
         this.createSimpleConfetti();
         
-        // Update stats
+        // Update stats with Safari-safe approach
         const stats = this.getStats();
-        // Check if stats for this game have already been recorded
         const gameStateKey = this.getGameStateKey();
+        
+        console.log('Current stats before update:', stats);
+        console.log('Game state key:', gameStateKey);
+        console.log('Last completed game:', stats.lastGameCompleted);
+        
+        // Check if stats for this game have already been recorded
         if (stats.lastGameCompleted !== gameStateKey) {
-            stats.gamesWon++;
-            stats.gamesPlayed++;
-            stats.currentStreak = (stats.currentStreak || 0) + 1;
-            stats.maxStreak = Math.max(stats.maxStreak || 0, stats.currentStreak);
+            // Safari fix: Create new stats object instead of modifying existing
+            const newStats = {
+                gamesWon: (stats.gamesWon || 0) + 1,
+                gamesPlayed: (stats.gamesPlayed || 0) + 1,
+                currentStreak: (stats.currentStreak || 0) + 1,
+                maxStreak: Math.max(stats.maxStreak || 0, (stats.currentStreak || 0) + 1),
+                bestScore: (stats.bestScore === null || this.currentMoves < stats.bestScore) ? this.currentMoves : stats.bestScore,
+                scoreDistribution: { ...(stats.scoreDistribution || {}) },
+                lastGameCompleted: gameStateKey
+            };
             
-            if (stats.bestScore === null || this.currentMoves < stats.bestScore) {
-                stats.bestScore = this.currentMoves;
-            }
+            // Update score distribution
+            newStats.scoreDistribution[this.currentMoves] = (newStats.scoreDistribution[this.currentMoves] || 0) + 1;
             
-            // Track score distribution (moves to win)
-            if (!stats.scoreDistribution) {
-                stats.scoreDistribution = {};
-            }
-            stats.scoreDistribution[this.currentMoves] = (stats.scoreDistribution[this.currentMoves] || 0) + 1;
-            
-            stats.lastGameCompleted = gameStateKey;
-            this.saveStats(stats);
-            console.log('Stats updated after win:', stats); // Debug log
+            this.saveStats(newStats);
+            console.log('Stats updated after win:', newStats); // Debug log
         } else {
             console.log('Stats already recorded for this game:', gameStateKey); // Debug log
         }
-        this.updateStatsDisplay();
+        
+        // Force update display after a short delay to ensure stats are saved
+        setTimeout(() => {
+            this.updateStatsDisplay();
+        }, 200);
 
         // Show buttons after a delay
         setTimeout(() => {
@@ -397,6 +404,7 @@ class FloodThisGame {
             }
         }, 500);
     }
+
 
     handleLoss() {
         this.gameActive = false;
@@ -660,7 +668,7 @@ class FloodThisGame {
     }
 
     getStats() {
-        const key = `flood-this-stats-v2-${this.gameMode}`; // Fixed: was this.difficulty
+        const key = `flood-this-stats-v2-${this.gameMode}`;
         const defaultStats = {
             gamesWon: 0,
             gamesPlayed: 0,
@@ -673,42 +681,84 @@ class FloodThisGame {
         
         try {
             const saved = localStorage.getItem(key);
-            const stats = saved ? JSON.parse(saved) : defaultStats;
-            
-            // Ensure all properties exist
-            if (!stats.hasOwnProperty('lastGameCompleted')) {
-                stats.lastGameCompleted = null;
-            }
-            if (!stats.hasOwnProperty('currentStreak')) {
-                stats.currentStreak = 0;
-            }
-            if (!stats.hasOwnProperty('maxStreak')) {
-                stats.maxStreak = 0;
-            }
-            if (!stats.hasOwnProperty('scoreDistribution')) {
-                stats.scoreDistribution = {};
+            if (!saved) {
+                console.log(`No saved stats found for ${this.gameMode}, using defaults`);
+                return defaultStats;
             }
             
-            console.log(`Getting stats for ${this.gameMode}:`, stats); // Debug log
-            return stats;
+            const stats = JSON.parse(saved);
+            
+            // Safari fix: Ensure all properties exist and are the right type
+            const sanitizedStats = {
+                gamesWon: Number(stats.gamesWon) || 0,
+                gamesPlayed: Number(stats.gamesPlayed) || 0,
+                bestScore: stats.bestScore === null ? null : Number(stats.bestScore),
+                lastGameCompleted: stats.lastGameCompleted || null,
+                currentStreak: Number(stats.currentStreak) || 0,
+                maxStreak: Number(stats.maxStreak) || 0,
+                scoreDistribution: stats.scoreDistribution && typeof stats.scoreDistribution === 'object' ? stats.scoreDistribution : {}
+            };
+            
+            console.log(`Getting stats for ${this.gameMode}:`, sanitizedStats); // Debug log
+            return sanitizedStats;
         } catch (error) {
             console.error('Error getting stats:', error); // Debug log
-            return defaultStats;
+            // Safari recovery: try to get basic data
+            try {
+                const rawData = localStorage.getItem(key);
+                console.log('Raw localStorage data:', rawData);
+                return defaultStats;
+            } catch (recoveryError) {
+                console.error('Recovery failed:', recoveryError);
+                return defaultStats;
+            }
         }
     }
 
+
     saveStats(stats) {
-        const key = `flood-this-stats-v2-${this.gameMode}`; // Fixed: was this.difficulty
+        const key = `flood-this-stats-v2-${this.gameMode}`;
         try {
-            localStorage.setItem(key, JSON.stringify(stats));
-            console.log(`Saved stats for ${this.gameMode}:`, stats); // Debug log
-            // Verify the save worked
-            const saved = localStorage.getItem(key);
-            const parsed = JSON.parse(saved);
-            console.log(`Verified saved stats for ${this.gameMode}:`, parsed); // Debug log
+            // Safari fix: Ensure we're storing valid JSON
+            const statsToSave = {
+                gamesWon: stats.gamesWon || 0,
+                gamesPlayed: stats.gamesPlayed || 0,
+                bestScore: stats.bestScore,
+                lastGameCompleted: stats.lastGameCompleted,
+                currentStreak: stats.currentStreak || 0,
+                maxStreak: stats.maxStreak || 0,
+                scoreDistribution: stats.scoreDistribution || {}
+            };
             
+            localStorage.setItem(key, JSON.stringify(statsToSave));
+            console.log(`Saved stats for ${this.gameMode}:`, statsToSave); // Debug log
+            
+            // Verify the save worked - important for Safari
+            setTimeout(() => {
+                try {
+                    const saved = localStorage.getItem(key);
+                    const parsed = JSON.parse(saved);
+                    console.log(`Verified saved stats for ${this.gameMode}:`, parsed); // Debug log
+                } catch (verifyError) {
+                    console.error('Verification failed:', verifyError);
+                }
+            }, 100);
         } catch (error) {
-            console.warn('Could not save stats:', error);
+            console.error('Could not save stats:', error);
+            // Safari fallback - try again with minimal data
+            try {
+                const minimalStats = {
+                    gamesWon: Number(stats.gamesWon) || 0,
+                    gamesPlayed: Number(stats.gamesPlayed) || 0,
+                    bestScore: stats.bestScore,
+                    currentStreak: Number(stats.currentStreak) || 0,
+                    maxStreak: Number(stats.maxStreak) || 0
+                };
+                localStorage.setItem(key, JSON.stringify(minimalStats));
+                console.log('Saved minimal stats as fallback:', minimalStats);
+            } catch (fallbackError) {
+                console.error('Fallback save also failed:', fallbackError);
+            }
         }
     }
 
@@ -717,10 +767,23 @@ class FloodThisGame {
     }
 
     updateStatsDisplay() {
-        const stats = this.getStats();
-        this.gamesWon.textContent = stats.gamesWon;
-        this.gamesPlayed.textContent = stats.gamesPlayed;
-        this.bestScore.textContent = stats.bestScore !== null ? stats.bestScore : '∞';
+        try {
+            const stats = this.getStats();
+            console.log('Updating stats display with:', stats); // Debug log
+            
+            // Safari fix: Ensure elements exist before updating
+            if (this.gamesWon) {
+                this.gamesWon.textContent = String(stats.gamesWon || 0);
+            }
+            if (this.gamesPlayed) {
+                this.gamesPlayed.textContent = String(stats.gamesPlayed || 0);
+            }
+            if (this.bestScore) {
+                this.bestScore.textContent = stats.bestScore !== null ? String(stats.bestScore) : '∞';
+            }
+        } catch (error) {
+            console.error('Error updating stats display:', error);
+        }
     }
 
     showStatsModal() {
