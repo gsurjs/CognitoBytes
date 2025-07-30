@@ -380,6 +380,9 @@ class FloodThisGame {
             
             stats.lastGameCompleted = gameStateKey;
             this.saveStats(stats);
+            console.log('Stats updated after win:', stats); // Debug log
+        } else {
+            console.log('Stats already recorded for this game:', gameStateKey); // Debug log
         }
         this.updateStatsDisplay();
 
@@ -410,6 +413,9 @@ class FloodThisGame {
             stats.currentStreak = 0; // Reset streak on loss
             stats.lastGameCompleted = gameStateKey;
             this.saveStats(stats);
+            console.log('Stats updated after loss:', stats); // Debug log
+        } else {
+            console.log('Stats already recorded for this game:', gameStateKey); // Debug log
         }
         this.updateStatsDisplay();
 
@@ -550,9 +556,13 @@ class FloodThisGame {
         if (this.gameMode === 'daily') {
             const today = new Date();
             const dateString = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
-            return `daily-${dateString}`;
+            const key = `daily-${dateString}`;
+            console.log(`Generated game state key for daily: ${key}`); // Debug log
+            return key;
         } else {
-            return `${this.gameMode}-${this.boardSize}-${this.maxMoves}-${this.numColors}`;
+            const key = `${this.gameMode}-${this.boardSize}-${this.maxMoves}-${this.numColors}`;
+            console.log(`Generated game state key for ${this.gameMode}: ${key}`); // Debug log
+            return key;
         }
     }
 
@@ -679,8 +689,10 @@ class FloodThisGame {
                 stats.scoreDistribution = {};
             }
             
+            console.log(`Getting stats for ${this.gameMode}:`, stats); // Debug log
             return stats;
         } catch (error) {
+            console.error('Error getting stats:', error); // Debug log
             return defaultStats;
         }
     }
@@ -689,6 +701,12 @@ class FloodThisGame {
         const key = `flood-this-stats-v2-${this.gameMode}`; // Fixed: was this.difficulty
         try {
             localStorage.setItem(key, JSON.stringify(stats));
+            console.log(`Saved stats for ${this.gameMode}:`, stats); // Debug log
+            // Verify the save worked
+            const saved = localStorage.getItem(key);
+            const parsed = JSON.parse(saved);
+            console.log(`Verified saved stats for ${this.gameMode}:`, parsed); // Debug log
+            
         } catch (error) {
             console.warn('Could not save stats:', error);
         }
