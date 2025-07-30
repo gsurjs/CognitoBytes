@@ -562,15 +562,14 @@ body {
     
     .game-container {
         border-radius: 0;
-        height: 100vh;
         height: 100dvh;
         max-width: none;
         padding: 0.8rem;
     }
     
     .title {
-        font-size: 1.6rem;
-        margin-bottom: 0.4rem;
+        font-size: 1.5rem;
+        margin-bottom: 0.3rem;
     }
     
     .navigation {
@@ -630,10 +629,11 @@ body {
     
     .game-board {
         max-width: 320px;
-        width: 320px;
-        height: 320px;
+        max-height: 320px;
+        width: 90vw;
+        height: 90vw;
         gap: 0px;
-        margin-bottom: 0.6rem;
+        margin-bottom: 0.5rem;
         padding: 2px;
     }
 
@@ -650,19 +650,20 @@ body {
     
     .message {
         font-size: 0.8rem;
-        padding: 0.5rem;
-        margin-bottom: 0.6rem;
+        padding: 0.4rem;
+        margin-bottom: 0.5rem;
         min-height: 35px;
     }
     
     .color-palette {
         gap: 8px;
-        margin-bottom: 0.6rem;
+        margin-bottom: 0.4rem;
+        padding: 0.4rem;
     }
     
     .color-button {
-        width: 45px;
-        height: 45px;
+        width: 42px;
+        height: 42px;
         border-width: 2px;
     }
     
