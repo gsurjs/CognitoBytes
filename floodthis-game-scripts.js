@@ -50,7 +50,7 @@ class FloodThisGame {
         this.easyMode = document.getElementById('easyMode');
         this.mediumMode = document.getElementById('mediumMode');
         this.hardMode = document.getElementById('hardMode');
-        this.newGameButton = document.getElementById('newGameButton');
+        //this.newGameButton = document.getElementById('newGameButton');
         this.newGameButton2 = document.getElementById('newGameButton2');
         this.shareButton = document.getElementById('shareButton');
         this.statsButton = document.getElementById('statsButton');
@@ -61,7 +61,7 @@ class FloodThisGame {
         this.easyMode.addEventListener('click', () => this.setGameMode('easy'));
         this.mediumMode.addEventListener('click', () => this.setGameMode('medium'));
         this.hardMode.addEventListener('click', () => this.setGameMode('hard'));
-        this.newGameButton.addEventListener('click', () => this.startNewGame(true)); // Force new game
+        //this.newGameButton.addEventListener('click', () => this.startNewGame(true)); // Force new game
         this.newGameButton2.addEventListener('click', () => this.startNewGame(true)); // Force new game
 
         if (this.shareButton) {
