@@ -51,6 +51,9 @@ class FloodThisGame {
         this.mediumMode = document.getElementById('mediumMode');
         this.hardMode = document.getElementById('hardMode');
         this.newGameButton = document.getElementById('newGameButton');
+        this.newGameButton2 = document.getElementById('newGameButton2');
+        this.shareButton = document.getElementById('shareButton');
+        this.statsButton = document.getElementById('statsButton');
     }
 
     setupEventListeners() {
@@ -59,6 +62,30 @@ class FloodThisGame {
         this.mediumMode.addEventListener('click', () => this.setGameMode('medium'));
         this.hardMode.addEventListener('click', () => this.setGameMode('hard'));
         this.newGameButton.addEventListener('click', () => this.startNewGame(true)); // Force new game
+        this.newGameButton2.addEventListener('click', () => this.startNewGame(true)); // Force new game
+
+        if (this.shareButton) {
+            this.shareButton.addEventListener('click', () => this.shareResults());
+        }
+
+        if (this.statsButton) {
+            this.statsButton.addEventListener('click', () => this.showStatsModal());
+        }
+
+        const statsModal = document.getElementById('statsModal');
+        if (statsModal) {
+            const closeModalButton = statsModal.querySelector('.modal-close-button');
+            const closeModal = () => statsModal.style.display = 'none';
+
+            if (closeModalButton) {
+                closeModalButton.addEventListener('click', closeModal);
+            }
+            statsModal.addEventListener('click', (e) => {
+                if (e.target === statsModal) {
+                    closeModal();
+                }
+            });
+        }
     }
 
     setupVisibilityHandling() {
@@ -120,6 +147,10 @@ class FloodThisGame {
     }
 
     startNewGame(forceNew = false) {
+
+        // Hide buttons at start of new game
+        this.hideAllButtons();
+
         // Try to load state unless a new game is forced
         if (!forceNew && this.loadGameState()) {
             console.log("Loaded saved game state.");
@@ -304,6 +335,20 @@ class FloodThisGame {
         return true;
     }
 
+
+    hideAllButtons() {
+        if (this.statsButton) {
+            this.statsButton.style.display = 'none';
+        }
+        if (this.shareButton) {
+            this.shareButton.style.display = 'none';
+        }
+        if (this.newGameButton) {
+            this.newGameButton.style.display = 'none';
+        }
+    }
+
+
     handleWin() {
         this.gameActive = false;
         this.saveGameState(); // Save final game state
@@ -320,13 +365,34 @@ class FloodThisGame {
         if (stats.lastGameCompleted !== gameStateKey) {
             stats.gamesWon++;
             stats.gamesPlayed++;
+            stats.currentStreak = (stats.currentStreak || 0) + 1;
+            stats.maxStreak = Math.max(stats.maxStreak || 0, stats.currentStreak);
+            
             if (stats.bestScore === null || this.currentMoves < stats.bestScore) {
                 stats.bestScore = this.currentMoves;
             }
+            
+            // Track score distribution (moves to win)
+            if (!stats.scoreDistribution) {
+                stats.scoreDistribution = {};
+            }
+            stats.scoreDistribution[this.currentMoves] = (stats.scoreDistribution[this.currentMoves] || 0) + 1;
+            
             stats.lastGameCompleted = gameStateKey;
             this.saveStats(stats);
         }
         this.updateStatsDisplay();
+
+        // Show buttons after a delay
+        setTimeout(() => {
+            if (this.statsButton) this.statsButton.style.display = 'inline-block';
+            if (this.gameMode === 'daily' && this.shareButton) {
+                this.shareButton.style.display = 'inline-block';
+            }
+            if (this.gameMode !== 'daily' && this.newGameButton) {
+                this.newGameButton.style.display = 'inline-block';
+            }
+        }, 500);
     }
 
     handleLoss() {
@@ -341,10 +407,22 @@ class FloodThisGame {
         const gameStateKey = this.getGameStateKey();
         if (stats.lastGameCompleted !== gameStateKey) {
             stats.gamesPlayed++;
+            stats.currentStreak = 0; // Reset streak on loss
             stats.lastGameCompleted = gameStateKey;
             this.saveStats(stats);
         }
         this.updateStatsDisplay();
+
+        // Show buttons after a delay
+        setTimeout(() => {
+            if (this.statsButton) this.statsButton.style.display = 'inline-block';
+            if (this.gameMode === 'daily' && this.shareButton) {
+                this.shareButton.style.display = 'inline-block';
+            }
+            if (this.gameMode !== 'daily' && this.newGameButton) {
+                this.newGameButton.style.display = 'inline-block';
+            }
+        }, 500);
     }
 
     saveGameState() {
@@ -421,15 +499,38 @@ class FloodThisGame {
             difficultyEl.textContent = `${this.boardSize}x${this.boardSize} Grid`;
             
             if (!this.gameActive) {
-                // Game was completed, show final message
+                // Game was completed, show final message and buttons
                 if (this.checkWin()) {
                     const attempts = this.currentMoves;
                     this.updateMessage(`🎉 Excellent! You flooded the board in ${attempts} move${attempts === 1 ? '' : 's'}!`, "success");
+                    
+                    // Show appropriate buttons for completed game
+                    setTimeout(() => {
+                        if (this.statsButton) this.statsButton.style.display = 'inline-block';
+                        if (this.gameMode === 'daily' && this.shareButton) {
+                            this.shareButton.style.display = 'inline-block';
+                        }
+                        if (this.gameMode !== 'daily' && this.newGameButton) {
+                            this.newGameButton.style.display = 'inline-block';
+                        }
+                    }, 100);
                 } else {
                     this.updateMessage(`💀 Game Over! You ran out of moves. Try again!`, "error");
+                    
+                    // Show appropriate buttons for completed game
+                    setTimeout(() => {
+                        if (this.statsButton) this.statsButton.style.display = 'inline-block';
+                        if (this.gameMode === 'daily' && this.shareButton) {
+                            this.shareButton.style.display = 'inline-block';
+                        }
+                        if (this.gameMode !== 'daily' && this.newGameButton) {
+                            this.newGameButton.style.display = 'inline-block';
+                        }
+                    }, 100);
                 }
             } else {
                 this.updateMessage("Welcome back! Continue flooding the board!", "info");
+                this.hideAllButtons();
             }
             
             return true;
@@ -554,16 +655,28 @@ class FloodThisGame {
             gamesWon: 0,
             gamesPlayed: 0,
             bestScore: null,
-            lastGameCompleted: null
+            lastGameCompleted: null,
+            currentStreak: 0,
+            maxStreak: 0,
+            scoreDistribution: {}
         };
         
         try {
             const saved = localStorage.getItem(key);
             const stats = saved ? JSON.parse(saved) : defaultStats;
             
-            // Ensure lastGameCompleted exists
+            // Ensure all properties exist
             if (!stats.hasOwnProperty('lastGameCompleted')) {
                 stats.lastGameCompleted = null;
+            }
+            if (!stats.hasOwnProperty('currentStreak')) {
+                stats.currentStreak = 0;
+            }
+            if (!stats.hasOwnProperty('maxStreak')) {
+                stats.maxStreak = 0;
+            }
+            if (!stats.hasOwnProperty('scoreDistribution')) {
+                stats.scoreDistribution = {};
             }
             
             return stats;
@@ -590,6 +703,182 @@ class FloodThisGame {
         this.gamesWon.textContent = stats.gamesWon;
         this.gamesPlayed.textContent = stats.gamesPlayed;
         this.bestScore.textContent = stats.bestScore !== null ? stats.bestScore : '∞';
+    }
+
+    showStatsModal() {
+        const stats = this.getStats();
+        const modal = document.getElementById('statsModal');
+
+        if (!modal) return;
+
+        // Populate Stats
+        document.getElementById('statsPlayed').textContent = stats.gamesPlayed;
+        const winRate = stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
+        document.getElementById('statsWinRate').textContent = winRate;
+        document.getElementById('statsBestScore').textContent = stats.bestScore !== null ? stats.bestScore : '∞';
+        document.getElementById('statsCurrentStreak').textContent = stats.currentStreak || 0;
+
+        // Populate Score Distribution
+        const distributionContainer = document.getElementById('scoreDistribution');
+        distributionContainer.innerHTML = ''; // Clear previous bars
+        
+        if (stats.scoreDistribution && Object.keys(stats.scoreDistribution).length > 0) {
+            const scores = Object.keys(stats.scoreDistribution).map(Number).sort((a, b) => a - b);
+            const maxCount = Math.max(...Object.values(stats.scoreDistribution));
+
+            scores.forEach((score) => {
+                const count = stats.scoreDistribution[score];
+                const row = document.createElement('div');
+                row.className = 'dist-item';
+
+                const bar = document.createElement('div');
+                bar.className = 'dist-bar';
+                bar.textContent = count;
+
+                // Highlight current game's score if it was just completed
+                if (!this.gameActive && this.checkWin() && score === this.currentMoves) {
+                    bar.classList.add('highlight');
+                }
+
+                const width = maxCount > 0 ? (count / maxCount) * 100 : 0;
+                bar.style.width = `${Math.max(width, 10)}%`; // Use a minimum width for visibility
+
+                const label = document.createElement('span');
+                label.textContent = score;
+
+                row.appendChild(label);
+                row.appendChild(bar);
+                distributionContainer.appendChild(row);
+            });
+        } else {
+            distributionContainer.innerHTML = '<p style="color: #ccc; font-size: 0.8rem; text-align: center;">No games completed yet</p>';
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    shareResults() {
+        const shareText = this.generateShareText();
+
+        if (navigator.share) {
+            navigator.share({ text: shareText }).catch(err => {
+                console.log('Error sharing:', err);
+                this.fallbackShare(shareText);
+            });
+        } else {
+            this.fallbackShare(shareText);
+        }
+    }
+
+    fallbackShare(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                this.updateMessage('📋 Results copied to clipboard!', 'success');
+                setTimeout(() => {
+                    if (this.checkWin()) {
+                        const attempts = this.currentMoves;
+                        this.updateMessage(`🎉 Excellent! You flooded the board in ${attempts} move${attempts === 1 ? '' : 's'}!`, "success");
+                    } else {
+                        this.updateMessage(`💀 Game Over! You ran out of moves. Try again!`, "error");
+                    }
+                }, 2000);
+            }).catch(err => {
+                console.log('Failed to copy:', err);
+                this.showShareText(text);
+            });
+        } else {
+            this.showShareText(text);
+        }
+    }
+
+    showShareText(text) {
+        // Prevent main page from scrolling while the modal is open
+        document.body.style.overflow = 'hidden';
+
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); display: flex;
+            align-items: center; justify-content: center; z-index: 1000;
+        `;
+        
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            background: #2c2c2c; padding: 20px; border-radius: 8px;
+            width: 90%; max-width: 400px; text-align: center;
+            color: #fff;
+        `;
+
+        // Function to close the modal and restore page styles
+        const closeModal = () => {
+            document.body.removeChild(overlay);
+            document.body.style.overflow = '';
+        };
+
+        modal.innerHTML = `
+            <h3 style="margin-top:0;">Copy to Clipboard</h3>
+            <textarea readonly style="width: 100%; height: 120px; background: #1e1e1e; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 10px; box-sizing: border-box; resize: none;">${text}</textarea>
+            <button class="modal-close-button" style="width: 100%; padding: 10px; margin-top: 15px; background: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer;">Close</button>
+        `;
+
+        // Add event listener to the new close button
+        modal.querySelector('.modal-close-button').addEventListener('click', closeModal);
+
+        // Allow closing by clicking the dark background
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                closeModal();
+            }
+        });
+                
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+    }
+
+    generateShareText() {
+        // Calculate daily game number (similar to Alpha-Bit)
+        const epoch = new Date('2025-07-29T00:00:00'); // Set epoch to today for Flood-This
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const daysSinceEpoch = Math.floor((today.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        const puzzleNumber = Math.max(1, daysSinceEpoch);
+        
+        let shareText = `Flood-This ${puzzleNumber} `;
+        
+        // Add score line
+        if (this.checkWin()) {
+            shareText += `${this.currentMoves}/${this.maxMoves}\n\n`;
+        } else {
+            shareText += `X/${this.maxMoves}\n\n`;
+        }
+        
+        // Add emoji grid (2x2 for compact sharing)
+        let emojiGrid = '';
+        if (this.checkWin()) {
+            // Get the final color from top-left corner
+            const finalColor = this.board[0][0];
+            const colorEmojis = {
+                0: '🟥', // Red
+                1: '🟦', // Blue  
+                2: '🟩', // Green
+                3: '🟧', // Orange
+                4: '🟪', // Purple
+                5: '🟪'  // Pink (using purple as closest)
+            };
+            const emoji = colorEmojis[finalColor] || '⬜';
+            
+            // Create 2x2 grid
+            emojiGrid = `${emoji}${emoji}\n${emoji}${emoji}`;
+        } else {
+            // Game over - use X emojis
+            emojiGrid = `❌❌\n❌❌`;
+        }
+        
+        shareText += emojiGrid + '\n\n';
+        shareText += 'Play at: ' + window.location.href;
+        
+        return shareText;
     }
 
     // Cleanup method for when page unloads
