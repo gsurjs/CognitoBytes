@@ -5,7 +5,6 @@ class FloodThisGame {
         this.numColors = 4;
         this.currentMoves = 0;
         this.gameActive = true;
-        this.board = [];
         this.gameMode = 'easy'; // 'daily', 'easy', 'medium', 'hard'
 
         // Performance optimizations
@@ -428,17 +427,18 @@ class FloodThisGame {
     saveGameState() {
         const today = new Date();
         const dateString = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+
         const state = {
             board: this.board,
             currentMoves: this.currentMoves,
             gameActive: this.gameActive,
-            gameMode: this.gameMode, // Fixed: was this.difficulty
+            gameMode: this.gameMode,
             boardSize: this.boardSize,
             maxMoves: this.maxMoves,
-            numColors: this.numColors
+            numColors: this.numColors,
             savedDate: this.gameMode === 'daily' ? dateString : null
         };
-        localStorage.setItem(`flood-this-gameState-${this.gameMode}-v2`, JSON.stringify(state)); // Fixed: was this.difficulty
+        localStorage.setItem(`flood-this-gameState-${this.gameMode}-v2`, JSON.stringify(state));
     }
 
     loadGameState() {
@@ -517,6 +517,10 @@ class FloodThisGame {
             this.clearGameState();
             return false;
         }
+    }
+
+    clearGameState() {
+        localStorage.removeItem(`flood-this-gameState-${this.gameMode}-v2`); // Fixed: was this.difficulty
     }
 
     getGameStateKey() {
