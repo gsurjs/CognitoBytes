@@ -869,10 +869,10 @@ class FloodThisGame {
             const emoji = colorEmojis[finalColor] || '⬜';
             
             // Create 2x2 grid
-            emojiGrid = `${emoji}${emoji}${emoji}${emoji}${emoji}\n${emoji}${emoji}${emoji}${emoji}${emoji}\n${emoji}${emoji}${emoji}${emoji}${emoji}\n${emoji}${emoji}${emoji}${emoji}${emoji}`;
+            emojiGrid = `${emoji}${emoji}${emoji}${emoji}${emoji}${emoji}\n${emoji}${emoji}${emoji}${emoji}${emoji}${emoji}\n${emoji}${emoji}${emoji}${emoji}${emoji}${emoji}\n${emoji}${emoji}${emoji}${emoji}${emoji}${emoji}\n${emoji}${emoji}${emoji}${emoji}${emoji}${emoji}\n${emoji}${emoji}${emoji}${emoji}${emoji}${emoji}`;
         } else {
             // Game over - use X emojis
-            emojiGrid = `❌❌❌❌❌\n❌❌❌❌❌\n❌❌❌❌❌\n❌❌❌❌❌`;
+            emojiGrid = `❌❌❌❌❌❌\n❌❌❌❌❌❌\n❌❌❌❌❌❌\n❌❌❌❌❌❌\n❌❌❌❌❌❌\n❌❌❌❌❌❌`;
         }
         
         shareText += emojiGrid + '\n\n';
