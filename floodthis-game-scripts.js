@@ -22,8 +22,8 @@ class FloodThisGame {
     }
 
     initializeGame() {
-        // Load saved difficulty setting
-        const savedDifficulty = localStorage.getItem('flood-this-gameMode');
+        // Load saved game mode setting
+        const savedMode = localStorage.getItem('flood-this-gameMode');
         this.gameMode = savedMode || 'easy';
         
         // Update button states based on saved mode
@@ -37,7 +37,6 @@ class FloodThisGame {
             this.startNewGame();
         }
     }
-
 
     initializeElements() {
         this.gameBoard = document.getElementById('gameBoard');
@@ -60,6 +59,7 @@ class FloodThisGame {
         this.mediumMode.addEventListener('click', () => this.setGameMode('medium'));
         this.hardMode.addEventListener('click', () => this.setGameMode('hard'));
         this.newGameButton.addEventListener('click', () => this.startNewGame(true)); // Force new game
+    }
 
     setupVisibilityHandling() {
         // Pause/resume when tab visibility changes
@@ -113,7 +113,7 @@ class FloodThisGame {
                 break;
             case 'hard':
                 this.boardSize = 14;
-                this.maxMoves = 23;
+                this.maxMoves = 20;
                 this.numColors = 6;
                 break;
         }
@@ -200,8 +200,6 @@ class FloodThisGame {
         }
         return hash;
     }
-
-
 
     createGameBoard() {
         // Use DocumentFragment for better performance
@@ -354,12 +352,12 @@ class FloodThisGame {
             board: this.board,
             currentMoves: this.currentMoves,
             gameActive: this.gameActive,
-            difficulty: this.difficulty,
+            gameMode: this.gameMode, // Fixed: was this.difficulty
             boardSize: this.boardSize,
             maxMoves: this.maxMoves,
             numColors: this.numColors
         };
-        localStorage.setItem(`flood-this-gameState-${this.difficulty}-v2`, JSON.stringify(state));
+        localStorage.setItem(`flood-this-gameState-${this.gameMode}-v2`, JSON.stringify(state)); // Fixed: was this.difficulty
     }
 
     loadGameState() {
@@ -443,7 +441,7 @@ class FloodThisGame {
     }
 
     clearGameState() {
-        localStorage.removeItem(`flood-this-gameState-${this.gameMode}-v2`);
+        localStorage.removeItem(`flood-this-gameState-${this.gameMode}-v2`); // Fixed: was this.difficulty
     }
 
     getGameStateKey() {
@@ -551,7 +549,7 @@ class FloodThisGame {
     }
 
     getStats() {
-        const key = `flood-this-stats-v2-${this.gameMode}`;
+        const key = `flood-this-stats-v2-${this.gameMode}`; // Fixed: was this.difficulty
         const defaultStats = {
             gamesWon: 0,
             gamesPlayed: 0,
@@ -575,7 +573,7 @@ class FloodThisGame {
     }
 
     saveStats(stats) {
-        const key = `flood-this-stats-v2-${this.gameMode}`;
+        const key = `flood-this-stats-v2-${this.gameMode}`; // Fixed: was this.difficulty
         try {
             localStorage.setItem(key, JSON.stringify(stats));
         } catch (error) {
