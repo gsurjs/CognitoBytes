@@ -2,10 +2,10 @@ class FloodThisGame {
     constructor() {
         this.boardSize = 14;
         this.maxMoves = 25;
-        this.numColors = 4;
+        this.numColors = 5;
         this.currentMoves = 0;
         this.gameActive = true;
-        this.gameMode = 'easy'; // 'daily', 'easy', 'medium', 'hard'
+        this.gameMode = 'daily'; // 'daily', 'easy', 'medium', 'hard'
 
         // Performance optimizations
         this.audioContext = null;
@@ -14,7 +14,6 @@ class FloodThisGame {
         
         this.initializeElements();
         this.setupEventListeners();
-        this.loadStats();
         this.setupVisibilityHandling();
 
         this.initializeGame();
@@ -30,6 +29,8 @@ class FloodThisGame {
         
         // Set difficulty parameters based on mode
         this.setModeParameters();
+
+        this.loadStats();
         
         // Try to load saved game state first, otherwise start new game
         if (!this.loadGameState()) {

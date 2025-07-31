@@ -54,21 +54,33 @@ class BrainGamesMenu {
         // Aggregate stats from all games with proper handling of different data structures
         const numberGameStats = this.getGameStats('number-game-stats');
         const memoryGameStats = this.getGameStats('memory-game-stats');
-        const woordleStats = this.getGameStats('woordle-stats');
-        const floodItStats = this.getGameStats('flood-it-stats');
+
+        // Aggregate stats for Alpha-Bit (Woordle) from both modes
+        const woordleDailyStats = this.getGameStats('woordle-stats-v2-daily');
+        const woordleInfiniteStats = this.getGameStats('woordle-stats-v2-infinite');
+        const woordleTotalPlayed = (woordleDailyStats.gamesPlayed || 0) + (woordleInfiniteStats.gamesPlayed || 0);
+        const woordleTotalWon = (woordleDailyStats.gamesWon || 0) + (woordleInfiniteStats.gamesWon || 0);
+
+        // Aggregate stats for Flood-This from all modes
+        const floodItDailyStats = this.getGameStats('flood-this-stats-v2-daily');
+        const floodItEasyStats = this.getGameStats('flood-this-stats-v2-easy');
+        const floodItMediumStats = this.getGameStats('flood-this-stats-v2-medium');
+        const floodItHardStats = this.getGameStats('flood-this-stats-v2-hard');
+        const floodItTotalPlayed = (floodItDailyStats.gamesPlayed || 0) + (floodItEasyStats.gamesPlayed || 0) + (floodItMediumStats.gamesPlayed || 0) + (floodItHardStats.gamesPlayed || 0);
+        const floodItTotalWon = (floodItDailyStats.gamesWon || 0) + (floodItEasyStats.gamesWon || 0) + (floodItMediumStats.gamesWon || 0) + (floodItHardStats.gamesWon || 0);
 
         // Calculate totals with proper field mapping
         const totalPlayed = 
             (numberGameStats.totalGames || 0) + 
             (memoryGameStats.gamesPlayed || 0) + 
-            (woordleStats.gamesPlayed || 0) + 
-            (floodItStats.gamesPlayed || 0);
+            woordleTotalPlayed +
+            floodItTotalPlayed;
             
         const totalWon = 
             (numberGameStats.gamesWon || 0) + 
             (memoryGameStats.gamesWon || 0) + 
-            (woordleStats.gamesWon || 0) + 
-            (floodItStats.gamesWon || 0);
+            woordleTotalWon +
+            floodItTotalWon;
             
         const winRate = totalPlayed > 0 ? Math.round((totalWon / totalPlayed) * 100) : 0;
 
