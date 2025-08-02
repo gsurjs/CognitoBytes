@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🧩 Pix-Slate</title>
+    <link rel="stylesheet" href="sliding-puzzle-styles.css">
+    <script src="analytics.js"></script>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1 class="title">🧩 Pix-Slate</h1>
+            <div class="navigation">
+                <a href="index.html" class="nav-button">🕹️ Back to Games</a>
+            </div>
+            <div class="game-mode-selector">
+                <button class="mode-button active" id="dailyMode">📅 Daily</button>
+                <button class="mode-button" id="randomMode">♾️ Random</button>
+            </div>
+        </div>
+
+        <div class="game-content">
+            <div class="game-info">
+                <div class="timer" id="timer">Time: 00:00</div>
+                <div class="moves" id="moves">Moves: 0</div>
+            </div>
+
+            <div class="game-board" id="gameBoard">
+                </div>
+
+            <div class="button-container">
+                <button class="new-game-button" id="newGameButton">NEW GAME</button>
+                <button class="share-button" id="shareButton" style="display: none;">💬 SHARE</button>
+            </div>
+        </div>
+    </div>
+    <script src="pixSlate-scripts.js"></script>
+</body>
+</html>
