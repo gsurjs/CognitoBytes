@@ -6,6 +6,13 @@ class SlidingPuzzleGame {
         this.timerInterval = null;
         this.gameActive = false;
         this.mode = 'daily'; // 'daily' or 'random'
+        this.images = [
+            'images/img01.jpg', 'images/img02.jpg', 'images/img03.jpg',
+            'images/img04.jpg', 'images/img05.jpg', 'images/img06.jpg',
+            'images/img07.jpg', 'images/img08.jpg', 'images/img09.jpg',
+            'images/img10.jpg', 'images/img11.jpg', 'images/img12.jpg'
+        ];
+        this.currentImage = '';
 
         this.initializeElements();
         this.setupEventListeners();
@@ -20,6 +27,7 @@ class SlidingPuzzleGame {
         this.shareButton = document.getElementById('shareButton');
         this.dailyModeButton = document.getElementById('dailyMode');
         this.randomModeButton = document.getElementById('randomMode');
+        this.imageCreditElement = document.getElementById('imageCredit');
     }
 
     setupEventListeners() {
@@ -33,6 +41,7 @@ class SlidingPuzzleGame {
         this.mode = mode;
         this.dailyModeButton.classList.toggle('active', mode === 'daily');
         this.randomModeButton.classList.toggle('active', mode !== 'daily');
+        this.newGameButton.style.display = mode === 'daily' ? 'none' : 'inline-block';
         this.startNewGame();
     }
 
@@ -42,7 +51,7 @@ class SlidingPuzzleGame {
         this.timer = 0;
         this.updateMoves();
         this.stopTimer();
-        this.startTimer();
+        this.updateTimer();
         this.generateBoard();
         this.renderBoard();
         this.shareButton.style.display = 'none';
@@ -55,19 +64,29 @@ class SlidingPuzzleGame {
         if (this.mode === 'daily') {
             const date = new Date();
             const seed = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+            this.currentImage = this.images[this.seededRandomInt(seed, this.images.length)];
             this.shuffleBoard(this.seededShuffle.bind(this, seed));
         } else {
+            this.currentImage = this.images[Math.floor(Math.random() * this.images.length)];
             this.shuffleBoard(this.randomShuffle);
         }
     }
 
+    seededRandomInt(seed, max) {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return Math.floor((((t ^ t >>> 14) >>> 0) / 4294967296) * max);
+    }
+
     shuffleBoard(shuffleFunction) {
+        let tempBoard = this.board.filter(t => t !== null);
         let inversions = 1;
         while (inversions % 2 !== 0) {
-            this.board = shuffleFunction(this.board.filter(t => t !== null));
-            this.board.push(null);
-            inversions = this.countInversions();
+            tempBoard = shuffleFunction(tempBoard);
+            inversions = this.countInversions(tempBoard);
         }
+        this.board = [...tempBoard, null];
     }
 
     randomShuffle(array) {
@@ -94,11 +113,11 @@ class SlidingPuzzleGame {
         return array;
     }
 
-    countInversions() {
+    countInversions(array) {
         let inversions = 0;
-        for (let i = 0; i < 15; i++) {
-            for (let j = i + 1; j < 15; j++) {
-                if (this.board[i] && this.board[j] && this.board[i] > this.board[j]) {
+        for (let i = 0; i < array.length - 1; i++) {
+            for (let j = i + 1; j < array.length; j++) {
+                if (array[i] && array[j] && array[i] > array[j]) {
                     inversions++;
                 }
             }
@@ -108,15 +127,20 @@ class SlidingPuzzleGame {
 
     renderBoard() {
         this.gameBoard.innerHTML = '';
-        this.board.forEach((tile, index) => {
+        this.board.forEach((tileValue, index) => {
             const tileElement = document.createElement('div');
             tileElement.classList.add('tile');
-            if (tile === null) {
+            if (tileValue === null) {
                 tileElement.classList.add('empty');
             } else {
                 const span = document.createElement('span');
-                span.textContent = tile;
+                span.textContent = tileValue;
                 tileElement.appendChild(span);
+
+                const x = (tileValue - 1) % 4;
+                const y = Math.floor((tileValue - 1) / 4);
+                tileElement.style.backgroundImage = `url(${this.currentImage})`;
+                tileElement.style.backgroundPosition = `${x * 100/3}% ${y * 100/3}%`;
             }
             tileElement.addEventListener('click', () => this.handleTileClick(index));
             this.gameBoard.appendChild(tileElement);
@@ -125,6 +149,10 @@ class SlidingPuzzleGame {
 
     handleTileClick(index) {
         if (!this.gameActive) return;
+
+        if (this.moves === 0 && this.timer === 0) {
+            this.startTimer();
+        }
 
         const emptyIndex = this.board.indexOf(null);
         const { row, col } = this.getTilePosition(index);
@@ -157,6 +185,7 @@ class SlidingPuzzleGame {
     }
 
     startTimer() {
+        if (this.timerInterval) return;
         this.timerInterval = setInterval(() => {
             this.timer++;
             this.updateTimer();
@@ -165,6 +194,7 @@ class SlidingPuzzleGame {
 
     stopTimer() {
         clearInterval(this.timerInterval);
+        this.timerInterval = null;
     }
 
     updateTimer() {
@@ -183,10 +213,12 @@ class SlidingPuzzleGame {
     endGame() {
         this.gameActive = false;
         this.stopTimer();
-        alert(`You solved it in ${this.timer} seconds and ${this.moves} moves!`);
-        this.shareButton.style.display = 'inline-block';
+        setTimeout(() => {
+            alert(`You solved it in ${this.timer} seconds and ${this.moves} moves!`);
+            this.shareButton.style.display = 'inline-block';
+        }, 300);
     }
-
+    
     shareResults() {
         const time = this.timerElement.textContent;
         const text = `I solved the daily sliding puzzle in ${time} and ${this.moves} moves! Can you beat my score?`;
