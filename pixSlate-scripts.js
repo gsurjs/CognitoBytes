@@ -403,20 +403,44 @@ class SlidingPuzzleGame {
         }, 300);
     }
 
+    generateShareText() {
+        // 1. Calculate a unique number for each daily puzzle
+        const epoch = new Date('2025-08-01T00:00:00'); // The "start date" for puzzle numbering
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Normalize to the beginning of the day
+        const puzzleNumber = Math.floor((today.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+        // 2. Format your time and moves
+        const minutes = Math.floor(this.timer / 60).toString().padStart(2, '0');
+        const seconds = (this.timer % 60).toString().padStart(2, '0');
+        const timeString = `${minutes}:${seconds}`;
+
+        // 3. Create a witty emoji pattern for the slider puzzle
+        const emojiPattern = [
+            '🟨🟨⬛',
+            '🟨🟩🟨',
+            '🟩🟩🏆'
+        ].join('\n');
+
+        // 4. Assemble the final text
+        const shareText = `🧩 Pix-Slate #${puzzleNumber}\nTime: ${timeString}, Moves: ${this.moves}\n\n${emojiPattern}`;
+
+        return shareText;
+    }
     shareResults() {
-        const time = this.timerElement.textContent;
-        const text = `I solved the daily sliding puzzle in ${time} and ${this.moves} moves! Can you beat my score?`;
+        const text = this.generateShareText();
+        
         if (navigator.share) {
             navigator.share({
-                title: 'Sliding Puzzle Challenge',
+                title: 'Pix-Slate Puzzle Result',
                 text: text,
                 url: window.location.href
-            });
+            }).catch(err => console.log("Share failed:", err));
         } else {
-            alert(text);
+            // Fallback for browsers that don't support the share API
+            alert("Share this result:\n\n" + text);
         }
     }
-}
 
 window.addEventListener('load', () => {
     new SlidingPuzzleGame();
