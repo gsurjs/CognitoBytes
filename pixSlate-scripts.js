@@ -85,11 +85,21 @@ class SlidingPuzzleGame {
 
     createBoardElements() {
         this.gameBoard.innerHTML = ''; // Clear board once at the start
+        this.tileElements = []; // Clear previous elements
         for (let i = 0; i < 16; i++) {
             const tileElement = document.createElement('div');
+            tileElement.dataset.tileValue = i + 1;
             this.gameBoard.appendChild(tileElement);
             this.tileElements.push(tileElement);
         }
+
+        // Mark the 16th tile as the one that represents the empty space
+        this.tileElements[15].classList.add('empty-spot');
+
+        // Use a single click listener on the board for efficiency
+        this.gameBoard.removeEventListener('click', this.boundHandleTileClick);
+        this.boundHandleTileClick = this.handleTileClick.bind(this);
+        this.gameBoard.addEventListener('click', this.boundHandleTileClick);
     }
 
     setupEventListeners() {
@@ -135,11 +145,6 @@ class SlidingPuzzleGame {
     generateBoard() {
         this.board = Array.from({ length: 16 }, (_, i) => i + 1);
         this.board[15] = null; // Empty space
-
-        // Create a mapping of the tile number to its element for the initial render
-        this.tileElements.forEach((element, i) => {
-            element.dataset.tileValue = i + 1;
-        });
         
         // Set image and shuffle
         if (this.mode === 'daily') {
@@ -303,14 +308,6 @@ class SlidingPuzzleGame {
                 this.board = [...shuffledResult, null];
             }
             attempt++;
-        }
-        
-        // Find the tile that will represent the empty space and mark it
-        const lastTileValue = 16;
-        this.tileElements.forEach(el => el.classList.remove('empty-spot'));
-        const emptyElement = this.tileElements.find(el => parseInt(el.dataset.tileValue) === lastTileValue);
-        if(emptyElement) {
-           emptyElement.classList.add('empty-spot');
         }
     }
 
