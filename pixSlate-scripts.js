@@ -85,15 +85,15 @@ class SlidingPuzzleGame {
         }
     }
 
-    // NEW METHOD: Updates the position of tiles based on the board array
     updateBoardView() {
         this.board.forEach((tileValue, index) => {
             if (tileValue === null) return;
             const { row, col } = this.getTilePosition(index);
             const tileElement = this.tileElements[tileValue];
             
-            const xOffset = `calc(${col * 25}% + ${col * 5}px)`;
-            const yOffset = `calc(${row * 25}% + ${row * 5}px)`;
+            // These are the corrected calculations
+            const xOffset = `${col * 25}%`;
+            const yOffset = `${row * 25}%`;
 
             tileElement.style.transform = `translate(${xOffset}, ${yOffset})`;
         });
