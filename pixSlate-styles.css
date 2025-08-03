@@ -87,11 +87,6 @@ body {
     grid-template-columns: repeat(4, 1fr);
     gap: 5px;
     margin-bottom: 1rem;
-    /* Add these optimizations for mobile */
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
 }
 
 .tile {
@@ -106,29 +101,6 @@ body {
     font-weight: bold;
     cursor: pointer;
     position: relative;
-    
-    /* Critical fixes for mobile background image flashing */
-    background-size: 400% 400%;
-    background-repeat: no-repeat;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    will-change: auto;
-    
-    /* Smooth transitions */
-    transition: transform 0.1s ease-out;
-    -webkit-transition: -webkit-transform 0.1s ease-out;
-    
-    /* Force hardware acceleration on mobile */
-    -webkit-transform-style: preserve-3d;
-    transform-style: preserve-3d;
-}
-
-/* Add active state to prevent flashing during touch */
-.tile:active {
-    transform: translateZ(0) scale(0.98);
-    -webkit-transform: translateZ(0) scale(0.98);
 }
 
 .tile span {
@@ -136,14 +108,10 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-    z-index: 2;
-    pointer-events: none;
 }
 
 .tile.empty {
     background-color: transparent;
-    background-image: none !important;
     cursor: default;
 }
 
@@ -159,10 +127,6 @@ body {
     color: white;
     cursor: pointer;
     transition: background-color 0.3s;
-    
-    /* Prevent button flashing on mobile */
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
 }
 
 .new-game-button {
@@ -171,19 +135,4 @@ body {
 
 .share-button {
     background-color: #27ae60;
-}
-
-/* Additional mobile-specific optimizations */
-@media (max-width: 768px) {
-    .tile {
-        /* Extra mobile-specific background image handling */
-        -webkit-background-size: 400% 400%;
-        background-attachment: scroll;
-        -webkit-background-attachment: scroll;
-    }
-    
-    /* Prevent zoom on double-tap */
-    .game-board {
-        touch-action: manipulation;
-    }
 }

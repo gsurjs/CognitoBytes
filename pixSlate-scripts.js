@@ -13,6 +13,7 @@ class SlidingPuzzleGame {
             'images/slider/yorkie.jpg', 'images/slider/yorkie1.jpg', 'images/slider/fine.jpg', 'images/slider/ancient-aliens.jpg'
         ];
         this.currentImage = '';
+        this.imagePreloaded = false;
 
         this.initializeElements();
         this.setupEventListeners();
@@ -45,19 +46,29 @@ class SlidingPuzzleGame {
         this.startNewGame();
     }
 
-    startNewGame() {
+    // Preload image to prevent flashing
+    preloadImage(imageSrc) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve();
+            img.onerror = () => resolve(); // Continue even if image fails to load
+            img.src = imageSrc;
+        });
+    }
+
+    async startNewGame() {
         this.gameActive = true;
         this.moves = 0;
         this.timer = 0;
         this.updateMoves();
         this.stopTimer();
         this.updateTimer();
-        this.generateBoard();
+        await this.generateBoard();
         this.renderBoard();
         this.shareButton.style.display = 'none';
     }
 
-    generateBoard() {
+    async generateBoard() {
         this.board = Array.from({ length: 16 }, (_, i) => i + 1);
         this.board[15] = null; // Empty space
 
@@ -70,6 +81,10 @@ class SlidingPuzzleGame {
             this.currentImage = this.images[Math.floor(Math.random() * this.images.length)];
             this.shuffleBoard(this.randomShuffle);
         }
+
+        // Preload the image before rendering
+        await this.preloadImage(this.currentImage);
+        this.imagePreloaded = true;
     }
 
     seededRandomInt(seed, max) {
@@ -126,10 +141,16 @@ class SlidingPuzzleGame {
     }
 
     renderBoard() {
+        // Clear the board first
         this.gameBoard.innerHTML = '';
+        
+        // Create a document fragment to minimize DOM manipulation
+        const fragment = document.createDocumentFragment();
+        
         this.board.forEach((tileValue, index) => {
             const tileElement = document.createElement('div');
             tileElement.classList.add('tile');
+            
             if (tileValue === null) {
                 tileElement.classList.add('empty');
             } else {
@@ -139,12 +160,24 @@ class SlidingPuzzleGame {
 
                 const x = (tileValue - 1) % 4;
                 const y = Math.floor((tileValue - 1) / 4);
-                tileElement.style.backgroundImage = `url(${this.currentImage})`;
-                tileElement.style.backgroundPosition = `${x * 100/3}% ${y * 100/3}%`;
+                
+                // Set background image and position in one operation to prevent flashing
+                const bgPosX = (x * 100/3).toFixed(2);
+                const bgPosY = (y * 100/3).toFixed(2);
+                
+                // Use requestAnimationFrame to ensure smooth rendering
+                requestAnimationFrame(() => {
+                    tileElement.style.backgroundImage = `url(${this.currentImage})`;
+                    tileElement.style.backgroundPosition = `${bgPosX}% ${bgPosY}%`;
+                });
             }
+            
             tileElement.addEventListener('click', () => this.handleTileClick(index));
-            this.gameBoard.appendChild(tileElement);
+            fragment.appendChild(tileElement);
         });
+        
+        // Add all tiles at once to minimize reflows
+        this.gameBoard.appendChild(fragment);
     }
 
     handleTileClick(index) {
@@ -165,10 +198,51 @@ class SlidingPuzzleGame {
             this.swapTiles(index, emptyIndex);
             this.moves++;
             this.updateMoves();
-            this.renderBoard();
+            
+            // Use a more efficient re-render approach
+            this.updateTilePositions(index, emptyIndex);
+            
             if (this.isSolved()) {
                 this.endGame();
             }
+        }
+    }
+
+    // New method to update only the affected tiles instead of re-rendering everything
+    updateTilePositions(movedIndex, emptyIndex) {
+        const tiles = this.gameBoard.children;
+        
+        // Update the moved tile
+        const movedTile = tiles[movedIndex];
+        const emptyTile = tiles[emptyIndex];
+        
+        // Get the new values
+        const movedValue = this.board[movedIndex];
+        const emptyValue = this.board[emptyIndex];
+        
+        // Update moved tile (now empty)
+        if (emptyValue === null) {
+            movedTile.className = 'tile empty';
+            movedTile.style.backgroundImage = 'none';
+            movedTile.innerHTML = '';
+        }
+        
+        // Update empty tile (now has the moved value)
+        if (movedValue !== null) {
+            emptyTile.className = 'tile';
+            const span = document.createElement('span');
+            span.textContent = movedValue;
+            emptyTile.innerHTML = '';
+            emptyTile.appendChild(span);
+            
+            const x = (movedValue - 1) % 4;
+            const y = Math.floor((movedValue - 1) / 4);
+            const bgPosX = (x * 100/3).toFixed(2);
+            const bgPosY = (y * 100/3).toFixed(2);
+            
+            // Set background properties without causing reflow
+            emptyTile.style.backgroundImage = `url(${this.currentImage})`;
+            emptyTile.style.backgroundPosition = `${bgPosX}% ${bgPosY}%`;
         }
     }
 
