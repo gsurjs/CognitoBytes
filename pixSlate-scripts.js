@@ -133,6 +133,8 @@ class SlidingPuzzleGame {
         this.dailyModeButton.classList.toggle('active', mode === 'daily');
         this.randomModeButton.classList.toggle('active', mode !== 'daily');
 
+        this.newGameButton.style.display = (mode === 'daily') ? 'none' : 'inline-block';
+
         if (!this.loadState()) {
             this.startNewGame();
         }
@@ -153,6 +155,10 @@ class SlidingPuzzleGame {
         this.renderFullBoard();
         this.shareButton.style.display = 'none';
         this.pauseButton.style.display = 'inline-block';
+
+        // It now matches the simple logic from setMode.
+        this.newGameButton.style.display = (this.mode === 'daily') ? 'none' : 'inline-block';
+
         this.saveState();
     }
 
@@ -410,6 +416,11 @@ class SlidingPuzzleGame {
         this.isPaused = true; // Enter a paused-like state on game end
         this.pauseButton.style.display = 'none'; // Hide pause button
         this.shareButton.style.display = 'inline-block';
+
+        if (this.mode === 'random') {
+            this.newGameButton.style.display = 'inline-block';
+        }
+
         this.saveState(); // Save the final solved state
         setTimeout(() => {
             alert(`You solved it in ${this.timer} seconds and ${this.moves} moves!`);
