@@ -41,6 +41,9 @@ class SlidingPuzzleGame {
         this.gamesWon = document.getElementById('gamesWon');
         this.gamesPlayed = document.getElementById('gamesPlayed');
         this.winStreak = document.getElementById('winStreak');
+
+        this.statsButton = document.getElementById('statsButton');
+        this.statsModal = document.getElementById('statsModal');
     }
 
     getStats() {
@@ -94,6 +97,54 @@ class SlidingPuzzleGame {
         this.randomModeButton.addEventListener('click', () => this.setMode('random'));
         this.pauseButton.addEventListener('click', () => this.togglePause());
         window.addEventListener('resize', () => this.renderFullBoard());
+
+        this.statsButton.addEventListener('click', () => this.showStatsModal());
+        this.statsModal.querySelector('.modal-close-button').addEventListener('click', () => this.closeStatsModal());
+        this.statsModal.addEventListener('click', (e) => {
+            if (e.target === this.statsModal) {
+                this.closeStatsModal();
+            }
+        });
+    }
+
+    showStatsModal() {
+        const stats = this.getStats();
+        
+        // Populate main stats
+        document.getElementById('statsPlayed').textContent = stats.gamesPlayed;
+        const winRate = stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
+        document.getElementById('statsWinRate').textContent = winRate;
+        document.getElementById('statsCurrentStreak').textContent = stats.currentStreak;
+        document.getElementById('statsMaxStreak').textContent = stats.maxStreak;
+        
+        // Populate best time
+        if (stats.bestTime) {
+            const minutes = Math.floor(stats.bestTime / 60).toString().padStart(2, '0');
+            const seconds = (stats.bestTime % 60).toString().padStart(2, '0');
+            document.getElementById('bestTime').textContent = `${minutes}:${seconds}`;
+        } else {
+            document.getElementById('bestTime').textContent = '--:--';
+        }
+
+        this.statsModal.style.display = 'flex';
+    }
+
+    closeStatsModal() {
+        this.statsModal.style.display = 'none';
+    }
+
+    getStats() {
+        const key = `pixSlate-stats-${this.mode}`;
+        const defaultStats = {
+            gamesWon: 0,
+            gamesPlayed: 0,
+            currentStreak: 0,
+            maxStreak: 0,
+            bestTime: null,
+            lastGamePlayedSeed: null
+        };
+        const saved = localStorage.getItem(key);
+        return saved ? JSON.parse(saved) : defaultStats;
     }
 
     saveState() {
@@ -457,11 +508,15 @@ class SlidingPuzzleGame {
             stats.gamesWon++;
             stats.currentStreak++;
             stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
+            if (stats.bestTime === null || this.timer < stats.bestTime) {
+                stats.bestTime = this.timer;
+            }
+
             stats.lastGamePlayedSeed = currentSeed;
             this.saveStats(stats);
             this.updateStatsDisplay();
         }
-        
+
         this.updateUIVisibility();
 
         this.saveState();
@@ -474,6 +529,7 @@ class SlidingPuzzleGame {
         const isGameOver = !this.gameActive && this.isSolved();
 
         this.shareButton.style.display = isGameOver ? 'inline-block' : 'none';
+        this.statsButton.style.display = isGameOver ? 'inline-block' : 'none';
         this.pauseButton.style.display = isGameOver ? 'none' : 'inline-block';
 
         if (this.mode === 'daily') {
