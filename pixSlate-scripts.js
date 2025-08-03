@@ -121,7 +121,7 @@ class SlidingPuzzleGame {
         }
 
         this.updateUIVisibility();
-        }
+        // The extra brace was here. It has been removed.
 
         return true;
     }
@@ -180,7 +180,7 @@ class SlidingPuzzleGame {
         if (boardSize === 0) return;
         this.gameBoard.style.height = `${boardSize}px`;
 
-        const gap = 5;
+        const gap = 0;
         const totalGapSize = gap * 3;
         const tileSize = (boardSize - totalGapSize) / 4;
 
@@ -409,29 +409,24 @@ class SlidingPuzzleGame {
     endGame() {
         this.gameActive = false;
         this.stopTimer();
-        this.isPaused = true; // Enter a paused-like state on game end
+        this.isPaused = true;
         this.updateUIVisibility();
 
-        this.saveState(); // Save the final solved state
+        this.saveState();
         setTimeout(() => {
             alert(`You solved it in ${this.timer} seconds and ${this.moves} moves!`);
         }, 300);
     }
 
-    // Add this new function
     updateUIVisibility() {
         const isGameOver = !this.gameActive && this.isSolved();
 
-        // Handle the visibility of the Share Button
         this.shareButton.style.display = isGameOver ? 'inline-block' : 'none';
-
-        // Handle the visibility of the Pause Button
         this.pauseButton.style.display = isGameOver ? 'none' : 'inline-block';
 
-        // Handle the visibility of the New Game button based on the mode
         if (this.mode === 'daily') {
             this.newGameButton.style.display = 'none';
-        } else { // Random mode
+        } else {
             this.newGameButton.style.display = 'inline-block';
         }
     }
