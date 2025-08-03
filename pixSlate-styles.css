@@ -86,7 +86,7 @@ body {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 0;
-    margin-bottom: 1rem;
+    margin-bottom: 0;
     position: relative;
 }
 
@@ -129,6 +129,11 @@ body {
 
 .button-container {
     margin-top: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .new-game-button, .share-button {
@@ -197,7 +202,7 @@ body {
     display: flex;
     justify-content: center;
     gap: 0.8rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0;
     flex-wrap: wrap;
 }
 
