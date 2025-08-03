@@ -178,10 +178,6 @@ class SlidingPuzzleGame {
         if (boardSize === 0) return;
         this.gameBoard.style.height = `${boardSize}px`;
 
-        const gap = 5;
-        const totalGapSize = gap * 3;
-        const tileSize = (boardSize - totalGapSize) / 4;
-
         this.board.forEach((tileValue, index) => {
             const elementToMove = (tileValue === null) ?
                 this.tileElements.find(el => el.classList.contains('empty-spot')) :
@@ -208,13 +204,11 @@ class SlidingPuzzleGame {
 
             const row = Math.floor(index / 4);
             const col = index % 4;
-            const top = row * (tileSize + gap);
-            const left = col * (tileSize + gap);
+            const top = row * 25;
+            const left = col * 25;
 
-            elementToMove.style.width = `${tileSize}px`;
-            elementToMove.style.height = `${tileSize}px`;
-            elementToMove.style.top = `${top}px`;
-            elementToMove.style.left = `${left}px`;
+            elementToMove.style.top = `${top}%`;
+            elementToMove.style.left = `${left}%`;
         });
     }
 
