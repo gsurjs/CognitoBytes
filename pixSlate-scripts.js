@@ -161,15 +161,21 @@ class SlidingPuzzleGame {
         const tileElement = this.tileElements[index];
         const tileValue = this.board[index];
 
-        tileElement.innerHTML = '';
-        tileElement.className = 'tile';
-        tileElement.style.backgroundImage = 'none';
-
         if (tileValue === null) {
-            tileElement.classList.add('empty');
+            // This tile is becoming the empty space.
+            // Clear its contents and remove its image.
+            tileElement.innerHTML = '';
+            tileElement.style.backgroundImage = 'none';
+            tileElement.className = 'tile empty';
         } else {
+            // This tile is becoming a numbered tile (it was previously empty).
+            // Set its class, add the number, and set the background image.
+            // Crucially, we do NOT set the background to 'none' first.
+            tileElement.className = 'tile';
+            
             const span = document.createElement('span');
             span.textContent = tileValue;
+            tileElement.innerHTML = ''; // Clear any old content before adding new span
             tileElement.appendChild(span);
 
             const x = (tileValue - 1) % 4;
