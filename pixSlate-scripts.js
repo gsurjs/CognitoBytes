@@ -7,10 +7,10 @@ class SlidingPuzzleGame {
         this.gameActive = false;
         this.mode = 'daily'; // 'daily' or 'random'
         this.images = [
-            'images/img01.jpg', 'images/img02.jpg', 'images/img03.jpg',
-            'images/img04.jpg', 'images/img05.jpg', 'images/img06.jpg',
-            'images/img07.jpg', 'images/img08.jpg', 'images/img09.jpg',
-            'images/img10.jpg', 'images/img11.jpg', 'images/img12.jpg'
+            'images/slider/blue-cheeked-jacama.jpg', 'images/slider/capybara.jpg', 'images/slider/CEO.jpg',
+            'images/slider/earth.jpg', 'images/slider/Einstein.jpg', 'images/slider/greenfinch.jpg',
+            'images/slider/SanDiegoHummingBird.jpg', 'images/slider/Warbler.jpg', 'images/slider/Water.jpg',
+            'images/slider/yorkie.jpg', 'images/slider/yorkie1.jpg', 'images/slider/fine.jpg', 'images/slider/ancient-aliens.jpg'
         ];
         this.currentImage = '';
 
