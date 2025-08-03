@@ -427,7 +427,9 @@ class SlidingPuzzleGame {
             '🟩🟩🏆'
         ].join('\n');
 
-        const shareText = `🧩 Pix-Slate #${puzzleNumber}\nTime: ${timeString}, Moves: ${this.moves}\n\n${emojiPattern}`;
+        const shareText = `Pix-Slate ${puzzleNumber}\nTime: ${timeString}, Moves: ${this.moves}\n\n${emojiPattern}`;
+
+        shareText += '\nPlay at: ' + window.location.href;
 
         return shareText;
     }
