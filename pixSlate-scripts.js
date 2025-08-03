@@ -494,7 +494,7 @@ class SlidingPuzzleGame {
     endGame() {
         this.gameActive = false;
         this.stopTimer();
-        this.isPaused = true;
+        //this.isPaused = true;
 
 
         const stats = this.getStats();
