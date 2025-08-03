@@ -101,6 +101,7 @@ body {
     font-weight: bold;
     cursor: pointer;
     position: relative;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .tile span {
