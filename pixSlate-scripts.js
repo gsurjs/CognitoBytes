@@ -223,10 +223,15 @@ class SlidingPuzzleGame {
             this.renderFullBoard();
             this.moves++;
             this.updateMoves();
+
+            // --- START OF FIX ---
+            // Added curly braces to ensure both lines are executed conditionally
             if (this.isSolved()) {
                 this.gameActive = false;
                 this.endGame();
             }
+            // --- END OF FIX ---
+
             this.saveState();
         }
     }
@@ -404,6 +409,8 @@ class SlidingPuzzleGame {
     closeStatsModal() {
         this.statsModal.style.display = 'none';
     }
+
+
 
     updateStatsDisplay() {
         const stats = this.getStats();
