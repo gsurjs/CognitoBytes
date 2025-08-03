@@ -15,6 +15,7 @@ class SlidingPuzzleGame {
         this.currentImage = '';
 
         this.initializeElements();
+        this.createBoardElements();
         this.setupEventListeners();
         this.startNewGame();
     }
@@ -28,6 +29,17 @@ class SlidingPuzzleGame {
         this.dailyModeButton = document.getElementById('dailyMode');
         this.randomModeButton = document.getElementById('randomMode');
         this.imageCreditElement = document.getElementById('imageCredit');
+    }
+
+    createBoardElements() {
+        this.gameBoard.innerHTML = ''; // Clear board once at the start
+        for (let i = 0; i < 16; i++) {
+            const tileElement = document.createElement('div');
+            // We pass the index 'i' so each tile knows its permanent position in the grid
+            tileElement.addEventListener('click', () => this.handleTileClick(i));
+            this.gameBoard.appendChild(tileElement);
+            this.tileElements.push(tileElement);
+        }
     }
 
     setupEventListeners() {
@@ -53,7 +65,7 @@ class SlidingPuzzleGame {
         this.stopTimer();
         this.updateTimer();
         this.generateBoard();
-        this.renderBoard();
+        this.renderFullBoard(); // <-- Use the RENAMED function here
         this.shareButton.style.display = 'none';
     }
 
@@ -125,26 +137,33 @@ class SlidingPuzzleGame {
         return inversions;
     }
 
-    renderBoard() {
-        this.gameBoard.innerHTML = '';
-        this.board.forEach((tileValue, index) => {
-            const tileElement = document.createElement('div');
-            tileElement.classList.add('tile');
-            if (tileValue === null) {
-                tileElement.classList.add('empty');
-            } else {
-                const span = document.createElement('span');
-                span.textContent = tileValue;
-                tileElement.appendChild(span);
+    updateTileStyle(index) {
+        const tileElement = this.tileElements[index];
+        const tileValue = this.board[index];
 
-                const x = (tileValue - 1) % 4;
-                const y = Math.floor((tileValue - 1) / 4);
-                tileElement.style.backgroundImage = `url(${this.currentImage})`;
-                tileElement.style.backgroundPosition = `${x * 100/3}% ${y * 100/3}%`;
-            }
-            tileElement.addEventListener('click', () => this.handleTileClick(index));
-            this.gameBoard.appendChild(tileElement);
-        });
+        // Reset the tile's appearance
+        tileElement.innerHTML = '';
+        tileElement.className = 'tile';
+        tileElement.style.backgroundImage = 'none';
+
+        if (tileValue === null) {
+            tileElement.classList.add('empty');
+        } else {
+            const span = document.createElement('span');
+            span.textContent = tileValue;
+            tileElement.appendChild(span);
+
+            const x = (tileValue - 1) % 4;
+            const y = Math.floor((tileValue - 1) / 4);
+            tileElement.style.backgroundImage = `url(${this.currentImage})`;
+            tileElement.style.backgroundPosition = `${x * 100 / 3}% ${y * 100 / 3}%`;
+        }
+    }
+
+    renderFullBoard() {
+        for (let i = 0; i < 16; i++) {
+            this.updateTileStyle(i);
+        }
     }
 
     handleTileClick(index) {
@@ -165,7 +184,13 @@ class SlidingPuzzleGame {
             this.swapTiles(index, emptyIndex);
             this.moves++;
             this.updateMoves();
-            this.renderBoard();
+
+            // === THE FIX ===
+            // Replace the old renderBoard() call with these two lines
+            this.updateTileStyle(index);
+            this.updateTileStyle(emptyIndex);
+            // =================
+
             if (this.isSolved()) {
                 this.endGame();
             }
