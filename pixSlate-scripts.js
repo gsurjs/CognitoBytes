@@ -120,6 +120,10 @@ class SlidingPuzzleGame {
             }
         }
 
+        if (!this.gameActive && this.isSolved()) {
+            this.shareButton.style.display = 'inline-block';
+            this.pauseButton.style.display = 'none';
+        }
         return true;
     }
 
@@ -148,6 +152,7 @@ class SlidingPuzzleGame {
         this.generateBoard();
         this.renderFullBoard();
         this.shareButton.style.display = 'none';
+        this.pauseButton.style.display = 'inline-block';
         this.saveState();
     }
 
