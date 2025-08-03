@@ -34,10 +34,9 @@ class SlidingPuzzleGame {
         this.shareButton = document.getElementById('shareButton');
         this.dailyModeButton = document.getElementById('dailyMode');
         this.randomModeButton = document.getElementById('randomMode');
-        this.pauseButton = document.getElementById('pauseButton'); 
-        this.pauseOverlay = document.getElementById('pauseOverlay');
+        this.pauseButton = document.getElementById('pauseButton');
     }
-    
+
     createBoardElements() {
         this.gameBoard.innerHTML = '';
         this.tileElements = [];
@@ -47,8 +46,7 @@ class SlidingPuzzleGame {
             this.gameBoard.appendChild(tileElement);
             this.tileElements.push(tileElement);
         }
-        
-        // Add the overlay as the last child to ensure it's on top
+
         this.pauseOverlay = document.createElement('div');
         this.pauseOverlay.id = 'pauseOverlay';
         this.pauseOverlay.className = 'pause-overlay';
@@ -57,7 +55,7 @@ class SlidingPuzzleGame {
 
         this.gameBoard.addEventListener('click', this.boundHandleTileClick);
     }
-    
+
     setupEventListeners() {
         this.newGameButton.addEventListener('click', () => this.startNewGame());
         this.shareButton.addEventListener('click', () => this.shareResults());
@@ -73,7 +71,7 @@ class SlidingPuzzleGame {
             moves: this.moves,
             timer: this.timer,
             currentImage: this.currentImage,
-            gameActive: this.gameActive, // Comma was missing here
+            gameActive: this.gameActive,
             isPaused: this.isPaused
         };
 
@@ -109,10 +107,6 @@ class SlidingPuzzleGame {
         this.gameActive = savedState.gameActive;
         this.isPaused = savedState.isPaused || false;
 
-        if (this.gameActive && !this.isPaused) {
-            this.startTimer();
-        }
-
         this.renderFullBoard();
         this.updateMoves();
         this.updateTimer();
@@ -120,11 +114,15 @@ class SlidingPuzzleGame {
         if (this.isPaused) {
             this.pauseButton.textContent = 'RESUME';
             this.pauseOverlay.classList.add('active');
+        } else {
+            if (this.gameActive) {
+                this.startTimer();
+            }
         }
 
         return true;
     }
-    
+
     setMode(mode) {
         this.stopTimer();
         this.mode = mode;
@@ -368,4 +366,58 @@ class SlidingPuzzleGame {
     startTimer() {
         if (this.timerInterval) return;
         this.gameActive = true;
-        this.timerInterval = setInterval(().
+        this.timerInterval = setInterval(() => {
+            this.timer++;
+            this.updateTimer();
+            this.saveState();
+        }, 1000);
+    }
+
+    stopTimer() {
+        clearInterval(this.timerInterval);
+        this.timerInterval = null;
+    }
+
+    updateTimer() {
+        const minutes = Math.floor(this.timer / 60).toString().padStart(2, '0');
+        const seconds = (this.timer % 60).toString().padStart(2, '0');
+        this.timerElement.textContent = `Time: ${minutes}:${seconds}`;
+    }
+
+    isSolved() {
+        for (let i = 0; i < 15; i++) {
+            if (this.board[i] !== i + 1) return false;
+        }
+        return true;
+    }
+
+    endGame() {
+        this.gameActive = false;
+        this.stopTimer();
+        this.isPaused = true; // Enter a paused-like state on game end
+        this.pauseButton.style.display = 'none'; // Hide pause button
+        this.shareButton.style.display = 'inline-block';
+        this.saveState(); // Save the final solved state
+        setTimeout(() => {
+            alert(`You solved it in ${this.timer} seconds and ${this.moves} moves!`);
+        }, 300);
+    }
+
+    shareResults() {
+        const time = this.timerElement.textContent;
+        const text = `I solved the daily sliding puzzle in ${time} and ${this.moves} moves! Can you beat my score?`;
+        if (navigator.share) {
+            navigator.share({
+                title: 'Sliding Puzzle Challenge',
+                text: text,
+                url: window.location.href
+            });
+        } else {
+            alert(text);
+        }
+    }
+}
+
+window.addEventListener('load', () => {
+    new SlidingPuzzleGame();
+});
