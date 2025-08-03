@@ -77,7 +77,8 @@ class SlidingPuzzleGame {
         if (this.mode === 'daily') {
             const date = new Date();
             const seed = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
-            this.currentImage = this.images[this.seededRandomInt(seed, this.images.length)];
+            //this.currentImage = this.images[this.seededRandomInt(seed, this.images.length)];
+            this.currentImage = this.images[0];
             this.shuffleBoard(); // No longer pass a function
         } else {
             this.currentImage = this.images[Math.floor(Math.random() * this.images.length)];
