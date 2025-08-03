@@ -445,8 +445,7 @@ class SlidingPuzzleGame {
         if (navigator.share) {
             navigator.share({
                 title: 'Pix-Slate Puzzle Result',
-                text: text,
-                url: window.location.href
+                text: text
             }).catch(err => console.log("Share failed:", err));
         } else {
             alert("Share this result:\n\n" + text);
