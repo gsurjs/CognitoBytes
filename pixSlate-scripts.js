@@ -152,7 +152,9 @@ class SlidingPuzzleGame {
     }
 
     generateBoard() {
-        this.board = Array.from({ length: 16 }, (_, i) => i + 1);
+        this.board = Array.from({
+            length: 16
+        }, (_, i) => i + 1);
         this.board[15] = null;
 
         if (this.mode === 'daily') {
@@ -176,9 +178,9 @@ class SlidingPuzzleGame {
         const tileSize = (boardSize - totalGapSize) / 4;
 
         this.board.forEach((tileValue, index) => {
-            const elementToMove = (tileValue === null)
-                ? this.tileElements.find(el => el.classList.contains('empty-spot'))
-                : this.tileElements.find(el => parseInt(el.dataset.tileValue) === tileValue);
+            const elementToMove = (tileValue === null) ?
+                this.tileElements.find(el => el.classList.contains('empty-spot')) :
+                this.tileElements.find(el => parseInt(el.dataset.tileValue) === tileValue);
 
             if (!elementToMove) return;
 
@@ -228,8 +230,14 @@ class SlidingPuzzleGame {
 
         if (clickedIndex === -1) return;
 
-        const { row, col } = this.getTilePosition(clickedIndex);
-        const { row: emptyRow, col: emptyCol } = this.getTilePosition(emptyIndex);
+        const {
+            row,
+            col
+        } = this.getTilePosition(clickedIndex);
+        const {
+            row: emptyRow,
+            col: emptyCol
+        } = this.getTilePosition(emptyIndex);
 
         if (
             (Math.abs(row - emptyRow) === 1 && col === emptyCol) ||
@@ -241,7 +249,7 @@ class SlidingPuzzleGame {
 
             this.swapTiles(clickedIndex, emptyIndex);
             this.renderFullBoard();
-            
+
             this.moves++;
             this.updateMoves();
 
@@ -271,18 +279,18 @@ class SlidingPuzzleGame {
         }
         this.saveState();
     }
-    
+
     shuffleBoard() {
         const initialTiles = this.board.filter(t => t !== null);
         let inversions = 1;
         let attempt = 0;
 
-        const seed = (this.mode === 'daily') 
-            ? new Date().getFullYear() * 10000 + (new Date().getMonth() + 1) * 100 + new Date().getDate()
-            : 0;
+        const seed = (this.mode === 'daily') ?
+            new Date().getFullYear() * 10000 + (new Date().getMonth() + 1) * 100 + new Date().getDate() :
+            0;
 
         while (inversions % 2 !== 0) {
-            let boardToShuffle = [...initialTiles]; 
+            let boardToShuffle = [...initialTiles];
             let shuffledResult;
 
             if (this.mode === 'daily') {
@@ -290,20 +298,20 @@ class SlidingPuzzleGame {
             } else {
                 shuffledResult = this.randomShuffle(boardToShuffle);
             }
-            
+
             inversions = this.countInversions(shuffledResult);
-            
+
             if (inversions % 2 === 0) {
                 this.board = [...shuffledResult, null];
             }
             attempt++;
         }
-        
+
         const lastTileValue = 16;
         this.tileElements.forEach(el => el.classList.remove('empty-spot'));
         const emptyElement = this.tileElements.find(el => parseInt(el.dataset.tileValue) === lastTileValue);
-        if(emptyElement) {
-           emptyElement.classList.add('empty-spot');
+        if (emptyElement) {
+            emptyElement.classList.add('empty-spot');
         }
     }
 
@@ -347,7 +355,7 @@ class SlidingPuzzleGame {
         }
         return inversions;
     }
-    
+
     swapTiles(index1, index2) {
         [this.board[index1], this.board[index2]] = [this.board[index2], this.board[index1]];
     }
@@ -404,32 +412,29 @@ class SlidingPuzzleGame {
     }
 
     generateShareText() {
-        // 1. Calculate a unique number for each daily puzzle
-        const epoch = new Date('2025-08-01T00:00:00'); // The "start date" for puzzle numbering
+        const epoch = new Date('2025-08-01T00:00:00');
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // Normalize to the beginning of the day
+        today.setHours(0, 0, 0, 0);
         const puzzleNumber = Math.floor((today.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-        // 2. Format your time and moves
         const minutes = Math.floor(this.timer / 60).toString().padStart(2, '0');
         const seconds = (this.timer % 60).toString().padStart(2, '0');
         const timeString = `${minutes}:${seconds}`;
 
-        // 3. Create a witty emoji pattern for the slider puzzle
         const emojiPattern = [
             '🟨🟨⬛',
             '🟨🟩🟨',
             '🟩🟩🏆'
         ].join('\n');
 
-        // 4. Assemble the final text
         const shareText = `🧩 Pix-Slate #${puzzleNumber}\nTime: ${timeString}, Moves: ${this.moves}\n\n${emojiPattern}`;
 
         return shareText;
     }
+    
     shareResults() {
         const text = this.generateShareText();
-        
+
         if (navigator.share) {
             navigator.share({
                 title: 'Pix-Slate Puzzle Result',
@@ -437,10 +442,10 @@ class SlidingPuzzleGame {
                 url: window.location.href
             }).catch(err => console.log("Share failed:", err));
         } else {
-            // Fallback for browsers that don't support the share API
             alert("Share this result:\n\n" + text);
         }
     }
+}
 
 window.addEventListener('load', () => {
     new SlidingPuzzleGame();
