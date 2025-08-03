@@ -78,19 +78,10 @@ class SlidingPuzzleGame {
             const date = new Date();
             const seed = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
             this.currentImage = this.images[this.seededRandomInt(seed, this.images.length)];
-            let attempt = 0;
-            const dailyShuffle = (array) => {
-                attempt++;
-                // Create a copy to ensure we're not re-shuffling a shuffled board
-                let arrayCopy = [...array]; 
-                return this.seededShuffle(seed + attempt, arrayCopy);
-            };
-            this.shuffleBoard(dailyShuffle);
-            // --- End of Fix ---
-
+            this.shuffleBoard(); // No longer pass a function
         } else {
             this.currentImage = this.images[Math.floor(Math.random() * this.images.length)];
-            this.shuffleBoard(this.randomShuffle);
+            this.shuffleBoard(); // No longer pass a function
         }
     }
 
@@ -101,15 +92,35 @@ class SlidingPuzzleGame {
         return Math.floor((((t ^ t >>> 14) >>> 0) / 4294967296) * max);
     }
 
-    shuffleBoard(shuffleFunction) {
-        let tempBoard = this.board.filter(t => t !== null);
+    shuffleBoard() {
+        const initialTiles = this.board.filter(t => t !== null);
         let inversions = 1;
-        // Ensure the puzzle is solvable by checking inversions
+        let attempt = 0;
+
+        // The seed is only used for daily mode
+        const seed = (this.mode === 'daily') 
+            ? new Date().getFullYear() * 10000 + (new Date().getMonth() + 1) * 100 + new Date().getDate()
+            : 0;
+
         while (inversions % 2 !== 0) {
-            tempBoard = shuffleFunction(tempBoard);
-            inversions = this.countInversions(tempBoard);
+            // Always shuffle a fresh, ordered copy of the tiles
+            let boardToShuffle = [...initialTiles]; 
+            let shuffledResult;
+
+            if (this.mode === 'daily') {
+                shuffledResult = this.seededShuffle(seed + attempt, boardToShuffle);
+            } else {
+                shuffledResult = this.randomShuffle(boardToShuffle);
+            }
+            
+            inversions = this.countInversions(shuffledResult);
+            
+            // If the board is solvable, assign it as the final result
+            if (inversions % 2 === 0) {
+                this.board = [...shuffledResult, null];
+            }
+            attempt++;
         }
-        this.board = [...tempBoard, null];
     }
 
     randomShuffle(array) {
