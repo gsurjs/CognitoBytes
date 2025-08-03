@@ -99,6 +99,8 @@ body {
     cursor: pointer;
     position: relative;
     background-size: 400% 400%;
+    backface-visibility: hidden;
+    will-change: transform;
 }
 
 .tile span {
