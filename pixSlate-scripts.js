@@ -527,7 +527,7 @@ class SlidingPuzzleGame {
 
     updateUIVisibility() {
         const isGameOver = !this.gameActive && this.isSolved();
-        this.shareButton.style.display = isGameOver ? 'inline-block' : 'none';
+        this.shareButton.style.display = isGameOver && this.mode === 'daily' ? 'inline-block' : 'none';
         this.statsButton.style.display = isGameOver ? 'inline-block' : 'none';
         this.pauseButton.style.display = isGameOver ? 'none' : 'inline-block';
         if (this.mode === 'daily') {
@@ -590,6 +590,8 @@ class SlidingPuzzleGame {
     }
     
     shareResults() {
+        if (this.mode!== 'daily') return;
+
         const text = this.generateShareText();
 
         if (navigator.share) {
