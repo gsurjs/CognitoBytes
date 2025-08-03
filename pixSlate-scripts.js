@@ -1,7 +1,7 @@
 class SlidingPuzzleGame {
     constructor() {
         this.board = [];
-        this.tileElements = []; // <-- Bug Fix: This array was missing
+        this.tileElements = [];
         this.moves = 0;
         this.timer = 0;
         this.timerInterval = null;
@@ -35,9 +35,8 @@ class SlidingPuzzleGame {
         this.gameBoard.innerHTML = ''; // Clear board once at the start
         for (let i = 0; i < 16; i++) {
             const tileElement = document.createElement('div');
-            tileElement.addEventListener('click', () => this.handleTileClick(i));
             this.gameBoard.appendChild(tileElement);
-            this.tileElements.push(tileElement); // <-- Bug Fix: This line was missing
+            this.tileElements.push(tileElement);
         }
     }
 
@@ -46,13 +45,15 @@ class SlidingPuzzleGame {
         this.shareButton.addEventListener('click', () => this.shareResults());
         this.dailyModeButton.addEventListener('click', () => this.setMode('daily'));
         this.randomModeButton.addEventListener('click', () => this.setMode('random'));
+        
+        // Add a listener to resize the board when the window size changes
+        window.addEventListener('resize', () => this.renderFullBoard());
     }
 
     setMode(mode) {
         this.mode = mode;
         this.dailyModeButton.classList.toggle('active', mode === 'daily');
         this.randomModeButton.classList.toggle('active', mode !== 'daily');
-        this.newGameButton.style.display = 'inline-block';
         this.startNewGame();
     }
 
@@ -69,21 +70,132 @@ class SlidingPuzzleGame {
     }
 
     generateBoard() {
-        this.board = Array.from({
-            length: 16
-        }, (_, i) => i + 1);
+        this.board = Array.from({ length: 16 }, (_, i) => i + 1);
         this.board[15] = null; // Empty space
 
+        // Create a mapping of the tile number to its element for the initial render
+        this.tileElements.forEach((element, i) => {
+            element.dataset.tileValue = i + 1;
+        });
+        
+        // Set image and shuffle
         if (this.mode === 'daily') {
             const date = new Date();
             const seed = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
             this.currentImage = this.images[this.seededRandomInt(seed, this.images.length)];
-            this.shuffleBoard(); // No longer pass a function
+            this.shuffleBoard();
         } else {
             this.currentImage = this.images[Math.floor(Math.random() * this.images.length)];
-            this.shuffleBoard(); // No longer pass a function
+            this.shuffleBoard();
         }
     }
+
+    renderFullBoard() {
+        // Ensure the game board container is a perfect square
+        const boardSize = this.gameBoard.clientWidth;
+        this.gameBoard.style.height = `${boardSize}px`;
+
+        const gap = 5; // The gap in pixels from your CSS
+        const totalGapSize = gap * 3;
+        const tileSize = (boardSize - totalGapSize) / 4;
+
+        this.board.forEach((tileValue, index) => {
+            // Find the correct DOM element for the tile's value
+            // The empty spot is handled by finding the tile that should be hidden
+            const elementToMove = (tileValue === null)
+                ? this.tileElements.find(el => el.classList.contains('empty-spot'))
+                : this.tileElements.find(el => parseInt(el.dataset.tileValue) === tileValue);
+
+            if (!elementToMove) return;
+
+            // --- Part 1: Style the tile's content and appearance ---
+            elementToMove.innerHTML = '';
+            if (tileValue === null) {
+                // This is the conceptual empty space, we just hide its element
+                elementToMove.className = 'tile empty-spot'; // A hidden tile
+                elementToMove.style.display = 'none';
+            } else {
+                elementToMove.className = 'tile';
+                elementToMove.style.display = 'flex';
+                const span = document.createElement('span');
+                span.textContent = tileValue;
+                elementToMove.appendChild(span);
+
+                const x = (tileValue - 1) % 4;
+                const y = Math.floor((tileValue - 1) / 4);
+                elementToMove.style.backgroundImage = `url(${this.currentImage})`;
+                elementToMove.style.backgroundPosition = `${x * 100 / 3}% ${y * 100 / 3}%`;
+            }
+
+            // --- Part 2: Position the tile on the board ---
+            const row = Math.floor(index / 4);
+            const col = index % 4;
+            const top = row * (tileSize + gap);
+            const left = col * (tileSize + gap);
+
+            elementToMove.style.width = `${tileSize}px`;
+            elementToMove.style.height = `${tileSize}px`;
+            elementToMove.style.top = `${top}px`;
+            elementToMove.style.left = `${left}px`;
+        });
+    }
+
+    handleTileClick(e) {
+        if (!this.gameActive) return;
+
+        // Find the clicked tile's value from its data attribute
+        const clickedValue = parseInt(e.target.dataset.tileValue);
+        if (isNaN(clickedValue)) return; // Exit if a non-tile is clicked
+
+        // Find the index of the clicked value and the empty spot in our data board
+        const clickedIndex = this.board.indexOf(clickedValue);
+        const emptyIndex = this.board.indexOf(null);
+
+        if (clickedIndex === -1) return;
+
+        const { row, col } = this.getTilePosition(clickedIndex);
+        const { row: emptyRow, col: emptyCol } = this.getTilePosition(emptyIndex);
+
+        if (
+            (Math.abs(row - emptyRow) === 1 && col === emptyCol) ||
+            (Math.abs(col - emptyCol) === 1 && row === emptyRow)
+        ) {
+            if (this.moves === 0 && this.timer === 0) {
+                this.startTimer();
+            }
+
+            this.swapTiles(clickedIndex, emptyIndex); // Update data model
+            this.renderFullBoard(); // Re-render the board
+            
+            this.moves++;
+            this.updateMoves();
+
+            if (this.isSolved()) {
+                this.endGame();
+            }
+        }
+    }
+    
+    // Minor change to how clicks are handled
+    // We bind the events to the elements *after* they have their data-tile-value set.
+    // So the old `createBoardElements` is split.
+    createBoardElements() {
+        this.gameBoard.innerHTML = '';
+        this.tileElements = []; // Clear previous elements
+        for (let i = 0; i < 16; i++) {
+            const tileElement = document.createElement('div');
+            // We set the click listener on the gameBoard to handle all tile clicks
+            // This is more efficient and avoids issues with element reordering
+            this.gameBoard.appendChild(tileElement);
+            this.tileElements.push(tileElement);
+        }
+        // Remove old listeners and add a single new one
+        this.gameBoard.removeEventListener('click', this.boundHandleTileClick);
+        this.boundHandleTileClick = this.handleTileClick.bind(this);
+        this.gameBoard.addEventListener('click', this.boundHandleTileClick);
+    }
+    
+    // --- All other functions (shuffle, timer, etc.) remain the same ---
 
     seededRandomInt(seed, max) {
         let t = seed += 0x6D2B79F5;
@@ -97,13 +209,11 @@ class SlidingPuzzleGame {
         let inversions = 1;
         let attempt = 0;
 
-        // The seed is only used for daily mode
         const seed = (this.mode === 'daily') 
             ? new Date().getFullYear() * 10000 + (new Date().getMonth() + 1) * 100 + new Date().getDate()
             : 0;
 
         while (inversions % 2 !== 0) {
-            // Always shuffle a fresh, ordered copy of the tiles
             let boardToShuffle = [...initialTiles]; 
             let shuffledResult;
 
@@ -115,11 +225,18 @@ class SlidingPuzzleGame {
             
             inversions = this.countInversions(shuffledResult);
             
-            // If the board is solvable, assign it as the final result
             if (inversions % 2 === 0) {
                 this.board = [...shuffledResult, null];
             }
             attempt++;
+        }
+        
+        // Find the tile that will represent the empty space and mark it
+        const lastTileValue = 16;
+        this.tileElements.forEach(el => el.classList.remove('empty-spot'));
+        const emptyElement = this.tileElements.find(el => parseInt(el.dataset.tileValue) === lastTileValue);
+        if(emptyElement) {
+           emptyElement.classList.add('empty-spot');
         }
     }
 
@@ -156,99 +273,7 @@ class SlidingPuzzleGame {
         }
         return inversions;
     }
-
-    updateTileStyle(index) {
-        const tileElement = this.tileElements[index];
-        const tileValue = this.board[index];
-
-        if (tileValue === null) {
-            // This tile is becoming the empty space.
-            // Clear its contents and remove its image.
-            tileElement.innerHTML = '';
-            tileElement.style.backgroundImage = 'none';
-            tileElement.className = 'tile empty';
-        } else {
-            // This tile is becoming a numbered tile (it was previously empty).
-            // Set its class, add the number, and set the background image.
-            // Crucially, we do NOT set the background to 'none' first.
-            tileElement.className = 'tile';
-            
-            const span = document.createElement('span');
-            span.textContent = tileValue;
-            tileElement.innerHTML = ''; // Clear any old content before adding new span
-            tileElement.appendChild(span);
-
-            const x = (tileValue - 1) % 4;
-            const y = Math.floor((tileValue - 1) / 4);
-            tileElement.style.backgroundImage = `url(${this.currentImage})`;
-            tileElement.style.backgroundPosition = `${x * 100 / 3}% ${y * 100 / 3}%`;
-        }
-    }
-
-    renderFullBoard() {
-        // We set the board size to be a perfect square
-        const boardSize = this.gameBoard.clientWidth;
-        this.gameBoard.style.height = `${boardSize}px`;
-
-        const gap = 5; // The gap in pixels from your CSS
-        const totalGap = gap * 3;
-        const tileSize = (boardSize - totalGap) / 4;
-
-        this.board.forEach((tileValue, index) => {
-            // Calculate the row and column for this grid position
-            const row = Math.floor(index / 4);
-            const col = index % 4;
-
-            // Calculate the pixel position for the tile
-            const top = row * (tileSize + gap);
-            const left = col * (tileSize + gap);
-
-            const tileElement = this.tileElements[index];
-
-            // Apply the new position
-            tileElement.style.top = `${top}px`;
-            tileElement.style.left = `${left}px`;
-            
-            // Set the size of the tile explicitly
-            tileElement.style.width = `${tileSize}px`;
-            tileElement.style.height = `${tileSize}px`;
-        });
-    }
-
-    handleTileClick(index) {
-        if (!this.gameActive) return;
-
-        if (this.moves === 0 && this.timer === 0) {
-            this.startTimer();
-        }
-
-        const emptyIndex = this.board.indexOf(null);
-        const {
-            row,
-            col
-        } = this.getTilePosition(index);
-        const {
-            row: emptyRow,
-            col: emptyCol
-        } = this.getTilePosition(emptyIndex);
-
-        if (
-            (Math.abs(row - emptyRow) === 1 && col === emptyCol) ||
-            (Math.abs(col - emptyCol) === 1 && row === emptyRow)
-        ) {
-            this.swapTiles(index, emptyIndex);
-            this.moves++;
-            this.updateMoves();
-
-            this.updateTileStyle(index);
-            this.updateTileStyle(emptyIndex);
-
-            if (this.isSolved()) {
-                this.endGame();
-            }
-        }
-    }
-
+    
     swapTiles(index1, index2) {
         [this.board[index1], this.board[index2]] = [this.board[index2], this.board[index1]];
     }

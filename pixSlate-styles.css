@@ -91,9 +91,11 @@ body {
 }
 
 .tile {
-    width: 25%; /* Set explicit width */
-    height: 25%; /* Set explicit height */
-    padding-bottom: 0; /* Remove padding hack */
+    /* Explicitly set width/height as padding trick no longer works */
+    width: 100px; /* This will be overridden by JS */
+    height: 100px; /* This will be overridden by JS */
+    padding-bottom: 0; 
+    
     background-color: rgba(255, 255, 255, 0.3);
     border-radius: 8px;
     display: flex;
@@ -102,10 +104,13 @@ body {
     font-size: 2rem;
     font-weight: bold;
     cursor: pointer;
-    position: absolute; /* Allow tiles to be positioned freely */
+    
+    position: absolute; /* Allows tiles to be positioned freely */
+    
     -webkit-tap-highlight-color: transparent;
     transform: translateZ(0);
-    /* Animate the 'top' and 'left' properties for a smooth slide */
+
+    /* The actual slide animation: animate the top and left properties */
     transition: top 0.25s ease-in-out, left 0.25s ease-in-out;
 }
 
