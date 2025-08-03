@@ -103,6 +103,7 @@ body {
     position: relative;
     -webkit-tap-highlight-color: transparent;
     transform: translateZ(0);
+    transition: background-position 0.9s ease-in-out, background-color 0.9s ease-in-out;
 }
 
 .tile span {
