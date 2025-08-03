@@ -18,7 +18,59 @@ class SlidingPuzzleGame {
         this.initializeElements();
         this.createBoardElements();
         this.setupEventListeners();
-        this.startNewGame();
+        // Attempt to load the last daily game. If none exists, start a new one.
+        if (!this.loadState()) {
+            this.startNewGame();
+        }
+    }
+
+
+    saveState() {
+        const state = {
+            board: this.board,
+            moves: this.moves,
+            timer: this.timer,
+            currentImage: this.currentImage,
+            gameActive: this.gameActive
+        };
+
+        // For daily mode, we also save the date to ensure we don't load a stale puzzle
+        if (this.mode === 'daily') {
+            state.date = new Date().toDateString();
+        }
+
+        localStorage.setItem(`pixSlateSave_${this.mode}`, JSON.stringify(state));
+    }
+
+    loadState() {
+        const savedStateJSON = localStorage.getItem(`pixSlateSave_${this.mode}`);
+        if (!savedStateJSON) return false;
+
+        const savedState = JSON.parse(savedStateJSON);
+
+        // For daily mode, if the saved game is from a previous day, ignore it
+        if (this.mode === 'daily' && savedState.date !== new Date().toDateString()) {
+            localStorage.removeItem(`pixSlateSave_${this.mode}`);
+            return false;
+        }
+
+        // Restore the game state from the loaded data
+        this.board = savedState.board;
+        this.moves = savedState.moves;
+        this.timer = savedState.timer;
+        this.currentImage = savedState.currentImage;
+        this.gameActive = savedState.gameActive;
+        
+        // If the game was active, restart the timer
+        if (this.gameActive) {
+            this.startTimer();
+        }
+        
+        this.renderFullBoard();
+        this.updateMoves();
+        this.updateTimer();
+        
+        return true;
     }
 
     initializeElements() {
@@ -51,13 +103,21 @@ class SlidingPuzzleGame {
     }
 
     setMode(mode) {
+        this.stopTimer(); // Stop timer when switching modes
         this.mode = mode;
         this.dailyModeButton.classList.toggle('active', mode === 'daily');
         this.randomModeButton.classList.toggle('active', mode !== 'daily');
-        this.startNewGame();
+
+        // Try to load a saved game in the selected mode
+        if (!this.loadState()) {
+            this.startNewGame();
+        }
     }
 
     startNewGame() {
+        // Clear any previous save for this mode since we are starting fresh
+        localStorage.removeItem(`pixSlateSave_${this.mode}`);
+
         this.gameActive = true;
         this.moves = 0;
         this.timer = 0;
@@ -67,6 +127,9 @@ class SlidingPuzzleGame {
         this.generateBoard();
         this.renderFullBoard();
         this.shareButton.style.display = 'none';
+
+        // Save the initial state of the new game
+        this.saveState();
     }
 
     generateBoard() {
@@ -180,8 +243,10 @@ class SlidingPuzzleGame {
             this.updateMoves();
 
             if (this.isSolved()) {
+                this.gameActive = false; // Stop game activity before saving
                 this.endGame();
             }
+            this.saveState(); // Save progress after every move
         }
     }
     
@@ -300,9 +365,11 @@ class SlidingPuzzleGame {
 
     startTimer() {
         if (this.timerInterval) return;
+        this.gameActive = true; // Make sure game is marked as active
         this.timerInterval = setInterval(() => {
             this.timer++;
             this.updateTimer();
+            this.saveState(); // Save timer progress
         }, 1000);
     }
 
