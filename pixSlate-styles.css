@@ -83,6 +83,8 @@ body {
 }
 
 .game-board {
+    position: relative; 
+    aspect-ratio: 1 / 1;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 5px;
@@ -90,10 +92,10 @@ body {
 }
 
 .tile {
-    transition: transform 0.5s ease-in-out, top 0.5s ease-in-out, left 0.5s ease-in-out;
+    transition: transform 0.5s ease-in-out;
     width: 100%;
     padding-bottom: 100%;
-    border-radius: 8px;
+    border-radius: 2px;
     font-size: 2rem;
     font-weight: bold;
     cursor: pointer;
