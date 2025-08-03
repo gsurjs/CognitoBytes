@@ -92,14 +92,20 @@ body {
 }
 
 .tile {
-    transition: transform 0.5s ease-in-out;
-    width: 100%;
-    padding-bottom: 100%;
-    border-radius: 2px;
+    position: absolute;  
+    width: calc(25% - 5px);  
+    height: calc(25% - 5px); 
+
+    /* --- Animation & Performance --- */
+    transition: transform 0.3s ease-in-out;
+    backface-visibility: hidden;
+    will-change: transform;
+
+    /* --- Visual Styles --- */
+    border-radius: 8px; 
     font-size: 2rem;
     font-weight: bold;
     cursor: pointer;
-    position: relative;
     background-size: 400% 400%;
 }
 
