@@ -20,6 +20,7 @@ class SlidingPuzzleGame {
         this.initializeElements();
         this.createBoardElements();
         this.setupEventListeners();
+
         this.updateStatsDisplay();
 
         if (!this.loadState()) {
@@ -36,11 +37,38 @@ class SlidingPuzzleGame {
         this.dailyModeButton = document.getElementById('dailyMode');
         this.randomModeButton = document.getElementById('randomMode');
         this.pauseButton = document.getElementById('pauseButton');
+
         this.gamesWon = document.getElementById('gamesWon');
         this.gamesPlayed = document.getElementById('gamesPlayed');
         this.winStreak = document.getElementById('winStreak');
+
         this.statsButton = document.getElementById('statsButton');
         this.statsModal = document.getElementById('statsModal');
+    }
+
+    getStats() {
+        const key = `pixSlate-stats-${this.mode}`;
+        const defaultStats = {
+            gamesWon: 0,
+            gamesPlayed: 0,
+            currentStreak: 0,
+            maxStreak: 0,
+            lastGamePlayedSeed: null
+        };
+        const saved = localStorage.getItem(key);
+        return saved ? JSON.parse(saved) : defaultStats;
+    }
+
+    saveStats(stats) {
+        const key = `pixSlate-stats-${this.mode}`;
+        localStorage.setItem(key, JSON.stringify(stats));
+    }
+
+    updateStatsDisplay() {
+        const stats = this.getStats();
+        this.gamesWon.textContent = stats.gamesWon;
+        this.gamesPlayed.textContent = stats.gamesPlayed;
+        this.winStreak.textContent = stats.currentStreak;
     }
 
     createBoardElements() {
@@ -52,11 +80,13 @@ class SlidingPuzzleGame {
             this.gameBoard.appendChild(tileElement);
             this.tileElements.push(tileElement);
         }
+
         this.pauseOverlay = document.createElement('div');
         this.pauseOverlay.id = 'pauseOverlay';
         this.pauseOverlay.className = 'pause-overlay';
         this.pauseOverlay.textContent = 'PAUSED';
         this.gameBoard.appendChild(this.pauseOverlay);
+
         this.gameBoard.addEventListener('click', this.boundHandleTileClick);
     }
 
@@ -67,6 +97,7 @@ class SlidingPuzzleGame {
         this.randomModeButton.addEventListener('click', () => this.setMode('random'));
         this.pauseButton.addEventListener('click', () => this.togglePause());
         window.addEventListener('resize', () => this.renderFullBoard());
+
         this.statsButton.addEventListener('click', () => this.showStatsModal());
         this.statsModal.querySelector('.modal-close-button').addEventListener('click', () => this.closeStatsModal());
         this.statsModal.addEventListener('click', (e) => {
@@ -74,6 +105,46 @@ class SlidingPuzzleGame {
                 this.closeStatsModal();
             }
         });
+    }
+
+    showStatsModal() {
+        const stats = this.getStats();
+        
+        // Populate main stats
+        document.getElementById('statsPlayed').textContent = stats.gamesPlayed;
+        const winRate = stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
+        document.getElementById('statsWinRate').textContent = winRate;
+        document.getElementById('statsCurrentStreak').textContent = stats.currentStreak;
+        document.getElementById('statsMaxStreak').textContent = stats.maxStreak;
+        
+        // Populate best time
+        if (stats.bestTime) {
+            const minutes = Math.floor(stats.bestTime / 60).toString().padStart(2, '0');
+            const seconds = (stats.bestTime % 60).toString().padStart(2, '0');
+            document.getElementById('bestTime').textContent = `${minutes}:${seconds}`;
+        } else {
+            document.getElementById('bestTime').textContent = '--:--';
+        }
+
+        this.statsModal.style.display = 'flex';
+    }
+
+    closeStatsModal() {
+        this.statsModal.style.display = 'none';
+    }
+
+    getStats() {
+        const key = `pixSlate-stats-${this.mode}`;
+        const defaultStats = {
+            gamesWon: 0,
+            gamesPlayed: 0,
+            currentStreak: 0,
+            maxStreak: 0,
+            bestTime: null,
+            lastGamePlayedSeed: null
+        };
+        const saved = localStorage.getItem(key);
+        return saved ? JSON.parse(saved) : defaultStats;
     }
 
     saveState() {
@@ -85,35 +156,43 @@ class SlidingPuzzleGame {
             gameActive: this.gameActive,
             isPaused: this.isPaused
         };
+
         if (this.mode === 'daily') {
             state.date = new Date().toDateString();
         }
+
         localStorage.setItem(`pixSlateSave_${this.mode}`, JSON.stringify(state));
     }
 
     loadState() {
         const savedStateJSON = localStorage.getItem(`pixSlateSave_${this.mode}`);
         if (!savedStateJSON) return false;
+
         const savedState = JSON.parse(savedStateJSON);
+
         if (this.mode === 'daily' && savedState.date !== new Date().toDateString()) {
             localStorage.removeItem(`pixSlateSave_${this.mode}`);
             return false;
         }
+
         const lastTileValue = 16;
         this.tileElements.forEach(el => el.classList.remove('empty-spot'));
         const emptyElement = this.tileElements.find(el => parseInt(el.dataset.tileValue) === lastTileValue);
         if (emptyElement) {
             emptyElement.classList.add('empty-spot');
         }
+
         this.board = savedState.board;
         this.moves = savedState.moves;
         this.timer = savedState.timer;
         this.currentImage = savedState.currentImage;
         this.gameActive = savedState.gameActive;
         this.isPaused = savedState.isPaused || false;
+
         this.renderFullBoard();
         this.updateMoves();
         this.updateTimer();
+
         if (this.isPaused) {
             this.pauseButton.textContent = 'RESUME';
             this.pauseOverlay.classList.add('active');
@@ -122,7 +201,10 @@ class SlidingPuzzleGame {
                 this.startTimer();
             }
         }
+
         this.updateUIVisibility();
+        // The extra brace was here. It has been removed.
+
         return true;
     }
 
@@ -131,10 +213,14 @@ class SlidingPuzzleGame {
         this.mode = mode;
         this.dailyModeButton.classList.toggle('active', mode === 'daily');
         this.randomModeButton.classList.toggle('active', mode !== 'daily');
+
+        // Update stats display for the new mode
         this.updateStatsDisplay();
+
         if (!this.loadState()) {
             this.startNewGame();
         }
+
         this.updateUIVisibility();
     }
 
@@ -151,13 +237,18 @@ class SlidingPuzzleGame {
         this.updateTimer();
         this.generateBoard();
         this.renderFullBoard();
+
         this.updateUIVisibility();
+
         this.saveState();
     }
 
     generateBoard() {
-        this.board = Array.from({ length: 16 }, (_, i) => i + 1);
+        this.board = Array.from({
+            length: 16
+        }, (_, i) => i + 1);
         this.board[15] = null;
+
         if (this.mode === 'daily') {
             const date = new Date();
             const seed = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
@@ -173,13 +264,18 @@ class SlidingPuzzleGame {
         const boardSize = this.gameBoard.clientWidth;
         if (boardSize === 0) return;
         this.gameBoard.style.height = `${boardSize}px`;
+
         const gap = 0;
-        const tileSize = boardSize / 4;
+        const totalGapSize = gap * 3;
+        const tileSize = (boardSize - totalGapSize) / 4;
+
         this.board.forEach((tileValue, index) => {
             const elementToMove = (tileValue === null) ?
                 this.tileElements.find(el => el.classList.contains('empty-spot')) :
                 this.tileElements.find(el => parseInt(el.dataset.tileValue) === tileValue);
+
             if (!elementToMove) return;
+
             elementToMove.innerHTML = '';
             if (tileValue === null) {
                 elementToMove.className = 'tile empty-spot';
@@ -190,15 +286,18 @@ class SlidingPuzzleGame {
                 const span = document.createElement('span');
                 span.textContent = tileValue;
                 elementToMove.appendChild(span);
+
                 const x = (tileValue - 1) % 4;
                 const y = Math.floor((tileValue - 1) / 4);
                 elementToMove.style.backgroundImage = `url(${this.currentImage})`;
                 elementToMove.style.backgroundPosition = `${x * 100 / 3}% ${y * 100 / 3}%`;
             }
+
             const row = Math.floor(index / 4);
             const col = index % 4;
-            const top = row * tileSize;
-            const left = col * tileSize;
+            const top = row * (tileSize + gap);
+            const left = col * (tileSize + gap);
+
             elementToMove.style.width = `${tileSize}px`;
             elementToMove.style.height = `${tileSize}px`;
             elementToMove.style.top = `${top}px`;
@@ -208,43 +307,65 @@ class SlidingPuzzleGame {
 
     handleTileClick(e) {
         if (this.isPaused || !this.gameActive) return;
+
         const clickedTileElement = e.target.closest('.tile');
-        if (!clickedTileElement || clickedTileElement.classList.contains('empty-spot')) return;
+
+        if (!clickedTileElement || clickedTileElement.classList.contains('empty-spot')) {
+            return;
+        }
+
         const clickedValue = parseInt(clickedTileElement.dataset.tileValue);
         if (isNaN(clickedValue)) return;
+
         const clickedIndex = this.board.indexOf(clickedValue);
         const emptyIndex = this.board.indexOf(null);
+
         if (clickedIndex === -1) return;
-        const { row, col } = this.getTilePosition(clickedIndex);
-        const { row: emptyRow, col: emptyCol } = this.getTilePosition(emptyIndex);
-        if ((Math.abs(row - emptyRow) === 1 && col === emptyCol) || (Math.abs(col - emptyCol) === 1 && row === emptyRow)) {
-            if (this.moves === 0 && this.timer === 0) this.startTimer();
+
+        const {
+            row,
+            col
+        } = this.getTilePosition(clickedIndex);
+        const {
+            row: emptyRow,
+            col: emptyCol
+        } = this.getTilePosition(emptyIndex);
+
+        if (
+            (Math.abs(row - emptyRow) === 1 && col === emptyCol) ||
+            (Math.abs(col - emptyCol) === 1 && row === emptyRow)
+        ) {
+            if (this.moves === 0 && this.timer === 0) {
+                this.startTimer();
+            }
+
             this.swapTiles(clickedIndex, emptyIndex);
             this.renderFullBoard();
+
             this.moves++;
             this.updateMoves();
 
-            // --- START OF FIX ---
-            // Added curly braces to ensure both lines are executed conditionally
             if (this.isSolved()) {
                 this.gameActive = false;
                 this.endGame();
             }
-            // --- END OF FIX ---
-
             this.saveState();
         }
     }
 
     togglePause() {
         if (!this.gameActive && !this.isPaused) return;
+
         this.isPaused = !this.isPaused;
+
         if (this.isPaused) {
             this.stopTimer();
             this.pauseButton.textContent = 'RESUME';
             this.pauseOverlay.classList.add('active');
         } else {
-            if (this.gameActive) this.startTimer();
+            if (this.gameActive) {
+                this.startTimer();
+            }
             this.pauseButton.textContent = 'PAUSE';
             this.pauseOverlay.classList.remove('active');
         }
@@ -253,24 +374,37 @@ class SlidingPuzzleGame {
 
     shuffleBoard() {
         const initialTiles = this.board.filter(t => t !== null);
-        let inversions = 1, attempt = 0;
-        const seed = (this.mode === 'daily') ? new Date().getFullYear() * 10000 + (new Date().getMonth() + 1) * 100 + new Date().getDate() : 0;
+        let inversions = 1;
+        let attempt = 0;
+
+        const seed = (this.mode === 'daily') ?
+            new Date().getFullYear() * 10000 + (new Date().getMonth() + 1) * 100 + new Date().getDate() :
+            0;
+
         while (inversions % 2 !== 0) {
             let boardToShuffle = [...initialTiles];
             let shuffledResult;
+
             if (this.mode === 'daily') {
                 shuffledResult = this.seededShuffle(seed + attempt, boardToShuffle);
             } else {
                 shuffledResult = this.randomShuffle(boardToShuffle);
             }
+
             inversions = this.countInversions(shuffledResult);
-            if (inversions % 2 === 0) this.board = [...shuffledResult, null];
+
+            if (inversions % 2 === 0) {
+                this.board = [...shuffledResult, null];
+            }
             attempt++;
         }
+
         const lastTileValue = 16;
         this.tileElements.forEach(el => el.classList.remove('empty-spot'));
         const emptyElement = this.tileElements.find(el => parseInt(el.dataset.tileValue) === lastTileValue);
-        if (emptyElement) emptyElement.classList.add('empty-spot');
+        if (emptyElement) {
+            emptyElement.classList.add('empty-spot');
+        }
     }
 
     seededRandomInt(seed, max) {
@@ -306,7 +440,9 @@ class SlidingPuzzleGame {
         let inversions = 0;
         for (let i = 0; i < array.length - 1; i++) {
             for (let j = i + 1; j < array.length; j++) {
-                if (array[i] && array[j] && array[i] > array[j]) inversions++;
+                if (array[i] && array[j] && array[i] > array[j]) {
+                    inversions++;
+                }
             }
         }
         return inversions;
@@ -317,7 +453,10 @@ class SlidingPuzzleGame {
     }
 
     getTilePosition(index) {
-        return { row: Math.floor(index / 4), col: index % 4 };
+        return {
+            row: Math.floor(index / 4),
+            col: index % 4
+        };
     }
 
     updateMoves() {
@@ -356,8 +495,14 @@ class SlidingPuzzleGame {
         this.gameActive = false;
         this.stopTimer();
         this.isPaused = true;
+
+
         const stats = this.getStats();
-        const currentSeed = (this.mode === 'daily') ? new Date().getFullYear() * 10000 + (new Date().getMonth() + 1) * 100 + new Date().getDate() : new Date().getTime();
+        const currentSeed = (this.mode === 'daily') 
+            ? new Date().getFullYear() * 10000 + (new Date().getMonth() + 1) * 100 + new Date().getDate() 
+            : new Date().getTime(); // Use timestamp for random games
+
+        // Only update stats if this specific game hasn't been won before
         if (stats.lastGamePlayedSeed !== currentSeed) {
             stats.gamesPlayed++;
             stats.gamesWon++;
@@ -366,11 +511,14 @@ class SlidingPuzzleGame {
             if (stats.bestTime === null || this.timer < stats.bestTime) {
                 stats.bestTime = this.timer;
             }
+
             stats.lastGamePlayedSeed = currentSeed;
             this.saveStats(stats);
             this.updateStatsDisplay();
         }
+
         this.updateUIVisibility();
+
         this.saveState();
         setTimeout(() => {
             alert(`You solved it in ${this.timer} seconds and ${this.moves} moves!`);
@@ -410,27 +558,11 @@ class SlidingPuzzleGame {
         this.statsModal.style.display = 'none';
     }
 
-
-
     updateStatsDisplay() {
         const stats = this.getStats();
         this.gamesWon.textContent = stats.gamesWon;
         this.gamesPlayed.textContent = stats.gamesPlayed;
         this.winStreak.textContent = stats.currentStreak;
-    }
-
-    getStats() {
-        const key = `pixSlate-stats-${this.mode}`;
-        const defaultStats = {
-            gamesWon: 0,
-            gamesPlayed: 0,
-            currentStreak: 0,
-            maxStreak: 0,
-            bestTime: null,
-            lastGamePlayedSeed: null
-        };
-        const saved = localStorage.getItem(key);
-        return saved ? JSON.parse(saved) : defaultStats;
     }
 
     generateShareText() {
