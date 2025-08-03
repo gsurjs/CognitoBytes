@@ -78,7 +78,16 @@ class SlidingPuzzleGame {
             const date = new Date();
             const seed = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
             this.currentImage = this.images[this.seededRandomInt(seed, this.images.length)];
-            this.shuffleBoard(this.seededShuffle.bind(this, seed));
+            let attempt = 0;
+            const dailyShuffle = (array) => {
+                attempt++;
+                // Create a copy to ensure we're not re-shuffling a shuffled board
+                let arrayCopy = [...array]; 
+                return this.seededShuffle(seed + attempt, arrayCopy);
+            };
+            this.shuffleBoard(dailyShuffle);
+            // --- End of Fix ---
+
         } else {
             this.currentImage = this.images[Math.floor(Math.random() * this.images.length)];
             this.shuffleBoard(this.randomShuffle);
