@@ -9,7 +9,7 @@ class SlidingPuzzleGame {
         this.mode = 'daily'; // 'daily' or 'random'
         this.images = [
             'images/slider/blue-cheeked-jacama.jpg', 'images/slider/capybara.jpg', 'images/slider/CEO.jpg',
-            'images/slider/earth.jpg', 'images/slider/Einstein.jpg', 'images/slider/greenfinch.jpg',
+            'images/slider/jaguar.jpg', 'images/slider/Einstein.jpg', 'images/slider/greenfinch.jpg',
             'images/slider/SanDiegoHummingBird.jpg', 'images/slider/Warbler.jpg', 'images/slider/Water.jpg',
             'images/slider/yorkie.jpg', 'images/slider/yorkie1.jpg', 'images/slider/fine.jpg', 'images/slider/ancient-aliens.jpg'
         ];
@@ -77,8 +77,7 @@ class SlidingPuzzleGame {
         if (this.mode === 'daily') {
             const date = new Date();
             const seed = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
-            //this.currentImage = this.images[this.seededRandomInt(seed, this.images.length)];
-            this.currentImage = this.images[0];
+            this.currentImage = this.images[this.seededRandomInt(seed, this.images.length)];
             this.shuffleBoard(); // No longer pass a function
         } else {
             this.currentImage = this.images[Math.floor(Math.random() * this.images.length)];
