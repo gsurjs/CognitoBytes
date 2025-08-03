@@ -1,6 +1,7 @@
 class SlidingPuzzleGame {
     constructor() {
         this.board = [];
+        this.tileElements = []; // <-- Bug Fix: This array was missing
         this.moves = 0;
         this.timer = 0;
         this.timerInterval = null;
@@ -28,17 +29,15 @@ class SlidingPuzzleGame {
         this.shareButton = document.getElementById('shareButton');
         this.dailyModeButton = document.getElementById('dailyMode');
         this.randomModeButton = document.getElementById('randomMode');
-        this.imageCreditElement = document.getElementById('imageCredit');
     }
 
     createBoardElements() {
         this.gameBoard.innerHTML = ''; // Clear board once at the start
         for (let i = 0; i < 16; i++) {
             const tileElement = document.createElement('div');
-            // We pass the index 'i' so each tile knows its permanent position in the grid
             tileElement.addEventListener('click', () => this.handleTileClick(i));
             this.gameBoard.appendChild(tileElement);
-            this.tileElements.push(tileElement);
+            this.tileElements.push(tileElement); // <-- Bug Fix: This line was missing
         }
     }
 
@@ -53,7 +52,7 @@ class SlidingPuzzleGame {
         this.mode = mode;
         this.dailyModeButton.classList.toggle('active', mode === 'daily');
         this.randomModeButton.classList.toggle('active', mode !== 'daily');
-        this.newGameButton.style.display = mode === 'daily' ? 'none' : 'inline-block';
+        this.newGameButton.style.display = 'inline-block';
         this.startNewGame();
     }
 
@@ -65,12 +64,14 @@ class SlidingPuzzleGame {
         this.stopTimer();
         this.updateTimer();
         this.generateBoard();
-        this.renderFullBoard(); // <-- Use the RENAMED function here
+        this.renderFullBoard();
         this.shareButton.style.display = 'none';
     }
 
     generateBoard() {
-        this.board = Array.from({ length: 16 }, (_, i) => i + 1);
+        this.board = Array.from({
+            length: 16
+        }, (_, i) => i + 1);
         this.board[15] = null; // Empty space
 
         if (this.mode === 'daily') {
@@ -94,6 +95,7 @@ class SlidingPuzzleGame {
     shuffleBoard(shuffleFunction) {
         let tempBoard = this.board.filter(t => t !== null);
         let inversions = 1;
+        // Ensure the puzzle is solvable by checking inversions
         while (inversions % 2 !== 0) {
             tempBoard = shuffleFunction(tempBoard);
             inversions = this.countInversions(tempBoard);
@@ -110,17 +112,15 @@ class SlidingPuzzleGame {
     }
 
     seededShuffle(seed, array) {
-        let currentIndex = array.length, temporaryValue, randomIndex;
+        let currentIndex = array.length;
         const random = () => {
             var x = Math.sin(seed++) * 10000;
             return x - Math.floor(x);
         };
         while (0 !== currentIndex) {
-            randomIndex = Math.floor(random() * currentIndex);
+            let randomIndex = Math.floor(random() * currentIndex);
             currentIndex -= 1;
-            temporaryValue = array[currentIndex];
-            array[currentIndex] = array[randomIndex];
-            array[randomIndex] = temporaryValue;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
         }
         return array;
     }
@@ -141,7 +141,6 @@ class SlidingPuzzleGame {
         const tileElement = this.tileElements[index];
         const tileValue = this.board[index];
 
-        // Reset the tile's appearance
         tileElement.innerHTML = '';
         tileElement.className = 'tile';
         tileElement.style.backgroundImage = 'none';
@@ -174,8 +173,14 @@ class SlidingPuzzleGame {
         }
 
         const emptyIndex = this.board.indexOf(null);
-        const { row, col } = this.getTilePosition(index);
-        const { row: emptyRow, col: emptyCol } = this.getTilePosition(emptyIndex);
+        const {
+            row,
+            col
+        } = this.getTilePosition(index);
+        const {
+            row: emptyRow,
+            col: emptyCol
+        } = this.getTilePosition(emptyIndex);
 
         if (
             (Math.abs(row - emptyRow) === 1 && col === emptyCol) ||
@@ -185,11 +190,8 @@ class SlidingPuzzleGame {
             this.moves++;
             this.updateMoves();
 
-            // === THE FIX ===
-            // Replace the old renderBoard() call with these two lines
             this.updateTileStyle(index);
             this.updateTileStyle(emptyIndex);
-            // =================
 
             if (this.isSolved()) {
                 this.endGame();
@@ -202,7 +204,10 @@ class SlidingPuzzleGame {
     }
 
     getTilePosition(index) {
-        return { row: Math.floor(index / 4), col: index % 4 };
+        return {
+            row: Math.floor(index / 4),
+            col: index % 4
+        };
     }
 
     updateMoves() {
@@ -243,7 +248,7 @@ class SlidingPuzzleGame {
             this.shareButton.style.display = 'inline-block';
         }, 300);
     }
-    
+
     shareResults() {
         const time = this.timerElement.textContent;
         const text = `I solved the daily sliding puzzle in ${time} and ${this.moves} moves! Can you beat my score?`;
