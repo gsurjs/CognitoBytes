@@ -87,11 +87,13 @@ body {
     grid-template-columns: repeat(4, 1fr);
     gap: 5px;
     margin-bottom: 1rem;
+    position: relative;
 }
 
 .tile {
-    width: 100%;
-    padding-bottom: 100%;
+    width: 25%; /* Set explicit width */
+    height: 25%; /* Set explicit height */
+    padding-bottom: 0; /* Remove padding hack */
     background-color: rgba(255, 255, 255, 0.3);
     border-radius: 8px;
     display: flex;
@@ -100,10 +102,11 @@ body {
     font-size: 2rem;
     font-weight: bold;
     cursor: pointer;
-    position: relative;
+    position: absolute; /* Allow tiles to be positioned freely */
     -webkit-tap-highlight-color: transparent;
     transform: translateZ(0);
-    transition: background-position 0.9s ease-in-out, background-color 0.9s ease-in-out;
+    /* Animate the 'top' and 'left' properties for a smooth slide */
+    transition: top 0.25s ease-in-out, left 0.25s ease-in-out;
 }
 
 .tile span {

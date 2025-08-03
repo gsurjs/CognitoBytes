@@ -186,9 +186,33 @@ class SlidingPuzzleGame {
     }
 
     renderFullBoard() {
-        for (let i = 0; i < 16; i++) {
-            this.updateTileStyle(i);
-        }
+        // We set the board size to be a perfect square
+        const boardSize = this.gameBoard.clientWidth;
+        this.gameBoard.style.height = `${boardSize}px`;
+
+        const gap = 5; // The gap in pixels from your CSS
+        const totalGap = gap * 3;
+        const tileSize = (boardSize - totalGap) / 4;
+
+        this.board.forEach((tileValue, index) => {
+            // Calculate the row and column for this grid position
+            const row = Math.floor(index / 4);
+            const col = index % 4;
+
+            // Calculate the pixel position for the tile
+            const top = row * (tileSize + gap);
+            const left = col * (tileSize + gap);
+
+            const tileElement = this.tileElements[index];
+
+            // Apply the new position
+            tileElement.style.top = `${top}px`;
+            tileElement.style.left = `${left}px`;
+            
+            // Set the size of the tile explicitly
+            tileElement.style.width = `${tileSize}px`;
+            tileElement.style.height = `${tileSize}px`;
+        });
     }
 
     handleTileClick(index) {
