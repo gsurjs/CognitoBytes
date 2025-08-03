@@ -143,9 +143,17 @@ class SlidingPuzzleGame {
     handleTileClick(e) {
         if (!this.gameActive) return;
 
-        // Find the clicked tile's value from its data attribute
-        const clickedValue = parseInt(e.target.dataset.tileValue);
-        if (isNaN(clickedValue)) return; // Exit if a non-tile is clicked
+        // Find the '.tile' element, even if the click was on the number inside it.
+        const clickedTileElement = e.target.closest('.tile');
+
+        // If the click was outside a tile or on the conceptual empty spot, do nothing.
+        if (!clickedTileElement || clickedTileElement.classList.contains('empty-spot')) {
+            return;
+        }
+
+        // Get the value from the tile's data attribute.
+        const clickedValue = parseInt(clickedTileElement.dataset.tileValue);
+        if (isNaN(clickedValue)) return;
 
         // Find the index of the clicked value and the empty spot in our data board
         const clickedIndex = this.board.indexOf(clickedValue);
@@ -156,6 +164,7 @@ class SlidingPuzzleGame {
         const { row, col } = this.getTilePosition(clickedIndex);
         const { row: emptyRow, col: emptyCol } = this.getTilePosition(emptyIndex);
 
+        // Check if the move is valid
         if (
             (Math.abs(row - emptyRow) === 1 && col === emptyCol) ||
             (Math.abs(col - emptyCol) === 1 && row === emptyRow)
@@ -165,7 +174,7 @@ class SlidingPuzzleGame {
             }
 
             this.swapTiles(clickedIndex, emptyIndex); // Update data model
-            this.renderFullBoard(); // Re-render the board
+            this.renderFullBoard(); // Re-render the board, which triggers the slide animation
             
             this.moves++;
             this.updateMoves();
