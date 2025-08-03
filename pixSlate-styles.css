@@ -120,15 +120,9 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    text-shadow:
-        -2px -2px 0 #000,  
-         2px -2px 0 #000,
-        -2px  2px 0 #000,
-         2px  2px 0 #000,
-        -2px  0   0 #000,
-         2px  0   0 #000,
-         0   -2px 0 #000,
-         0    2px 0 #000;
+
+    -webkit-text-stroke: 1.5px black;
+    text-stroke: 1.5px black;
 }
 
 .tile.empty {
