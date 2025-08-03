@@ -83,8 +83,6 @@ body {
 }
 
 .game-board {
-    position: relative; 
-    aspect-ratio: 1 / 1;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 5px;
@@ -92,21 +90,17 @@ body {
 }
 
 .tile {
-    position: absolute;  
-    width: calc(25% - 5px);  
-    height: calc(25% - 5px); 
-
-    /* --- Animation & Performance --- */
-    transition: transform 0.3s ease-in-out;
-    backface-visibility: hidden;
-    will-change: transform;
-
-    /* --- Visual Styles --- */
-    border-radius: 8px; 
+    width: 100%;
+    padding-bottom: 100%;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     font-size: 2rem;
     font-weight: bold;
     cursor: pointer;
-    background-size: 400% 400%;
+    position: relative;
 }
 
 .tile span {
@@ -114,12 +108,10 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: white;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
 }
 
 .tile.empty {
-    background: rgba(0,0,0,0.2);
+    background-color: transparent;
     cursor: default;
 }
 
@@ -143,9 +135,4 @@ body {
 
 .share-button {
     background-color: #27ae60;
-}
-.image-credit {
-    font-size: 0.8rem;
-    margin-top: 0.5rem;
-    color: rgba(255, 255, 255, 0.7);
 }
