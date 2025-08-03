@@ -527,16 +527,42 @@ class SlidingPuzzleGame {
 
     updateUIVisibility() {
         const isGameOver = !this.gameActive && this.isSolved();
-
         this.shareButton.style.display = isGameOver ? 'inline-block' : 'none';
         this.statsButton.style.display = isGameOver ? 'inline-block' : 'none';
         this.pauseButton.style.display = isGameOver ? 'none' : 'inline-block';
-
         if (this.mode === 'daily') {
             this.newGameButton.style.display = 'none';
         } else {
             this.newGameButton.style.display = 'inline-block';
         }
+    }
+
+    showStatsModal() {
+        const stats = this.getStats();
+        document.getElementById('statsPlayed').textContent = stats.gamesPlayed;
+        const winRate = stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
+        document.getElementById('statsWinRate').textContent = winRate;
+        document.getElementById('statsCurrentStreak').textContent = stats.currentStreak;
+        document.getElementById('statsMaxStreak').textContent = stats.maxStreak;
+        if (stats.bestTime) {
+            const minutes = Math.floor(stats.bestTime / 60).toString().padStart(2, '0');
+            const seconds = (stats.bestTime % 60).toString().padStart(2, '0');
+            document.getElementById('bestTime').textContent = `${minutes}:${seconds}`;
+        } else {
+            document.getElementById('bestTime').textContent = '--:--';
+        }
+        this.statsModal.style.display = 'flex';
+    }
+
+    closeStatsModal() {
+        this.statsModal.style.display = 'none';
+    }
+
+    updateStatsDisplay() {
+        const stats = this.getStats();
+        this.gamesWon.textContent = stats.gamesWon;
+        this.gamesPlayed.textContent = stats.gamesPlayed;
+        this.winStreak.textContent = stats.currentStreak;
     }
 
     generateShareText() {
