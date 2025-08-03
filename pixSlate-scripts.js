@@ -120,10 +120,9 @@ class SlidingPuzzleGame {
             }
         }
 
-        if (!this.gameActive && this.isSolved()) {
-            this.shareButton.style.display = 'inline-block';
-            this.pauseButton.style.display = 'none';
+        this.updateUIVisibility();
         }
+
         return true;
     }
 
@@ -133,11 +132,11 @@ class SlidingPuzzleGame {
         this.dailyModeButton.classList.toggle('active', mode === 'daily');
         this.randomModeButton.classList.toggle('active', mode !== 'daily');
 
-        this.newGameButton.style.display = (mode === 'daily') ? 'none' : 'inline-block';
-
         if (!this.loadState()) {
             this.startNewGame();
         }
+
+        this.updateUIVisibility();
     }
 
     startNewGame() {
@@ -153,11 +152,8 @@ class SlidingPuzzleGame {
         this.updateTimer();
         this.generateBoard();
         this.renderFullBoard();
-        this.shareButton.style.display = 'none';
-        this.pauseButton.style.display = 'inline-block';
 
-        // It now matches the simple logic from setMode.
-        this.newGameButton.style.display = (this.mode === 'daily') ? 'none' : 'inline-block';
+        this.updateUIVisibility();
 
         this.saveState();
     }
@@ -414,17 +410,30 @@ class SlidingPuzzleGame {
         this.gameActive = false;
         this.stopTimer();
         this.isPaused = true; // Enter a paused-like state on game end
-        this.pauseButton.style.display = 'none'; // Hide pause button
-        this.shareButton.style.display = 'inline-block';
-
-        if (this.mode === 'random') {
-            this.newGameButton.style.display = 'inline-block';
-        }
+        this.updateUIVisibility();
 
         this.saveState(); // Save the final solved state
         setTimeout(() => {
             alert(`You solved it in ${this.timer} seconds and ${this.moves} moves!`);
         }, 300);
+    }
+
+    // Add this new function
+    updateUIVisibility() {
+        const isGameOver = !this.gameActive && this.isSolved();
+
+        // Handle the visibility of the Share Button
+        this.shareButton.style.display = isGameOver ? 'inline-block' : 'none';
+
+        // Handle the visibility of the Pause Button
+        this.pauseButton.style.display = isGameOver ? 'none' : 'inline-block';
+
+        // Handle the visibility of the New Game button based on the mode
+        if (this.mode === 'daily') {
+            this.newGameButton.style.display = 'none';
+        } else { // Random mode
+            this.newGameButton.style.display = 'inline-block';
+        }
     }
 
     generateShareText() {
