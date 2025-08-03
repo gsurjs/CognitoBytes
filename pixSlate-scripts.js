@@ -6,6 +6,7 @@ class SlidingPuzzleGame {
         this.timer = 0;
         this.timerInterval = null;
         this.gameActive = false;
+        this.isPaused = false;
         this.mode = 'daily'; // 'daily' or 'random'
         this.images = [
             'images/slider/blue-cheeked-jacama.jpg', 'images/slider/capybara.jpg', 'images/slider/CEO.jpg',
@@ -33,6 +34,7 @@ class SlidingPuzzleGame {
             timer: this.timer,
             currentImage: this.currentImage,
             gameActive: this.gameActive
+            isPaused: this.isPaused
         };
 
         if (this.mode === 'daily') {
@@ -69,14 +71,22 @@ class SlidingPuzzleGame {
         this.timer = savedState.timer;
         this.currentImage = savedState.currentImage;
         this.gameActive = savedState.gameActive;
+        this.isPaused = savedState.isPaused || false; // Load the paused state
 
-        if (this.gameActive) {
+        // Only start the timer if the game was active AND not paused
+        if (this.gameActive && !this.isPaused) {
             this.startTimer();
         }
 
         this.renderFullBoard();
         this.updateMoves();
         this.updateTimer();
+
+        // If the game was loaded in a paused state, update the UI
+        if (this.isPaused) {
+            this.pauseButton.textContent = 'RESUME';
+            this.pauseOverlay.classList.add('active');
+        }
 
         return true;
     }
@@ -89,6 +99,8 @@ class SlidingPuzzleGame {
         this.shareButton = document.getElementById('shareButton');
         this.dailyModeButton = document.getElementById('dailyMode');
         this.randomModeButton = document.getElementById('randomMode');
+        this.pauseButton = document.getElementById('pauseButton'); 
+        this.pauseOverlay = document.getElementById('pauseOverlay');
     }
 
     // START OF FIX
@@ -113,6 +125,7 @@ class SlidingPuzzleGame {
         this.shareButton.addEventListener('click', () => this.shareResults());
         this.dailyModeButton.addEventListener('click', () => this.setMode('daily'));
         this.randomModeButton.addEventListener('click', () => this.setMode('random'));
+        this.pauseButton.addEventListener('click', () => this.togglePause());
         window.addEventListener('resize', () => this.renderFullBoard());
     }
 
@@ -128,6 +141,10 @@ class SlidingPuzzleGame {
     }
 
     startNewGame() {
+        // When starting a new game, ensure it's not paused
+        this.isPaused = false;
+        this.pauseButton.textContent = 'PAUSE';
+        this.pauseOverlay.classList.remove('active');
         localStorage.removeItem(`pixSlateSave_${this.mode}`);
         this.gameActive = true;
         this.moves = 0;
@@ -205,7 +222,7 @@ class SlidingPuzzleGame {
     }
 
     handleTileClick(e) {
-        if (!this.gameActive) return;
+        if (this.isPaused || !this.gameActive) return;
 
         const clickedTileElement = e.target.closest('.tile');
 
@@ -244,6 +261,27 @@ class SlidingPuzzleGame {
             }
             this.saveState();
         }
+    }
+
+    togglePause() {
+        // Don't allow pausing if the game isn't active
+        if (!this.gameActive && !this.isPaused) return;
+
+        this.isPaused = !this.isPaused;
+
+        if (this.isPaused) {
+            this.stopTimer();
+            this.pauseButton.textContent = 'RESUME';
+            this.pauseOverlay.classList.add('active');
+        } else {
+            // Only start the timer if the game is actually in progress
+            if (this.gameActive) {
+                this.startTimer();
+            }
+            this.pauseButton.textContent = 'PAUSE';
+            this.pauseOverlay.classList.remove('active');
+        }
+        this.saveState(); // Save the paused state
     }
     
     shuffleBoard() {
