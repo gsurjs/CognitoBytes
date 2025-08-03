@@ -92,12 +92,12 @@ body {
 
 .tile {
     /* Explicitly set width/height as padding trick no longer works */
-    width: 25%; /* This will be overridden by JS */
-    height: 25%; /* This will be overridden by JS */
+    width: 100px; /* This will be overridden by JS */
+    height: 100px; /* This will be overridden by JS */
     padding-bottom: 0; 
     
     background-color: rgba(255, 255, 255, 0.3);
-    border-radius: 4px;
+    border-radius: 2px;
     display: flex;
     justify-content: center;
     align-items: center;
