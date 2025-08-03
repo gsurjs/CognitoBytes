@@ -33,7 +33,39 @@
             <div class="button-container">
                 <button class="new-game-button" id="newGameButton">NEW GAME</button>
                 <button class="game-button" id="pauseButton">PAUSE</button>
+                <button class="game-button" id="statsButton" style="display: none;">STATS</button>
                 <button class="share-button" id="shareButton" style="display: none;">💬 SHARE</button>
+            </div>
+        </div>
+        <div id="statsModal" class="modal-overlay">
+            <div class="modal-content">
+                <button class="modal-close-button">&times;</button>
+                <h2>Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div id="statsPlayed" class="stat-value">0</div>
+                        <div class="stat-label">Played</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="statsWinRate" class="stat-value">0</div>
+                        <div class="stat-label">Win %</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="statsCurrentStreak" class="stat-value">0</div>
+                        <div class="stat-label">Current Streak</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="statsMaxStreak" class="stat-value">0</div>
+                        <div class="stat-label">Max Streak</div>
+                    </div>
+                </div>
+                <h3>Best Time</h3>
+                <div class="stats-grid" id="bestStatsGrid">
+                    <div class="stat-item">
+                        <div id="bestTime" class="stat-value">--:--</div>
+                        <div class="stat-label">Fastest Solve</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
