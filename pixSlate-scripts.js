@@ -7,7 +7,7 @@ class SlidingPuzzleGame {
         this.timerInterval = null;
         this.gameActive = false;
         this.isPaused = false;
-        this.mode = 'daily'; // 'daily' or 'random'
+        this.mode = 'daily';
         this.images = [
             'images/slider/blue-cheeked-jacama.jpg', 'images/slider/capybara.jpg', 'images/slider/CEO.jpg',
             'images/slider/jaguar.jpg', 'images/slider/Einstein.jpg', 'images/slider/greenfinch.jpg',
@@ -21,10 +21,50 @@ class SlidingPuzzleGame {
         this.createBoardElements();
         this.setupEventListeners();
 
-        // Attempt to load the last daily game. If none exists, start a new one.
         if (!this.loadState()) {
             this.startNewGame();
         }
+    }
+
+    initializeElements() {
+        this.gameBoard = document.getElementById('gameBoard');
+        this.movesElement = document.getElementById('moves');
+        this.timerElement = document.getElementById('timer');
+        this.newGameButton = document.getElementById('newGameButton');
+        this.shareButton = document.getElementById('shareButton');
+        this.dailyModeButton = document.getElementById('dailyMode');
+        this.randomModeButton = document.getElementById('randomMode');
+        this.pauseButton = document.getElementById('pauseButton'); 
+        this.pauseOverlay = document.getElementById('pauseOverlay');
+    }
+    
+    createBoardElements() {
+        this.gameBoard.innerHTML = '';
+        this.tileElements = [];
+        for (let i = 0; i < 16; i++) {
+            const tileElement = document.createElement('div');
+            tileElement.dataset.tileValue = i + 1;
+            this.gameBoard.appendChild(tileElement);
+            this.tileElements.push(tileElement);
+        }
+        
+        // Add the overlay as the last child to ensure it's on top
+        this.pauseOverlay = document.createElement('div');
+        this.pauseOverlay.id = 'pauseOverlay';
+        this.pauseOverlay.className = 'pause-overlay';
+        this.pauseOverlay.textContent = 'PAUSED';
+        this.gameBoard.appendChild(this.pauseOverlay);
+
+        this.gameBoard.addEventListener('click', this.boundHandleTileClick);
+    }
+    
+    setupEventListeners() {
+        this.newGameButton.addEventListener('click', () => this.startNewGame());
+        this.shareButton.addEventListener('click', () => this.shareResults());
+        this.dailyModeButton.addEventListener('click', () => this.setMode('daily'));
+        this.randomModeButton.addEventListener('click', () => this.setMode('random'));
+        this.pauseButton.addEventListener('click', () => this.togglePause());
+        window.addEventListener('resize', () => this.renderFullBoard());
     }
 
     saveState() {
@@ -33,7 +73,7 @@ class SlidingPuzzleGame {
             moves: this.moves,
             timer: this.timer,
             currentImage: this.currentImage,
-            gameActive: this.gameActive
+            gameActive: this.gameActive, // Comma was missing here
             isPaused: this.isPaused
         };
 
@@ -55,25 +95,20 @@ class SlidingPuzzleGame {
             return false;
         }
 
-        // START OF FIX
-        // This crucial step ensures the rendering engine knows which tile to hide
-        // for the empty space, as this is normally done in `shuffleBoard`.
         const lastTileValue = 16;
         this.tileElements.forEach(el => el.classList.remove('empty-spot'));
         const emptyElement = this.tileElements.find(el => parseInt(el.dataset.tileValue) === lastTileValue);
         if (emptyElement) {
             emptyElement.classList.add('empty-spot');
         }
-        // END OF FIX
 
         this.board = savedState.board;
         this.moves = savedState.moves;
         this.timer = savedState.timer;
         this.currentImage = savedState.currentImage;
         this.gameActive = savedState.gameActive;
-        this.isPaused = savedState.isPaused || false; // Load the paused state
+        this.isPaused = savedState.isPaused || false;
 
-        // Only start the timer if the game was active AND not paused
         if (this.gameActive && !this.isPaused) {
             this.startTimer();
         }
@@ -82,7 +117,6 @@ class SlidingPuzzleGame {
         this.updateMoves();
         this.updateTimer();
 
-        // If the game was loaded in a paused state, update the UI
         if (this.isPaused) {
             this.pauseButton.textContent = 'RESUME';
             this.pauseOverlay.classList.add('active');
@@ -90,45 +124,7 @@ class SlidingPuzzleGame {
 
         return true;
     }
-
-    initializeElements() {
-        this.gameBoard = document.getElementById('gameBoard');
-        this.movesElement = document.getElementById('moves');
-        this.timerElement = document.getElementById('timer');
-        this.newGameButton = document.getElementById('newGameButton');
-        this.shareButton = document.getElementById('shareButton');
-        this.dailyModeButton = document.getElementById('dailyMode');
-        this.randomModeButton = document.getElementById('randomMode');
-        this.pauseButton = document.getElementById('pauseButton'); 
-        this.pauseOverlay = document.getElementById('pauseOverlay');
-    }
-
-    // START OF FIX
-    // This function now gives each tile a permanent ID when it's created.
-    createBoardElements() {
-        this.gameBoard.innerHTML = '';
-        this.tileElements = [];
-        for (let i = 0; i < 16; i++) {
-            const tileElement = document.createElement('div');
-            tileElement.dataset.tileValue = i + 1;
-            this.gameBoard.appendChild(tileElement);
-            this.tileElements.push(tileElement);
-        }
-
-        this.gameBoard.removeEventListener('click', this.boundHandleTileClick);
-        this.gameBoard.addEventListener('click', this.boundHandleTileClick);
-    }
-    // END OF FIX
-
-    setupEventListeners() {
-        this.newGameButton.addEventListener('click', () => this.startNewGame());
-        this.shareButton.addEventListener('click', () => this.shareResults());
-        this.dailyModeButton.addEventListener('click', () => this.setMode('daily'));
-        this.randomModeButton.addEventListener('click', () => this.setMode('random'));
-        this.pauseButton.addEventListener('click', () => this.togglePause());
-        window.addEventListener('resize', () => this.renderFullBoard());
-    }
-
+    
     setMode(mode) {
         this.stopTimer();
         this.mode = mode;
@@ -141,7 +137,6 @@ class SlidingPuzzleGame {
     }
 
     startNewGame() {
-        // When starting a new game, ensure it's not paused
         this.isPaused = false;
         this.pauseButton.textContent = 'PAUSE';
         this.pauseOverlay.classList.remove('active');
@@ -158,8 +153,6 @@ class SlidingPuzzleGame {
         this.saveState();
     }
 
-    // START OF FIX
-    // This function no longer needs to set the 'data-tile-value' attribute.
     generateBoard() {
         this.board = Array.from({ length: 16 }, (_, i) => i + 1);
         this.board[15] = null;
@@ -174,7 +167,6 @@ class SlidingPuzzleGame {
             this.shuffleBoard();
         }
     }
-    // END OF FIX
 
     renderFullBoard() {
         const boardSize = this.gameBoard.clientWidth;
@@ -264,7 +256,6 @@ class SlidingPuzzleGame {
     }
 
     togglePause() {
-        // Don't allow pausing if the game isn't active
         if (!this.gameActive && !this.isPaused) return;
 
         this.isPaused = !this.isPaused;
@@ -274,14 +265,13 @@ class SlidingPuzzleGame {
             this.pauseButton.textContent = 'RESUME';
             this.pauseOverlay.classList.add('active');
         } else {
-            // Only start the timer if the game is actually in progress
             if (this.gameActive) {
                 this.startTimer();
             }
             this.pauseButton.textContent = 'PAUSE';
             this.pauseOverlay.classList.remove('active');
         }
-        this.saveState(); // Save the paused state
+        this.saveState();
     }
     
     shuffleBoard() {
@@ -378,55 +368,4 @@ class SlidingPuzzleGame {
     startTimer() {
         if (this.timerInterval) return;
         this.gameActive = true;
-        this.timerInterval = setInterval(() => {
-            this.timer++;
-            this.updateTimer();
-            this.saveState();
-        }, 1000);
-    }
-
-    stopTimer() {
-        clearInterval(this.timerInterval);
-        this.timerInterval = null;
-    }
-
-    updateTimer() {
-        const minutes = Math.floor(this.timer / 60).toString().padStart(2, '0');
-        const seconds = (this.timer % 60).toString().padStart(2, '0');
-        this.timerElement.textContent = `Time: ${minutes}:${seconds}`;
-    }
-
-    isSolved() {
-        for (let i = 0; i < 15; i++) {
-            if (this.board[i] !== i + 1) return false;
-        }
-        return true;
-    }
-
-    endGame() {
-        this.gameActive = false;
-        this.stopTimer();
-        setTimeout(() => {
-            alert(`You solved it in ${this.timer} seconds and ${this.moves} moves!`);
-            this.shareButton.style.display = 'inline-block';
-        }, 300);
-    }
-
-    shareResults() {
-        const time = this.timerElement.textContent;
-        const text = `I solved the daily sliding puzzle in ${time} and ${this.moves} moves! Can you beat my score?`;
-        if (navigator.share) {
-            navigator.share({
-                title: 'Sliding Puzzle Challenge',
-                text: text,
-                url: window.location.href
-            });
-        } else {
-            alert(text);
-        }
-    }
-}
-
-window.addEventListener('load', () => {
-    new SlidingPuzzleGame();
-});
+        this.timerInterval = setInterval(().
