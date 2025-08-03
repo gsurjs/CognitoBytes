@@ -442,9 +442,10 @@ class SlidingPuzzleGame {
         const timeString = `${minutes}:${seconds}`;
 
         const emojiPattern = [
-            '🟩🟩🟩',
-            '🟩🟩🟩',
-            '🟩🟩🏆'
+            '🟩🟩🟩🟩',
+            '🟩🟩🟩🟩',
+            '🟩🟩🟩🟩',
+            '🟩🟩🟩🏆'
         ].join('\n');
 
         let shareText = `Pix-Slate ${puzzleNumber}\n\nTime: ${timeString}\n${emojiPattern}\nMoves: ${this.moves}`;
