@@ -54,7 +54,10 @@ class BrainGamesMenu {
         // Aggregate stats from all games with proper handling of different data structures
         const numberGameStats = this.getGameStats('number-game-stats');
         const memoryGameStats = this.getGameStats('memory-game-stats');
-        const slidingPuzzleStats = this.getGameStats('sliding-puzzle-stats');
+        const slidingPuzzleDailyStats = this.getGameStats('pixSlate-stats-daily');
+        const slidingPuzzleRandomStats = this.getGameStats('pixSlate-stats-random');
+        const slidingPuzzleTotalPlayed = (slidingPuzzleDailyStats.gamesPlayed || 0) + (slidingPuzzleRandomStats.gamesPlayed || 0);
+        const slidingPuzzleTotalWon = (slidingPuzzleDailyStats.gamesWon || 0) + (slidingPuzzleRandomStats.gamesWon || 0);
 
         // Aggregate stats for Alpha-Bit (Woordle) from both modes
         const woordleDailyStats = this.getGameStats('woordle-stats-v2-daily');
@@ -74,14 +77,14 @@ class BrainGamesMenu {
         const totalPlayed = 
             (numberGameStats.totalGames || 0) + 
             (memoryGameStats.gamesPlayed || 0) +
-            (slidingPuzzleStats.gamesPlayed || 0) + 
+            slidingPuzzleTotalPlayed + 
             woordleTotalPlayed +
             floodItTotalPlayed;
             
         const totalWon = 
             (numberGameStats.gamesWon || 0) + 
             (memoryGameStats.gamesWon || 0) + 
-            (slidingPuzzleStats.gamesWon || 0) +
+            slidingPuzzleTotalWon +
             woordleTotalWon +
             floodItTotalWon;
             

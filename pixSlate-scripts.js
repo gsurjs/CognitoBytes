@@ -21,6 +21,8 @@ class SlidingPuzzleGame {
         this.createBoardElements();
         this.setupEventListeners();
 
+        this.updateStatsDisplay();
+
         if (!this.loadState()) {
             this.startNewGame();
         }
@@ -35,6 +37,35 @@ class SlidingPuzzleGame {
         this.dailyModeButton = document.getElementById('dailyMode');
         this.randomModeButton = document.getElementById('randomMode');
         this.pauseButton = document.getElementById('pauseButton');
+
+        this.gamesWon = document.getElementById('gamesWon');
+        this.gamesPlayed = document.getElementById('gamesPlayed');
+        this.winStreak = document.getElementById('winStreak');
+    }
+
+    getStats() {
+        const key = `pixSlate-stats-${this.mode}`;
+        const defaultStats = {
+            gamesWon: 0,
+            gamesPlayed: 0,
+            currentStreak: 0,
+            maxStreak: 0,
+            lastGamePlayedSeed: null
+        };
+        const saved = localStorage.getItem(key);
+        return saved ? JSON.parse(saved) : defaultStats;
+    }
+
+    saveStats(stats) {
+        const key = `pixSlate-stats-${this.mode}`;
+        localStorage.setItem(key, JSON.stringify(stats));
+    }
+
+    updateStatsDisplay() {
+        const stats = this.getStats();
+        this.gamesWon.textContent = stats.gamesWon;
+        this.gamesPlayed.textContent = stats.gamesPlayed;
+        this.winStreak.textContent = stats.currentStreak;
     }
 
     createBoardElements() {
@@ -131,6 +162,9 @@ class SlidingPuzzleGame {
         this.mode = mode;
         this.dailyModeButton.classList.toggle('active', mode === 'daily');
         this.randomModeButton.classList.toggle('active', mode !== 'daily');
+
+        // Update stats display for the new mode
+        this.updateStatsDisplay();
 
         if (!this.loadState()) {
             this.startNewGame();
@@ -410,6 +444,24 @@ class SlidingPuzzleGame {
         this.gameActive = false;
         this.stopTimer();
         this.isPaused = true;
+
+
+        const stats = this.getStats();
+        const currentSeed = (this.mode === 'daily') 
+            ? new Date().getFullYear() * 10000 + (new Date().getMonth() + 1) * 100 + new Date().getDate() 
+            : new Date().getTime(); // Use timestamp for random games
+
+        // Only update stats if this specific game hasn't been won before
+        if (stats.lastGamePlayedSeed !== currentSeed) {
+            stats.gamesPlayed++;
+            stats.gamesWon++;
+            stats.currentStreak++;
+            stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
+            stats.lastGamePlayedSeed = currentSeed;
+            this.saveStats(stats);
+            this.updateStatsDisplay();
+        }
+        
         this.updateUIVisibility();
 
         this.saveState();
