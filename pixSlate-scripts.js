@@ -432,7 +432,7 @@ class SlidingPuzzleGame {
             '🟩🟩🏆'
         ].join('\n');
 
-        let shareText = `Pix-Slate ${puzzleNumber}\nTime: ${timeString}\n${emojiPattern}\nMoves: ${this.moves}`;
+        let shareText = `Pix-Slate ${puzzleNumber}\n\nTime: ${timeString}\n${emojiPattern}\nMoves: ${this.moves}`;
 
         shareText += '\n\nPlay at: ' + window.location.href;
 
