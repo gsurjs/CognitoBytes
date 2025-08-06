@@ -11,7 +11,7 @@ class SlidingPuzzleGame {
         this.images = [
             'images/slider/blue-cheeked-jacama.jpg', 'images/slider/capybara.jpg', 'images/slider/the_dude.jpg', 'images/slider/cat.jpg', 'images/slider/barn-owl.jpg', 'images/slider/owl_.jpg', 'images/slider/lotus.jpg', 'images/slider/aurora.jpg', 'images/slider/landscape.jpg'
             'images/slider/jaguar.jpg', 'images/slider/Einstein.jpg', 'images/slider/greenfinch.jpg',
-            'images/slider/SanDiegoHummingBird.jpg', 'images/slider/Warbler.jpg', 'images/slider/Water.jpg',
+            'images/slider/SanDiegoHummingBird.jpg', 'images/slider/Warbler.jpg', 'images/slider/Water.jpg', 'images/slider/mountains.jpg'
             'images/slider/yorkie.jpg', 'images/slider/yorkie1.jpg', 'images/slider/fine.jpg', 'images/slider/ancient-aliens.jpg'
         ];
         this.currentImage = '';
