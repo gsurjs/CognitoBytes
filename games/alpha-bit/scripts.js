@@ -86,7 +86,7 @@ class WoordleGame {
 
     async loadWordsFromFiles() {
         // Load answer words from wordle-answers-alphabetical.txt
-        const answerResponse = await fetch('data/wordle-answers-alphabetical.txt');
+        const answerResponse = await fetch('/games/alpha-bit/data/wordle-answers-alphabetical.txt');
         if (!answerResponse.ok) {
             throw new Error(`HTTP error loading answers! status: ${answerResponse.status}`);
         }
@@ -100,7 +100,7 @@ class WoordleGame {
             .filter(word => word.length === this.wordLength);
         
         // Load valid guess words from valid-wordle-words.txt
-        const validResponse = await fetch('data/valid-wordle-words.txt');
+        const validResponse = await fetch('/games/alpha-bit/data/valid-wordle-words.txt');
         if (!validResponse.ok) {
             throw new Error(`HTTP error loading valid words! status: ${validResponse.status}`);
         }
