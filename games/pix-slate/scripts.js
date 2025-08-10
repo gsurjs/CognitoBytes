@@ -9,10 +9,10 @@ class SlidingPuzzleGame {
         this.isPaused = false;
         this.mode = 'daily';
         this.images = [
-            '../../assets/images/slider/blue-cheeked-jacama.jpg', '../../assets/images/slider/capybara.jpg', '../../assets/images/slider/the_dude.jpg', '../../assets/images/slider/cat.jpg', '../../assets/images/slider/barn-owl.jpg', '../../assets/images/slider/owl_.jpg', '../../assets/images/slider/lotus.jpg', '../../assets/images/slider/aurora.jpg', '../../assets/images/slider/landscape.jpg',
-            '../../assets/images/slider/jaguar.jpg', '../../assets/images/slider/Einstein.jpg', '../../assets/images/slider/greenfinch.jpg',
-            '../../assets/images/slider/SanDiegoHummingBird.jpg', '../../assets/images/slider/Warbler.jpg', '../../assets/images/slider/Water.jpg', '../../assets/images/slider/mountains.jpg',
-            '../../assets/images/slider/yorkie.jpg', '../../assets/images/slider/yorkie1.jpg', '../../assets/images/slider/fine.jpg', '../../assets/images/slider/ancient-aliens.jpg'
+            '/assets/images/slider/blue-cheeked-jacama.jpg', '/assets/images/slider/capybara.jpg', '/assets/images/slider/the_dude.jpg', '/assets/images/slider/cat.jpg', '/assets/images/slider/barn-owl.jpg', '/assets/images/slider/owl_.jpg', '/assets/images/slider/lotus.jpg', '/assets/images/slider/aurora.jpg', '/assets/images/slider/landscape.jpg',
+            '/assets/images/slider/jaguar.jpg', '/assets/images/slider/Einstein.jpg', '/assets/images/slider/greenfinch.jpg',
+            '/assets/images/slider/SanDiegoHummingBird.jpg', '/assets/images/slider/Warbler.jpg', '/assets/images/slider/Water.jpg', '/assets/images/slider/mountains.jpg',
+            '/assets/images/slider/yorkie.jpg', '/assets/images/slider/yorkie1.jpg', '/assets/images/slider/fine.jpg', '/assets/images/slider/ancient-aliens.jpg'
         ];
         this.currentImage = '';
         this.boundHandleTileClick = this.handleTileClick.bind(this);
