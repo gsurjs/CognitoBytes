@@ -18,18 +18,18 @@ class MemoryGame {
         
         //image paths for cards
         this.imagePaths = [
-            'images/img01.jpg',
-            'images/img02.jpg', 
-            'images/img03.jpg',
-            'images/img04.jpg',
-            'images/img05.jpg',
-            'images/img06.jpg',
-            'images/img07.jpg',
-            'images/img08.jpg',
-            'images/img09.jpg',
-            'images/img10.jpg',
-            'images/img11.jpg',
-            'images/img12.jpg'
+            '../../assets/images/memory/img01.jpg',
+            '../../assets/images/memory/img02.jpg', 
+            '../../assets/images/memory/img03.jpg',
+            '../../assets/images/memory/img04.jpg',
+            '../../assets/images/memory/img05.jpg',
+            '../../assets/images/memory/img06.jpg',
+            '../../assets/images/memory/img07.jpg',
+            '../../assets/images/memory/img08.jpg',
+            '../../assets/images/memory/img09.jpg',
+            '../../assets/images/memory/img10.jpg',
+            '../../assets/images/memory/img11.jpg',
+            '../../assets/images/memory/img12.jpg'
         ];
         
         this.initializeElements();

@@ -2,54 +2,89 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Number Guessing Game!</title>
-    <link rel="stylesheet" href="number-game-styles.css">
-    <script src="analytics.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🧩 Pix-Slate</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="../../analytics.js"></script>
 </head>
 <body>
-    <div class="floating-numbers" id="floatingNumbers"></div>
-    
     <div class="game-container">
         <div class="header">
-            <h1 class="title">🤔 Guess the Number!</h1>
-            <div class="clock" id="clock"></div>
+            <h1 class="title">🧩 Pix-Slate</h1>
             <div class="navigation">
-                <a href="index.html" class="nav-button">🕹️ Back to Games</a>
+                <a href="../../" class="nav-button">🕹️ Back to Games</a>
             </div>
-            <div class="game-start" id="gameStart">
-                <button class="start-guessing-button" id="startGuessingButton">START GUESSING!</button>
+            <div class="game-mode-selector">
+                <button class="mode-button active" id="dailyMode">📅 Daily</button>
+                <button class="mode-button" id="randomMode">♾️ Random</button>
             </div>
         </div>
-        <div class="game-interface" id="gameInterface" style="display: none;">
+
+        <div class="game-content">
             <div class="game-info">
-                <div class="guesses-left" id="guessesLeft">10 guesses left</div>
-                <div class="range-info">1 - 100</div>
+                <div class="timer" id="timer">Time: 00:00</div>
+                <div class="moves" id="moves">Moves: 0</div>
             </div>
 
-            <div class="message" id="message">
-                <p>I'm thinking of a number between 1 and 100. Can you guess it?</p>
-            </div>
-            
-            <div class="input-section">
-                <div class="input-container">
-                    <input type="number" id="guessInput" min="1" max="100" placeholder="?">
-                    <button id="guessButton">Guess</button>
+            <div class="game-board" id="gameBoard">
                 </div>
+
+            <div class="button-container">
+                <button class="new-game-button" id="newGameButton">NEW GAME</button>
+                <button class="game-button" id="pauseButton">PAUSE</button>
+                <button class="game-button" id="statsButton" style="display: none;">STATS</button>
+                <button class="share-button" id="shareButton" style="display: none;">💬 SHARE</button>
             </div>
+
             <div class="stats">
                 <div class="stat-item">
                     <div class="stat-value" id="gamesWon">0</div>
                     <div class="stat-label">Games Won</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value" id="totalGames">0</div>
-                    <div class="stat-label">Total Games</div>
+                    <div class="stat-value" id="gamesPlayed">0</div>
+                    <div class="stat-label">Games Played</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="winStreak">0</div>
+                    <div class="stat-label">Win Streak</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="statsModal" class="modal-overlay">
+            <div class="modal-content">
+                <button class="modal-close-button">&times;</button>
+                <h2>Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div id="statsPlayed" class="stat-value">0</div>
+                        <div class="stat-label">Played</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="statsWinRate" class="stat-value">0</div>
+                        <div class="stat-label">Win %</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="statsCurrentStreak" class="stat-value">0</div>
+                        <div class="stat-label">Current Streak</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="statsMaxStreak" class="stat-value">0</div>
+                        <div class="stat-label">Max Streak</div>
+                    </div>
+                </div>
+                <h3>Best Time</h3>
+                <div class="stats-grid" id="bestStatsGrid">
+                    <div class="stat-item">
+                        <div id="bestTime" class="stat-value">--:--</div>
+                        <div class="stat-label">Fastest Solve</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <script src="number-game-scripts.js"></script>
+    <script src="scripts.js"></script>
     <script>
         // Orientation Lock Script - Add to all your HTML files
         class OrientationLock {

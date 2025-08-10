@@ -4,7 +4,7 @@
 
 A collection of engaging web-based brain games designed to challenge your cognitive abilities. From word puzzles to memory challenges, test your skills across multiple game modes including daily challenges and endless play.
 
-**[Click Here to Play!][https://www.cognitobytes.com/]**
+[Click Here to Play!](https://www.cognitobytes.com/)
 
 ## 🎮 Games Included
 

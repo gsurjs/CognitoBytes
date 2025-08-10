@@ -9,10 +9,10 @@ class SlidingPuzzleGame {
         this.isPaused = false;
         this.mode = 'daily';
         this.images = [
-            'images/slider/blue-cheeked-jacama.jpg', 'images/slider/capybara.jpg', 'images/slider/the_dude.jpg', 'images/slider/cat.jpg', 'images/slider/barn-owl.jpg', 'images/slider/owl_.jpg', 'images/slider/lotus.jpg', 'images/slider/aurora.jpg', 'images/slider/landscape.jpg',
-            'images/slider/jaguar.jpg', 'images/slider/Einstein.jpg', 'images/slider/greenfinch.jpg',
-            'images/slider/SanDiegoHummingBird.jpg', 'images/slider/Warbler.jpg', 'images/slider/Water.jpg', 'images/slider/mountains.jpg',
-            'images/slider/yorkie.jpg', 'images/slider/yorkie1.jpg', 'images/slider/fine.jpg', 'images/slider/ancient-aliens.jpg'
+            '../../assets/images/slider/blue-cheeked-jacama.jpg', '../../assets/images/slider/capybara.jpg', '../../assets/images/slider/the_dude.jpg', '../../assets/images/slider/cat.jpg', '../../assets/images/slider/barn-owl.jpg', '../../assets/images/slider/owl_.jpg', '../../assets/images/slider/lotus.jpg', '../../assets/images/slider/aurora.jpg', '../../assets/images/slider/landscape.jpg',
+            '../../assets/images/slider/jaguar.jpg', '../../assets/images/slider/Einstein.jpg', '../../assets/images/slider/greenfinch.jpg',
+            '../../assets/images/slider/SanDiegoHummingBird.jpg', '../../assets/images/slider/Warbler.jpg', '../../assets/images/slider/Water.jpg', '../../assets/images/slider/mountains.jpg',
+            '../../assets/images/slider/yorkie.jpg', '../../assets/images/slider/yorkie1.jpg', '../../assets/images/slider/fine.jpg', '../../assets/images/slider/ancient-aliens.jpg'
         ];
         this.currentImage = '';
         this.boundHandleTileClick = this.handleTileClick.bind(this);
