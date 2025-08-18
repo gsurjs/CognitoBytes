@@ -1007,7 +1007,7 @@ class WoordleGame {
         // Use 'X' for score if the game was lost on the final attempt
         const score = (!gameWon && attempts === this.maxAttempts) ? 'X' : attempts;
         
-        let shareText = `Alpha-bit ${puzzleNumber} ${attempts}/6\n\n`;
+        let shareText = `Alpha-bit ${puzzleNumber} ${score}/6\n\n`;
         
         for (let row = 0; row < attempts; row++) {
             let rowText = '';
