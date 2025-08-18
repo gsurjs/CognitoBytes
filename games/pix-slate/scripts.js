@@ -520,6 +520,7 @@ class SlidingPuzzleGame {
         this.updateUIVisibility();
 
         this.saveState();
+        this.showStatsModal();
         setTimeout(() => {
             alert(`You solved it in ${this.timer} seconds and ${this.moves} moves!`);
         }, 300);
@@ -527,7 +528,6 @@ class SlidingPuzzleGame {
 
     updateUIVisibility() {
         const isGameOver = !this.gameActive && this.isSolved();
-        this.showStatsModal();
         this.shareButton.style.display = isGameOver && this.mode === 'daily' ? 'inline-block' : 'none';
         this.statsButton.style.display = isGameOver ? 'inline-block' : 'none';
         this.pauseButton.style.display = isGameOver ? 'none' : 'inline-block';
