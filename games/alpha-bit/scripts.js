@@ -559,6 +559,8 @@ class WoordleGame {
         
         // Store the timer ID when it's created
         this.endGameTimeoutId = setTimeout(() => {
+            //automatically show stats modal with winning row highlighted
+            this.showStatsModal(this.currentRow + 1);
             if (this.statsButton) this.statsButton.style.display = 'inline-block';
             if (this.gameMode === 'daily' && this.shareButton) {
                 this.shareButton.style.display = 'inline-block';
@@ -589,7 +591,11 @@ class WoordleGame {
         
         // Store the timer ID when it's created
         this.endGameTimeoutId = setTimeout(() => {
+            this.showStatsModal();
             if (this.statsButton) this.statsButton.style.display = 'inline-block';
+            if (this.gameMode == 'daily' && this.shareButton) {
+                this.shareButton.style.display = 'inline-block';
+            }
             if (this.definitionButton) this.definitionButton.style.display = 'inline-block';
             if (this.gameMode !== 'daily' && this.newGameButton) {
                 this.newGameButton.style.display = 'inline-block';
@@ -907,8 +913,22 @@ class WoordleGame {
             navigator.clipboard.writeText(text).then(() => {
                 this.updateMessage('📋 Results copied to clipboard!', 'success');
                 setTimeout(() => {
-                    const attempts = this.currentRow + 1;
-                    this.updateMessage(`🎉 Excellent! You got it in ${attempts} attempt${attempts === 1 ? '' : 's'}!`, "success");
+                    // Determine if the game was a win or loss to show the correct message.
+                    let gameWon = true;
+                    for (let col = 0; col < this.wordLength; col++) {
+                        const tile = document.getElementById(`tile-${this.currentRow}-${col}`);
+                        if (!tile || !tile.classList.contains('correct')) {
+                            gameWon = false;
+                            break;
+                        }
+                    }
+
+                    if (gameWon) {
+                        const attempts = this.currentRow + 1;
+                        this.updateMessage(`🎉 Excellent! You got it in ${attempts} attempt${attempts === 1 ? '' : 's'}!`, "success");
+                    } else {
+                        this.updateMessage(`💀 Game Over! The word was "${this.targetWord}".`, "error");
+                    }
                 }, 2000);
             }).catch(err => {
                 console.log('Failed to copy:', err);
@@ -973,6 +993,19 @@ class WoordleGame {
         const daysSinceEpoch = Math.floor((today.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24)) + 1;
         const attempts = this.gameActive ? this.currentRow : this.currentRow + 1;
         const puzzleNumber = Math.max(1, daysSinceEpoch);
+
+        // Check if the game was won by looking at the tiles in the last active row
+        let gameWon = true;
+        for (let col = 0; col < this.wordLength; col++) {
+            const tile = document.getElementById(`tile-${this.currentRow}-${col}`);
+            if (!tile || !tile.classList.contains('correct')) {
+                gameWon = false;
+                break;
+            }
+        }
+    
+        // Use 'X' for score if the game was lost on the final attempt
+        const score = (!gameWon && attempts === this.maxAttempts) ? 'X' : attempts;
         
         let shareText = `Alpha-bit ${puzzleNumber} ${attempts}/6\n\n`;
         
