@@ -527,6 +527,7 @@ class SlidingPuzzleGame {
 
     updateUIVisibility() {
         const isGameOver = !this.gameActive && this.isSolved();
+        this.showStatsModal();
         this.shareButton.style.display = isGameOver && this.mode === 'daily' ? 'inline-block' : 'none';
         this.statsButton.style.display = isGameOver ? 'inline-block' : 'none';
         this.pauseButton.style.display = isGameOver ? 'none' : 'inline-block';
