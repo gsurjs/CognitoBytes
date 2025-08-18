@@ -359,9 +359,20 @@ class FloodThisGame {
         // Update stats - simplified approach like Alpha-Bit
         const stats = this.getStats();
         const gameStateKey = this.getGameStateKey();
-        
-        // Check if stats for this game have already been recorded
-        if (stats.lastGameCompleted !== gameStateKey) {
+
+        let shouldUpdateStats = false;
+
+        if (this.gameMode === 'daily') {
+            // For daily mode, only update if it's a new day's game
+            if (stats.lastGameCompleted !== gameStateKey) {
+                shouldUpdateStats = true;
+            }
+        } else {
+            // For other modes, always update stats
+            shouldUpdateStats = true;
+        }
+
+        if (shouldUpdateStats) {
             stats.gamesWon++;
             stats.gamesPlayed++;
             stats.currentStreak++;
@@ -371,19 +382,21 @@ class FloodThisGame {
                 stats.bestScore = this.currentMoves;
             }
             
-            // Track score distribution (moves to win)
             if (!stats.scoreDistribution) {
                 stats.scoreDistribution = {};
             }
             stats.scoreDistribution[this.currentMoves] = (stats.scoreDistribution[this.currentMoves] || 0) + 1;
             
-            stats.lastGameCompleted = gameStateKey; // Mark this game as recorded
+            if (this.gameMode === 'daily') {
+                stats.lastGameCompleted = gameStateKey; // Only mark daily game as completed
+            }
             this.saveStats(stats);
         }
         this.updateStatsDisplay();
 
         // Show buttons after a delay
         setTimeout(() => {
+            this.showStatsModal();
             if (this.statsButton) this.statsButton.style.display = 'inline-block';
             if (this.gameMode === 'daily' && this.shareButton) {
                 this.shareButton.style.display = 'inline-block';
@@ -391,7 +404,7 @@ class FloodThisGame {
             if (this.gameMode !== 'daily' && this.newGameButton) {
                 this.newGameButton.style.display = 'inline-block';
             }
-        }, 500);
+        }, 1000);
     }
 
     handleLoss() {
@@ -404,17 +417,30 @@ class FloodThisGame {
         const stats = this.getStats();
         const gameStateKey = this.getGameStateKey();
         
-        // Check if stats for this game have already been recorded
-        if (stats.lastGameCompleted !== gameStateKey) {
+        let shouldUpdateStats = false;
+        if (this.gameMode === 'daily') {
+            // For daily mode, only update if it's a new day's game
+            if (stats.lastGameCompleted !== gameStateKey) {
+                shouldUpdateStats = true;
+            }
+        } else {
+            // For other modes, always update stats
+            shouldUpdateStats = true;
+        }
+
+        if (shouldUpdateStats) {
             stats.gamesPlayed++;
             stats.currentStreak = 0; // Reset streak on loss
-            stats.lastGameCompleted = gameStateKey; // Mark this game as recorded
+            if (this.gameMode === 'daily') {
+                stats.lastGameCompleted = gameStateKey; // Only mark daily game as completed
+            }
             this.saveStats(stats);
         }
         this.updateStatsDisplay();
 
         // Show buttons after a delay
         setTimeout(() => {
+            this.showStatsModal();
             if (this.statsButton) this.statsButton.style.display = 'inline-block';
             if (this.gameMode === 'daily' && this.shareButton) {
                 this.shareButton.style.display = 'inline-block';
@@ -422,7 +448,7 @@ class FloodThisGame {
             if (this.gameMode !== 'daily' && this.newGameButton) {
                 this.newGameButton.style.display = 'inline-block';
             }
-        }, 500);
+        }, 1000);
     }
 
     saveGameState() {

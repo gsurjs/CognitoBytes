@@ -36,13 +36,6 @@ Test your memory by matching pairs of cards.
 - Time pressure gameplay
 - Visual feedback and animations
 
-### 🤔 Number Guessing
-Guess the secret number between 1-100 with smart hints.
-- Temperature-based hints (Hot/Cold)
-- 2-minute time limit
-- 10 guess maximum
-- Distance-based feedback
-
 ## ✨ Features
 
 - **📱 Mobile Responsive**: Optimized for all screen sizes
@@ -103,11 +96,5 @@ The CSS uses CSS custom properties for easy theme customization.
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Images sourced from royalty-free collections
-- Inspired by classic puzzle and word games
-- Built with modern web technologies for optimal performance
 
 **Enjoy challenging your mind with Cognito Bytes!** 🧠
