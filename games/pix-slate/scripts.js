@@ -8,12 +8,8 @@ class SlidingPuzzleGame {
         this.gameActive = false;
         this.isPaused = false;
         this.mode = 'daily';
-        this.images = [
-            '/assets/images/slider/blue-cheeked-jacama.jpg', '/assets/images/slider/capybara.jpg', '/assets/images/slider/the_dude.jpg', '/assets/images/slider/cat.jpg', '/assets/images/slider/barn-owl.jpg', '/assets/images/slider/owl_.jpg', '/assets/images/slider/lotus.jpg', '/assets/images/slider/aurora.jpg', '/assets/images/slider/landscape.jpg',
-            '/assets/images/slider/jaguar.jpg', '/assets/images/slider/Einstein.jpg', '/assets/images/slider/greenfinch.jpg',
-            '/assets/images/slider/SanDiegoHummingBird.jpg', '/assets/images/slider/Warbler.jpg', '/assets/images/slider/Water.jpg', '/assets/images/slider/mountains.jpg',
-            '/assets/images/slider/yorkie.jpg', '/assets/images/slider/yorkie1.jpg', '/assets/images/slider/fine.jpg', '/assets/images/slider/ancient-aliens.jpg'
-        ];
+        const totalImages = 20;
+        this.images = Array.from({ length: totalImages }, (_, i) => `/assets/images/slider/${i + 1}.webp`);
         this.currentImage = '';
         this.boundHandleTileClick = this.handleTileClick.bind(this);
 
@@ -56,7 +52,13 @@ class SlidingPuzzleGame {
             lastGamePlayedSeed: null
         };
         const saved = localStorage.getItem(key);
-        return saved ? JSON.parse(saved) : defaultStats;
+    
+        try {
+            return saved ? JSON.parse(saved) : defaultStats;
+        } catch (e) {
+            console.error("Save file corrupted, resetting stats.");
+            return defaultStats;
+        }
     }
 
     saveStats(stats) {
@@ -164,48 +166,61 @@ class SlidingPuzzleGame {
         localStorage.setItem(`pixSlateSave_${this.mode}`, JSON.stringify(state));
     }
 
+    // --- SECURITY FIX: Robust State Loading ---
     loadState() {
-        const savedStateJSON = localStorage.getItem(`pixSlateSave_${this.mode}`);
-        if (!savedStateJSON) return false;
+        try {
+            const savedStateJSON = localStorage.getItem(`pixSlateSave_${this.mode}`);
+            if (!savedStateJSON) return false;
 
-        const savedState = JSON.parse(savedStateJSON);
+            const savedState = JSON.parse(savedStateJSON);
 
-        if (this.mode === 'daily' && savedState.date !== new Date().toDateString()) {
+            // Validation: Check if board data exists and is valid
+            if (!savedState.board || !Array.isArray(savedState.board)) {
+                throw new Error("Invalid board state");
+            }
+
+            if (this.mode === 'daily' && savedState.date !== new Date().toDateString()) {
+                console.log("New day detected. Clearing old save.");
+                localStorage.removeItem(`pixSlateSave_${this.mode}`);
+                // Force game to stop so it doesn't auto-resume
+                this.gameActive = false; 
+                this.timer = 0;
+                return false;
+            }
+
+            const lastTileValue = 16;
+            this.tileElements.forEach(el => el.classList.remove('empty-spot'));
+            const emptyElement = this.tileElements.find(el => parseInt(el.dataset.tileValue) === lastTileValue);
+            if (emptyElement) {
+                emptyElement.classList.add('empty-spot');
+            }
+
+            this.board = savedState.board;
+            this.moves = savedState.moves || 0;
+            this.timer = savedState.timer || 0;
+            this.currentImage = savedState.currentImage;
+            this.gameActive = savedState.gameActive;
+            this.isPaused = savedState.isPaused || false;
+
+            this.renderFullBoard();
+            this.updateMoves();
+            this.updateTimer();
+
+            if (this.isPaused) {
+                this.pauseButton.textContent = 'RESUME';
+                this.pauseOverlay.classList.add('active');
+            } else if (this.gameActive && this.moves > 0) { 
+                // Added check: Only auto-resume if player has actually made moves
+                this.startTimer();
+            }
+
+            this.updateUIVisibility();
+            return true;
+        } catch (e) {
+            console.warn("Save file invalid or corrupted. Starting fresh.", e);
             localStorage.removeItem(`pixSlateSave_${this.mode}`);
             return false;
         }
-
-        const lastTileValue = 16;
-        this.tileElements.forEach(el => el.classList.remove('empty-spot'));
-        const emptyElement = this.tileElements.find(el => parseInt(el.dataset.tileValue) === lastTileValue);
-        if (emptyElement) {
-            emptyElement.classList.add('empty-spot');
-        }
-
-        this.board = savedState.board;
-        this.moves = savedState.moves;
-        this.timer = savedState.timer;
-        this.currentImage = savedState.currentImage;
-        this.gameActive = savedState.gameActive;
-        this.isPaused = savedState.isPaused || false;
-
-        this.renderFullBoard();
-        this.updateMoves();
-        this.updateTimer();
-
-        if (this.isPaused) {
-            this.pauseButton.textContent = 'RESUME';
-            this.pauseOverlay.classList.add('active');
-        } else {
-            if (this.gameActive) {
-                this.startTimer();
-            }
-        }
-
-        this.updateUIVisibility();
-        // The extra brace was here. It has been removed.
-
-        return true;
     }
 
     setMode(mode) {
@@ -229,13 +244,20 @@ class SlidingPuzzleGame {
         this.pauseButton.textContent = 'PAUSE';
         this.pauseOverlay.classList.remove('active');
         localStorage.removeItem(`pixSlateSave_${this.mode}`);
-        this.gameActive = true;
+        this.gameActive = false;
         this.moves = 0;
         this.timer = 0;
         this.updateMoves();
         this.stopTimer();
         this.updateTimer();
         this.generateBoard();
+
+        const preloadImg = new Image();
+        preloadImg.src = this.currentImage;
+        preloadImg.onload = () => {
+            this.renderFullBoard();
+        };
+
         this.renderFullBoard();
 
         this.updateUIVisibility();
@@ -306,7 +328,7 @@ class SlidingPuzzleGame {
     }
 
     handleTileClick(e) {
-        if (this.isPaused || !this.gameActive) return;
+        if (this.isPaused) return;
 
         const clickedTileElement = e.target.closest('.tile');
 
@@ -335,7 +357,9 @@ class SlidingPuzzleGame {
             (Math.abs(row - emptyRow) === 1 && col === emptyCol) ||
             (Math.abs(col - emptyCol) === 1 && row === emptyRow)
         ) {
-            if (this.moves === 0 && this.timer === 0) {
+            // Start the game on the very first move
+            if (!this.gameActive) {
+                this.gameActive = true;
                 this.startTimer();
             }
 
