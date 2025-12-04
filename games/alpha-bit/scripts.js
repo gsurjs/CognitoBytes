@@ -97,7 +97,7 @@ class WoordleGame {
         this.answerWords = answerText
             .split('\n')
             .map(word => word.trim().toUpperCase())
-            .filter(word => word.length === this.wordLength);
+            .filter(word => /^[A-Z]{5}$/.test(word)); //strict regex validation
         
         // Load valid guess words from valid-wordle-words.txt
         const validResponse = await fetch('/games/alpha-bit/data/valid-wordle-words.txt');
@@ -111,7 +111,7 @@ class WoordleGame {
         this.validWords = validText
             .split('\n')
             .map(word => word.trim().toUpperCase())
-            .filter(word => word.length === this.wordLength);
+            .filter(word => /^[A-Z]{5}$/.test(word)); //strict regex validation
         
         console.log(`Loaded ${this.answerWords.length} answer words and ${this.validWords.length} valid guess words`);
         
@@ -641,8 +641,23 @@ class WoordleGame {
         const savedStateJSON = localStorage.getItem(`woordle-gameState-${this.gameMode}-v2`);
         if (!savedStateJSON) return false;
 
-        const savedState = JSON.parse(savedStateJSON);
+        let savedState;
+        try {
+            savedState = JSON.parse(savedStateJSON);
+        } catch (error) {
+            console.error('Save state corrupted, resetting:', error);
+            this.clearGameState();
+            return false;
+        }
 
+        // SECURITY FIX: Input Validation
+        // We verify that the word in storage is actually in our allowed word list.
+        // If the user modified it to "ABCDE" or a 10-letter word, this catches it.
+        if (!this.answerWords.includes(savedState.targetWord)) {
+            console.warn('Invalid target word found in save state. Resetting game.');
+            this.clearGameState();
+            return false;
+        }
         // Daily word validation: if the saved word is not today's word, invalidate state
         if (this.gameMode === 'daily') {
             const dailyWord = this.getDailyWord();
@@ -655,7 +670,7 @@ class WoordleGame {
         this.targetWord = savedState.targetWord;
         this.currentRow = savedState.currentRow;
         this.gameActive = savedState.gameActive;
-        this.keyboardState = savedState.keyboardState;
+        this.keyboardState = savedState.keyboardState || {}; //fallback to empty obj if undefined
         this.currentWord = '';
         this.currentCol = 0;
         
@@ -671,7 +686,7 @@ class WoordleGame {
             }
         } else {
              this.updateMessage("Welcome back!", "info");
-             this.hideAllButtons(); // This is the fix
+             this.hideAllButtons(); 
         }
 
         return true;
@@ -713,8 +728,15 @@ class WoordleGame {
 
 
     updateMessage(text, type) {
-        this.message.innerHTML = `<p>${text}</p>`;
-        this.message.className = `message ${type}`;
+        //clear existing content
+        this.message.textContent = '';
+
+        //create paragraph element programmatically
+        const p = document.createElement('p');
+        p.textContent = text; //sanitize input automatically
+
+        this.message.appendChild(p);
+        this.message.className = 'message ${type}';
     }
 
     updateAttemptsDisplay() {
@@ -890,7 +912,7 @@ class WoordleGame {
 
 
         const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
-        window.open(googleSearchUrl, '_blank');
+        window.open(googleSearchUrl, '_blank', 'noopener,noreferrer');
     }
 
     shareResults() {
