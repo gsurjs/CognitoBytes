@@ -736,6 +736,10 @@ class WoordleGame {
         p.textContent = text; //sanitize input automatically
 
         this.message.appendChild(p);
+
+        this.message.className = 'message'; 
+        
+        void this.message.offsetWidth;
         this.message.className = 'message ${type}';
     }
 
