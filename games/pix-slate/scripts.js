@@ -42,6 +42,18 @@ class SlidingPuzzleGame {
         this.statsModal = document.getElementById('statsModal');
     }
 
+    // --- Scroll Locking Helper ---
+    toggleScrollLock(shouldLock) {
+        if (shouldLock) {
+            document.body.style.overflow = 'hidden';
+            // Prevent iOS rubber-banding
+            document.body.style.overscrollBehavior = 'none';
+        } else {
+            document.body.style.overflow = '';
+            document.body.style.overscrollBehavior = '';
+        }
+    }
+
     getStats() {
         const key = `pixSlate-stats-${this.mode}`;
         const defaultStats = {
@@ -209,9 +221,11 @@ class SlidingPuzzleGame {
             if (this.isPaused) {
                 this.pauseButton.textContent = 'RESUME';
                 this.pauseOverlay.classList.add('active');
+                this.toggleScrollLock(false); // Paused = Can scroll
             } else if (this.gameActive && this.moves > 0) { 
                 // Added check: Only auto-resume if player has actually made moves
                 this.startTimer();
+                this.toggleScrollLock(true); // Resume active game = Lock scroll
             }
 
             this.updateUIVisibility();
@@ -219,6 +233,7 @@ class SlidingPuzzleGame {
         } catch (e) {
             console.warn("Save file invalid or corrupted. Starting fresh.", e);
             localStorage.removeItem(`pixSlateSave_${this.mode}`);
+            this.toggleScrollLock(false);
             return false;
         }
     }
@@ -245,6 +260,7 @@ class SlidingPuzzleGame {
         this.pauseOverlay.classList.remove('active');
         localStorage.removeItem(`pixSlateSave_${this.mode}`);
         this.gameActive = false;
+        this.toggleScrollLock(false); // New game starts unlocked
         this.moves = 0;
         this.timer = 0;
         this.updateMoves();
@@ -361,6 +377,7 @@ class SlidingPuzzleGame {
             if (!this.gameActive) {
                 this.gameActive = true;
                 this.startTimer();
+                this.toggleScrollLock(true); // LOCK SCROLL ON FIRST CLICK
             }
 
             this.swapTiles(clickedIndex, emptyIndex);
@@ -386,12 +403,15 @@ class SlidingPuzzleGame {
             this.stopTimer();
             this.pauseButton.textContent = 'RESUME';
             this.pauseOverlay.classList.add('active');
+            this.toggleScrollLock(false); // UNLOCK SCROLL WHEN PAUSED
         } else {
             if (this.gameActive) {
                 this.startTimer();
+                this.toggleScrollLock(true); // LOCK SCROLL WHEN RESUMED
             }
             this.pauseButton.textContent = 'PAUSE';
             this.pauseOverlay.classList.remove('active');
+
         }
         this.saveState();
     }
