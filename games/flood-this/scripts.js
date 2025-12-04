@@ -22,7 +22,9 @@ class FloodThisGame {
     initializeGame() {
         // Load saved game mode setting
         const savedMode = localStorage.getItem('flood-this-gameMode');
-        this.gameMode = savedMode || 'easy';
+        // SECURITY: Validate that savedMode is one of the allowed values
+        const allowedModes = ['daily', 'easy', 'medium', 'hard'];
+        this.gameMode = allowedModes.includes(savedMode) ? savedMode : 'daily';
         
         // Update button states based on saved mode
         this.updateModeButtons();
@@ -97,6 +99,10 @@ class FloodThisGame {
     }
 
     setGameMode(mode) {
+        // SECURITY: Whitelist valid modes
+        const validModes = ['daily', 'easy', 'medium', 'hard'];
+        if (!validModes.includes(mode)) return;
+
         // If mode hasn't changed, don't do anything
         if (this.gameMode === mode) return;
         
@@ -566,7 +572,7 @@ class FloodThisGame {
     }
 
     updateMessage(text, type) {
-        this.message.innerHTML = `<p>${text}</p>`;
+        this.message.textContent = text;
         this.message.className = `message ${type}`;
     }
 
@@ -671,13 +677,16 @@ class FloodThisGame {
         };
 
         const saved = localStorage.getItem(key); 
-        const stats = saved ? JSON.parse(saved) : defaultStats;
-
-        if (!stats.scoreDistribution) {
-            stats.scoreDistribution = defaultStats.scoreDistribution;
+        try {
+            const stats = saved ? JSON.parse(saved) : defaultStats;
+            if (!stats.scoreDistribution) {
+                stats.scoreDistribution = defaultStats.scoreDistribution;
+            }
+            return stats;
+        } catch (e) {
+            console.error("Corrupt stats found, resetting:", e);
+            return defaultStats;
         }
-
-        return stats;
     }
 
     saveStats(stats) {
@@ -750,7 +759,8 @@ class FloodThisGame {
                     distributionContainer.appendChild(row);
                 });
             } else {
-                distributionContainer.innerHTML = '<p style="color: #ccc; font-size: 0.8rem; text-align: center;">No games completed yet</p>';
+                distributionContainer.textContent = 'No games completed yet';
+                distributionContainer.style.cssText = 'color: #ccc; font-size: 0.8rem; text-align: center;';
             }
         }
 
@@ -829,6 +839,7 @@ class FloodThisGame {
         }
     }
 
+    // SECURITY CRITICAL FIX: Removed innerHTML injection
     showShareText(text) {
         // Prevent main page from scrolling while the modal is open
         document.body.style.overflow = 'hidden';
@@ -853,14 +864,26 @@ class FloodThisGame {
             document.body.style.overflow = '';
         };
 
-        modal.innerHTML = `
-            <h3 style="margin-top:0;">Copy to Clipboard</h3>
-            <textarea readonly style="width: 100%; height: 120px; background: #1e1e1e; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 10px; box-sizing: border-box; resize: none;">${text}</textarea>
-            <button class="modal-close-button" style="width: 100%; padding: 10px; margin-top: 15px; background: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer;">Close</button>
-        `;
+        // Create Title
+        const title = document.createElement('h3');
+        title.style.marginTop = '0';
+        title.textContent = 'Copy to Clipboard';
+        modal.appendChild(title);
 
-        // Add event listener to the new close button
-        modal.querySelector('.modal-close-button').addEventListener('click', closeModal);
+        // Create Textarea (Safe Method)
+        const textarea = document.createElement('textarea');
+        textarea.readOnly = true;
+        textarea.style.cssText = 'width: 100%; height: 120px; background: #1e1e1e; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 10px; box-sizing: border-box; resize: none;';
+        textarea.value = text; // SAFE: .value treats content as plain text
+        modal.appendChild(textarea);
+
+        // Create Button
+        const button = document.createElement('button');
+        button.className = 'modal-close-button';
+        button.style.cssText = 'width: 100%; padding: 10px; margin-top: 15px; background: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer;';
+        button.textContent = 'Close';
+        button.addEventListener('click', closeModal);
+        modal.appendChild(button);
 
         // Allow closing by clicking the dark background
         overlay.addEventListener('click', (e) => {
@@ -910,7 +933,7 @@ class FloodThisGame {
             emojiGrid = `${emoji}${emoji}${emoji}${emoji}${emoji}${emoji}\n${emoji}${emoji}${emoji}${emoji}${emoji}${emoji}\n${emoji}${emoji}${emoji}${emoji}${emoji}${emoji}\n${emoji}${emoji}${emoji}${emoji}${emoji}${emoji}\n${emoji}${emoji}${emoji}${emoji}${emoji}${emoji}\n${emoji}${emoji}${emoji}${emoji}${emoji}${emoji}`;
         } else {
             // Game over - use X emojis
-            emojiGrid = `❌❌❌❌❌❌\n❌❌❌❌❌❌\n❌❌❌❌❌❌\n❌❌❌❌❌❌\n❌❌❌❌❌❌\n❌❌❌❌❌❌`;
+            emojiGrid = `⬛️⬛️⬛️⬛️⬛️⬛️\n⬛️⬛️⬛️⬛️⬛️⬛️\n⬛️⬛️⬛️⬛️⬛️⬛️\n⬛️⬛️⬛️⬛️⬛️⬛️\n⬛️⬛️⬛️⬛️⬛️⬛️\n⬛️⬛️⬛️⬛️⬛️⬛️`;
         }
         
         shareText += emojiGrid + '\n\n';
