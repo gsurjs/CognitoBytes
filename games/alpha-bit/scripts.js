@@ -740,7 +740,7 @@ class WoordleGame {
         this.message.className = 'message'; 
         
         void this.message.offsetWidth;
-        this.message.className = 'message ${type}';
+        this.message.className = `message ${type}`;
     }
 
     updateAttemptsDisplay() {
