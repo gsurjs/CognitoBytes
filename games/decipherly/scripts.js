@@ -1,11 +1,13 @@
 class CrossJumbleGame {
     constructor() {
         this.words = [];
-        this.gridSize = 7; 
-        this.solutionGrid = []; // 7x7 Grid of correct chars
-        this.currentGrid = [];  // 7x7 Grid of current chars
-        this.wordDefs = [];     // Array of {direction, r, c, length, word}
-        this.tileMap = [];      // 7x7 map where cell = [wordIndex1, wordIndex2]
+        this.gridSize = 8; // Increased to 8x8 for better fit
+        this.targetWordCount = 5; // Aim for 5 words
+        
+        this.solutionGrid = [];
+        this.currentGrid = [];
+        this.wordDefs = [];
+        this.tileMap = [];
 
         this.selectedTile = null; 
         this.moves = 0;
@@ -122,7 +124,7 @@ class CrossJumbleGame {
         
         this.dom.board.innerHTML = ''; 
         this.createPauseOverlay();
-        this.showMessage("Swap letters to fix the grid!", "");
+        this.showMessage("Swap letters in each word to decipher the grid!", "");
 
         // Check daily save
         if (this.gameMode === 'daily') {
@@ -149,7 +151,7 @@ class CrossJumbleGame {
         // Retry loop for valid grid
         let success = false;
         let attempts = 0;
-        while (!success && attempts < 50) {
+        while (!success && attempts < 20) {
             success = this.generateGrid(nextRand);
             attempts++;
         }
@@ -167,15 +169,18 @@ class CrossJumbleGame {
     generateGrid(randFunc) {
         const size = this.gridSize;
         const grid = Array(size).fill(null).map(() => Array(size).fill(null));
-        const wordDefs = []; 
+        const placedWords = []; 
         
-        const pickWord = (len) => {
-            const subsets = this.words.filter(w => w.length === len);
+        const pickWord = (len, mustContainChar = null) => {
+            let subsets = this.words.filter(w => w.length === len);
+            if (mustContainChar) {
+                subsets = subsets.filter(w => w.includes(mustContainChar));
+            }
             if (subsets.length === 0) return null;
             return subsets[Math.floor(randFunc() * subsets.length)];
         };
 
-        // 1. Center Word
+        // 1. Center Word (Horizontal)
         const centerLen = 5 + Math.floor(randFunc() * 2);
         const centerWord = pickWord(centerLen);
         if (!centerWord) return false;
@@ -184,52 +189,93 @@ class CrossJumbleGame {
         const startRow = Math.floor(size / 2);
         
         for (let i = 0; i < centerLen; i++) grid[startRow][startCol + i] = centerWord[i];
-        wordDefs.push({dir: 'H', r: startRow, c: startCol, len: centerLen, word: centerWord});
+        placedWords.push({dir: 'H', r: startRow, c: startCol, len: centerLen, word: centerWord});
 
-        // 2. Add Intersections
-        const intersections = [];
-        for (let i = 0; i < centerLen; i++) {
-            if (randFunc() > 0.3) intersections.push({r: startRow, c: startCol + i, char: centerWord[i]});
-        }
-
-        let wordsAdded = 1;
-
-        for (let pt of intersections) {
-            const vLen = 4 + Math.floor(randFunc() * 3);
-            const possibleWords = this.words.filter(w => w.length === vLen && w.includes(pt.char));
+        // 2. Branch Out
+        let attempts = 0;
+        // Keep trying until we have 5 words or give up
+        while (placedWords.length < this.targetWordCount && attempts < 50) {
+            attempts++;
             
-            if (possibleWords.length > 0) {
-                const w = possibleWords[Math.floor(randFunc() * possibleWords.length)];
-                const charIdx = w.indexOf(pt.char);
-                const vStartRow = pt.r - charIdx;
+            // Pick a random existing word to branch off
+            const baseWord = placedWords[Math.floor(randFunc() * placedWords.length)];
+            
+            // Pick a random char in that word
+            const charIdx = Math.floor(randFunc() * baseWord.len);
+            const intersectChar = baseWord.word[charIdx];
+            
+            // Determine intersection coordinates
+            const intersectR = baseWord.dir === 'H' ? baseWord.r : baseWord.r + charIdx;
+            const intersectC = baseWord.dir === 'H' ? baseWord.c + charIdx : baseWord.c;
+            
+            // Determine new direction
+            const newDir = baseWord.dir === 'H' ? 'V' : 'H';
+            
+            // Pick a new word length (3 to 6)
+            const newLen = 3 + Math.floor(randFunc() * 4);
+            
+            // Find a word that fits
+            const newWordStr = pickWord(newLen, intersectChar);
+            if (!newWordStr) continue;
+            
+            // Determine start position of new word
+            const newCharIdx = newWordStr.indexOf(intersectChar);
+            const newStartR = newDir === 'V' ? intersectR - newCharIdx : intersectR;
+            const newStartC = newDir === 'H' ? intersectC - newCharIdx : intersectC;
+            
+            // Check Bounds
+            if (newStartR < 0 || newStartR + newLen > size || newStartC < 0 || newStartC + newLen > size) continue;
+            
+            // Check Collisions
+            let fits = true;
+            for (let k = 0; k < newLen; k++) {
+                const checkR = newDir === 'V' ? newStartR + k : newStartR;
+                const checkC = newDir === 'H' ? newStartC + k : newStartC;
                 
-                if (vStartRow >= 0 && vStartRow + vLen <= size) {
-                    let fits = true;
-                    for (let k = 0; k < vLen; k++) {
-                        const cell = grid[vStartRow + k][pt.c];
-                        if (cell !== null && cell !== w[k]) fits = false;
-                        if (cell === null) {
-                            if (pt.c > 0 && grid[vStartRow+k][pt.c-1] !== null) fits = false;
-                            if (pt.c < size-1 && grid[vStartRow+k][pt.c+1] !== null) fits = false;
-                        }
-                    }
-                    if (fits) {
-                        for (let k = 0; k < vLen; k++) grid[vStartRow + k][pt.c] = w[k];
-                        wordDefs.push({dir: 'V', r: vStartRow, c: pt.c, len: vLen, word: w});
-                        wordsAdded++;
+                const existingChar = grid[checkR][checkC];
+                
+                // Must match existing char if present
+                if (existingChar !== null && existingChar !== newWordStr[k]) {
+                    fits = false; break;
+                }
+                
+                // If empty, check neighbors (Don't create accidental 2-letter words parallel)
+                if (existingChar === null) {
+                    if (newDir === 'V') {
+                        if (checkC > 0 && grid[checkR][checkC-1] !== null) fits = false;
+                        if (checkC < size-1 && grid[checkR][checkC+1] !== null) fits = false;
+                        // Check ends
+                        if (k===0 && checkR > 0 && grid[checkR-1][checkC] !== null) fits = false;
+                        if (k===newLen-1 && checkR < size-1 && grid[checkR+1][checkC] !== null) fits = false;
+                    } else {
+                        if (checkR > 0 && grid[checkR-1][checkC] !== null) fits = false;
+                        if (checkR < size-1 && grid[checkR+1][checkC] !== null) fits = false;
+                        // Check ends
+                        if (k===0 && checkC > 0 && grid[checkR][checkC-1] !== null) fits = false;
+                        if (k===newLen-1 && checkC < size-1 && grid[checkR][checkC+1] !== null) fits = false;
                     }
                 }
             }
+            
+            if (fits) {
+                // Place it
+                for (let k = 0; k < newLen; k++) {
+                    const r = newDir === 'V' ? newStartR + k : newStartR;
+                    const c = newDir === 'H' ? newStartC + k : newStartC;
+                    grid[r][c] = newWordStr[k];
+                }
+                placedWords.push({dir: newDir, r: newStartR, c: newStartC, len: newLen, word: newWordStr});
+            }
         }
 
-        if (wordsAdded < 3) return false;
+        if (placedWords.length < 4) return false; // Minimum 4 words
 
         this.solutionGrid = grid;
-        this.wordDefs = wordDefs;
+        this.wordDefs = placedWords;
         
-        // Build Tile Map (Which cell belongs to which word index)
+        // Build Tile Map
         this.tileMap = Array(size).fill(null).map(() => Array(size).fill(null).map(() => []));
-        wordDefs.forEach((def, idx) => {
+        placedWords.forEach((def, idx) => {
             if (def.dir === 'H') {
                 for (let i=0; i<def.len; i++) this.tileMap[def.r][def.c + i].push(idx);
             } else {
@@ -274,7 +320,7 @@ class CrossJumbleGame {
         this.dom.board.style.display = 'grid';
         this.dom.board.style.gridTemplateColumns = `repeat(${this.gridSize}, 1fr)`;
 
-        // Calculate valid swap targets if a tile is selected
+        // Calculate valid swap targets
         let validTargets = new Set();
         if (this.selectedTile) {
             const sR = this.selectedTile.r;
@@ -286,9 +332,7 @@ class CrossJumbleGame {
                     if (this.tileMap[r][c].length > 0) {
                          const targetIndices = this.tileMap[r][c];
                          const intersection = sourceWordIndices.filter(x => targetIndices.includes(x));
-                         if (intersection.length > 0) {
-                             validTargets.add(`${r},${c}`);
-                         }
+                         if (intersection.length > 0) validTargets.add(`${r},${c}`);
                     }
                 }
             }
@@ -321,9 +365,6 @@ class CrossJumbleGame {
                         cell.classList.add('dimmed');
                     }
 
-                    // Always allow clicks unless it's strictly locked by game design
-                    // (Here we allow clicking even 'correct' tiles to move them if needed, 
-                    // or you can block it. Let's block it if correct to be helpful)
                     if (char !== this.solutionGrid[r][c]) {
                          cell.addEventListener('click', () => this.handleTileClick(r, c));
                     }
