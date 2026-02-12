@@ -1,4 +1,4 @@
-/* Inherit base gradient and fonts */
+/* Inherit base gradient and fonts from your main theme */
 body {
     font-family: 'Arial', sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -19,6 +19,7 @@ body {
     align-items: center;
 }
 
+/* --- HEADER & NAVIGATION --- */
 .header {
     text-align: center;
     width: 100%;
@@ -42,6 +43,19 @@ body {
     cursor: pointer;
     margin: 5px;
     backdrop-filter: blur(5px);
+    transition: background 0.2s;
+}
+
+.nav-button:hover, .game-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 10px;
 }
 
 .game-mode-selector {
@@ -67,6 +81,7 @@ body {
     border-color: white;
 }
 
+/* --- SCOREBOARD --- */
 .game-info {
     display: flex;
     flex-direction: column;
@@ -88,7 +103,7 @@ body {
     background: rgba(0,0,0,0.2);
     padding: 8px 15px;
     border-radius: 10px;
-    font-family: monospace;
+    font-family: monospace; /* Keeps numbers from jumping */
 }
 
 .message {
@@ -96,34 +111,37 @@ body {
     font-size: 1.1rem;
     text-align: center;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    font-weight: 500;
 }
 
-/* THE GRID */
+/* --- THE GAME BOARD --- */
 .board-container {
     display: flex;
     justify-content: center;
     margin-bottom: 20px;
+    position: relative;
 }
 
 .game-board {
     display: grid;
+    /* Columns are set dynamically by JS, but usually repeat(7, 1fr) */
     gap: 6px;
     background: rgba(255, 255, 255, 0.15);
     padding: 10px;
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    position: relative; /* REQUIRED for Pause Overlay */
+    position: relative; /* Anchor for Pause Overlay */
 }
 
-/* PAUSE OVERLAY STYLES */
+/* --- PAUSE OVERLAY --- */
 .pause-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px); /* Blurs the letters */
+    background: rgba(0, 0, 0, 0.6); /* Dark tint */
+    backdrop-filter: blur(8px);      /* The blur effect */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -142,6 +160,7 @@ body {
     pointer-events: all; /* Blocks clicks on tiles */
 }
 
+/* --- TILES --- */
 .tile {
     width: 45px;
     height: 45px;
@@ -155,7 +174,7 @@ body {
     color: #333;
     cursor: pointer;
     user-select: none;
-    transition: transform 0.2s, background-color 0.3s;
+    transition: transform 0.2s, background-color 0.2s, opacity 0.2s;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
@@ -165,28 +184,50 @@ body {
     cursor: default;
 }
 
+/* 1. Correct Position (Solved) */
 .tile.correct {
-    background: #6aaa64;
+    background: #6aaa64; /* Green */
     color: white;
     cursor: default;
-    transform: scale(1);
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+    transform: none !important; /* Prevent hover effects */
 }
 
+/* 2. Selected (First Tap) */
 .tile.selected {
-    background: #f1c40f;
+    background: #f1c40f; /* Yellow */
     transform: scale(1.1);
     z-index: 10;
     box-shadow: 0 0 15px rgba(241, 196, 15, 0.6);
+}
+
+/* 3. Valid Target (The Hint) */
+.tile.valid-target {
+    background: #fff8dc; /* Cornsilk / Very Light Yellow */
+    box-shadow: inset 0 0 0 3px #f1c40f; /* Yellow Ring inside */
+    transform: scale(1.05);
+}
+
+/* 4. Dimmed (Invalid for current selection) */
+.tile.dimmed {
+    opacity: 0.4;
+    transform: scale(0.95);
+    cursor: not-allowed;
+}
+
+/* --- CONTROLS AREA --- */
+.controls-area {
+    margin-top: 10px;
 }
 
 .instruction {
     font-size: 0.9rem;
     opacity: 0.8;
     text-align: center;
+    max-width: 400px;
 }
 
-/* Modal Styles */
+/* --- STATS MODAL --- */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -235,6 +276,12 @@ body {
 .stat-value { font-size: 1.5rem; font-weight: bold; color: #f1c40f; }
 .stat-label { font-size: 0.8rem; opacity: 0.8; }
 
+/* Records Section (Best Time) */
+h3 { margin-top: 20px; margin-bottom: 10px; font-size: 1.2rem; opacity: 0.9; }
+
+/* --- MOBILE RESPONSIVE --- */
 @media (max-width: 400px) {
     .tile { width: 38px; height: 38px; font-size: 1.2rem; }
+    .game-board { gap: 4px; padding: 8px; }
+    .title { font-size: 2rem; }
 }
