@@ -288,18 +288,13 @@ class CrossJumbleGame {
 
     // --- ANCHORED SCRAMBLE LOGIC ---
     scrambleBoard(randFunc) {
-        // 1. Start with the solution (Intersections are already correct here)
         this.currentGrid = this.solutionGrid.map(row => [...row]);
-
-        // 2. Identify Movable Cells per Word
-        // wordBuckets[i] holds tiles that ONLY belong to word i
         const wordBuckets = this.wordDefs.map(() => []); 
 
         for(let r=0; r<this.gridSize; r++) {
             for(let c=0; c<this.gridSize; c++) {
                 const indices = this.tileMap[r][c];
-                // If indices.length > 1, it's an intersection. LEAVE IT ALONE.
-                // If indices.length === 1, it belongs to one word. SCRAMBLE IT.
+                // Only scramble Non-Intersection (Non-Anchor) tiles
                 if (indices && indices.length === 1) {
                     const wordIdx = indices[0];
                     wordBuckets[wordIdx].push({r, c, char: this.solutionGrid[r][c]});
@@ -307,7 +302,6 @@ class CrossJumbleGame {
             }
         }
 
-        // 3. Shuffle each bucket independently
         wordBuckets.forEach(bucket => {
             if (bucket.length > 1) {
                 const originalStr = bucket.map(b => b.char).join('');
@@ -315,11 +309,9 @@ class CrossJumbleGame {
                 let scrambledStr = originalStr;
                 let attempts = 0;
 
-                // EDGE CASE LOOP: Ensure it actually scrambles
-                // Check if new order is different from original order
-                // Safety break after 10 attempts (e.g. if word is "MOM", it might be hard to scramble if M's swap)
-                while (scrambledStr === originalStr && attempts < 10) {
-                    // Fisher-Yates Shuffle
+                // FORCE SCRAMBLE: Keep shuffling until it doesn't match
+                while (scrambledStr === originalStr && attempts < 20) {
+                    // Fisher-Yates
                     for (let i = chars.length - 1; i > 0; i--) {
                         const j = Math.floor(randFunc() * (i + 1));
                         [chars[i], chars[j]] = [chars[j], chars[i]];
@@ -328,7 +320,11 @@ class CrossJumbleGame {
                     attempts++;
                 }
 
-                // Assign back to grid
+                // Fallback: If random shuffle failed to change it (rare), force a swap
+                if (scrambledStr === originalStr) {
+                    [chars[0], chars[1]] = [chars[1], chars[0]];
+                }
+
                 bucket.forEach((item, i) => {
                     this.currentGrid[item.r][item.c] = chars[i];
                 });
