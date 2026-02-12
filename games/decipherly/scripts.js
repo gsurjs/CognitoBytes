@@ -288,13 +288,16 @@ class CrossJumbleGame {
 
     // --- ANCHORED SCRAMBLE LOGIC ---
     scrambleBoard(randFunc) {
+        // 1. Copy Solution
         this.currentGrid = this.solutionGrid.map(row => [...row]);
+
+        // 2. Identify Movable Cells (Buckets)
         const wordBuckets = this.wordDefs.map(() => []); 
 
         for(let r=0; r<this.gridSize; r++) {
             for(let c=0; c<this.gridSize; c++) {
                 const indices = this.tileMap[r][c];
-                // Only scramble Non-Intersection (Non-Anchor) tiles
+                // Only non-intersections are movable
                 if (indices && indices.length === 1) {
                     const wordIdx = indices[0];
                     wordBuckets[wordIdx].push({r, c, char: this.solutionGrid[r][c]});
@@ -302,29 +305,56 @@ class CrossJumbleGame {
             }
         }
 
-        wordBuckets.forEach(bucket => {
+        // 3. Shuffle Buckets with "Difficulty Check"
+        wordBuckets.forEach((bucket, wordIdx) => {
             if (bucket.length > 1) {
-                const originalStr = bucket.map(b => b.char).join('');
-                let chars = bucket.map(b => b.char);
-                let scrambledStr = originalStr;
-                let attempts = 0;
+                // A. Calculate constraints
+                // How many letters are already locked (Anchors)?
+                const totalWordLen = this.wordDefs[wordIdx].len;
+                const anchorCount = totalWordLen - bucket.length;
+                
+                // We want Max 2 Green letters TOTAL per word.
+                // So allowed matches in this bucket = 2 - anchorCount
+                // (If anchors >= 2, allowed is 0. If anchors < 2, allowed is remainder)
+                const maxBucketMatches = Math.max(0, 2 - anchorCount);
 
-                // FORCE SCRAMBLE: Keep shuffling until it doesn't match
-                while (scrambledStr === originalStr && attempts < 20) {
-                    // Fisher-Yates
+                const originalChars = bucket.map(b => b.char); // Reference for checking matches
+                let chars = [...originalChars];
+                let scrambledStr = chars.join('');
+                let attempts = 0;
+                let matchCount = bucket.length; // Start assuming worst case
+
+                // B. Retry Loop: 
+                // Keep shuffling if:
+                // 1. It looks exactly like the solution
+                // 2. OR it has too many correct letters (Too easy)
+                while ((scrambledStr === originalChars.join('') || matchCount > maxBucketMatches) && attempts < 50) {
+                    
+                    // Fisher-Yates Shuffle
                     for (let i = chars.length - 1; i > 0; i--) {
                         const j = Math.floor(randFunc() * (i + 1));
                         [chars[i], chars[j]] = [chars[j], chars[i]];
                     }
+                    
                     scrambledStr = chars.join('');
+                    
+                    // Count how many letters are in the correct spot
+                    matchCount = 0;
+                    for(let k=0; k<chars.length; k++) {
+                        if (chars[k] === originalChars[k]) matchCount++;
+                    }
+                    
                     attempts++;
                 }
 
-                // Fallback: If random shuffle failed to change it (rare), force a swap
-                if (scrambledStr === originalStr) {
+                // C. Safety Fallback: 
+                // If we timed out (impossible constraint due to double letters e.g. "MOM"), 
+                // at least ensure it's not identical to original.
+                if (scrambledStr === originalChars.join('')) {
                     [chars[0], chars[1]] = [chars[1], chars[0]];
                 }
 
+                // Apply back to grid
                 bucket.forEach((item, i) => {
                     this.currentGrid[item.r][item.c] = chars[i];
                 });
