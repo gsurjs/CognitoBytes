@@ -64,7 +64,7 @@ class CrossJumbleGame {
 
     async loadWords() {
         try {
-            const response = await fetch('data/words.txt');
+            const response = await fetch('/games/decipherly/data/words.txt');
             if (!response.ok) throw new Error("Failed to load dictionary");
             const text = await response.text();
             this.words = text.split('\n')
