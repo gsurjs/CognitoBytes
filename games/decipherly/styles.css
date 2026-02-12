@@ -1,0 +1,240 @@
+/* Inherit base gradient and fonts */
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    touch-action: manipulation;
+}
+
+.game-container {
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.header {
+    text-align: center;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.title {
+    font-size: 2.5rem;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.nav-button, .share-button, .new-game-button, .game-button {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+    margin: 5px;
+    backdrop-filter: blur(5px);
+}
+
+.game-mode-selector {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.mode-button {
+    background: transparent;
+    border: 2px solid rgba(255,255,255,0.3);
+    color: rgba(255,255,255,0.6);
+    padding: 5px 15px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.mode-button.active {
+    background: white;
+    color: #764ba2;
+    border-color: white;
+}
+
+.game-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    min-height: 60px;
+}
+
+.score-board {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 5px;
+}
+
+#timerDisplay, #movesDisplay {
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: rgba(0,0,0,0.2);
+    padding: 8px 15px;
+    border-radius: 10px;
+    font-family: monospace;
+}
+
+.message {
+    height: 1.5em;
+    font-size: 1.1rem;
+    text-align: center;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+/* THE GRID */
+.board-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.game-board {
+    display: grid;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    position: relative; /* REQUIRED for Pause Overlay */
+}
+
+/* PAUSE OVERLAY STYLES */
+.pause-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px); /* Blurs the letters */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: white;
+    z-index: 100;
+    border-radius: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.pause-overlay.active {
+    opacity: 1;
+    pointer-events: all; /* Blocks clicks on tiles */
+}
+
+.tile {
+    width: 45px;
+    height: 45px;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.2s, background-color 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.tile.empty {
+    background: transparent;
+    box-shadow: none;
+    cursor: default;
+}
+
+.tile.correct {
+    background: #6aaa64;
+    color: white;
+    cursor: default;
+    transform: scale(1);
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+}
+
+.tile.selected {
+    background: #f1c40f;
+    transform: scale(1.1);
+    z-index: 10;
+    box-shadow: 0 0 15px rgba(241, 196, 15, 0.6);
+}
+
+.instruction {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    text-align: center;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #2c3e50;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.modal-close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.stat-item {
+    background: rgba(255,255,255,0.1);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.stat-value { font-size: 1.5rem; font-weight: bold; color: #f1c40f; }
+.stat-label { font-size: 0.8rem; opacity: 0.8; }
+
+@media (max-width: 400px) {
+    .tile { width: 38px; height: 38px; font-size: 1.2rem; }
+}
