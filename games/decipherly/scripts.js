@@ -286,29 +286,41 @@ class CrossJumbleGame {
         return true;
     }
 
+    // --- ANCHORED SCRAMBLE LOGIC ---
     scrambleBoard(randFunc) {
+        // 1. Start with the solution
         this.currentGrid = this.solutionGrid.map(row => [...row]);
-        
-        let letters = [];
-        let positions = [];
-        
+
+        // 2. Identify Movable Cells per Word
+        // wordBuckets[i] holds tiles that ONLY belong to word i
+        const wordBuckets = this.wordDefs.map(() => []); 
+
         for(let r=0; r<this.gridSize; r++) {
             for(let c=0; c<this.gridSize; c++) {
-                if(this.solutionGrid[r][c] !== null) {
-                    letters.push(this.solutionGrid[r][c]);
-                    positions.push({r,c});
+                const indices = this.tileMap[r][c];
+                // If indices.length > 1, it's an intersection. LEAVE IT ALONE.
+                // If indices.length === 1, it belongs to one word. SCRAMBLE IT.
+                if (indices && indices.length === 1) {
+                    const wordIdx = indices[0];
+                    wordBuckets[wordIdx].push({r, c, char: this.solutionGrid[r][c]});
                 }
             }
         }
 
-        // Shuffle
-        for (let i = letters.length - 1; i > 0; i--) {
-            const j = Math.floor(randFunc() * (i + 1));
-            [letters[i], letters[j]] = [letters[j], letters[i]];
-        }
-
-        positions.forEach((pos, i) => {
-            this.currentGrid[pos.r][pos.c] = letters[i];
+        // 3. Shuffle each bucket independently
+        wordBuckets.forEach(bucket => {
+            if (bucket.length > 1) {
+                const chars = bucket.map(b => b.char);
+                // Shuffle
+                for (let i = chars.length - 1; i > 0; i--) {
+                    const j = Math.floor(randFunc() * (i + 1));
+                    [chars[i], chars[j]] = [chars[j], chars[i]];
+                }
+                // Assign back
+                bucket.forEach((item, i) => {
+                    this.currentGrid[item.r][item.c] = chars[i];
+                });
+            }
         });
     }
 
