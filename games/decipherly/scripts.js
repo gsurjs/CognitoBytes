@@ -65,7 +65,7 @@ class CrossJumbleGame {
 
     async loadWords() {
         try {
-            const response = await fetch('/games/decipherly/data/words.txt');
+            const response = await fetch('data/words.txt');
             if (!response.ok) throw new Error("Failed to load dictionary");
             const text = await response.text();
             this.words = text.split('\n')
@@ -112,22 +112,22 @@ class CrossJumbleGame {
         this.stopTimer();
         
         this.selectedTile = null;
-        this.isGameActive = true;
+        this.gameActive = true;
         
         this.dom.movesDisplay.textContent = "Moves: 0";
         this.dom.timerDisplay.textContent = "Time: 00:00";
         this.dom.shareBtn.style.display = 'none';
-        this.dom.pauseBtn.style.display = 'inline-block'; // Show Pause
+        this.dom.pauseBtn.style.display = 'inline-block';
         this.dom.pauseBtn.textContent = 'PAUSE';
         
         this.dom.board.innerHTML = ''; 
-        this.createPauseOverlay(); // Create overlay
-        this.showMessage("Swap letters in each word to fix the grid!", "");
+        this.createPauseOverlay();
+        this.showMessage("Swap letters to fix the grid!", "");
 
+        // Check daily save
         if (this.gameMode === 'daily') {
             const saveKey = 'cj-daily-state-' + new Date().toDateString();
             const savedState = localStorage.getItem(saveKey);
-            
             if (savedState) {
                 try {
                     const parsed = JSON.parse(savedState);
@@ -146,6 +146,7 @@ class CrossJumbleGame {
             return rng;
         };
 
+        // Retry loop for valid grid
         let success = false;
         let attempts = 0;
         while (!success && attempts < 50) {
@@ -158,7 +159,7 @@ class CrossJumbleGame {
             return;
         }
 
-        this.scrambleBoard(nextRand);
+        this.scrambleBoard(nextRand); // FIX: Function name matches definition
         this.renderBoard();
     }
 
@@ -166,7 +167,7 @@ class CrossJumbleGame {
     generateGrid(randFunc) {
         const size = this.gridSize;
         const grid = Array(size).fill(null).map(() => Array(size).fill(null));
-        const wordDefs = []; // Track metadata
+        const wordDefs = []; 
         
         const pickWord = (len) => {
             const subsets = this.words.filter(w => w.length === len);
@@ -239,7 +240,7 @@ class CrossJumbleGame {
         return true;
     }
 
-    scrambleGrid(randFunc) {
+    scrambleBoard(randFunc) {
         this.currentGrid = this.solutionGrid.map(row => [...row]);
         
         let letters = [];
@@ -270,7 +271,6 @@ class CrossJumbleGame {
         this.dom.board.innerHTML = '';
         if (overlay) this.dom.board.appendChild(overlay);
 
-        // Reset grid styles for CSS
         this.dom.board.style.display = 'grid';
         this.dom.board.style.gridTemplateColumns = `repeat(${this.gridSize}, 1fr)`;
 
@@ -281,7 +281,6 @@ class CrossJumbleGame {
             const sC = this.selectedTile.c;
             const sourceWordIndices = this.tileMap[sR][sC];
             
-            // Find all cells that share at least one word index
             for(let r=0; r<this.gridSize; r++) {
                 for(let c=0; c<this.gridSize; c++) {
                     if (this.tileMap[r][c].length > 0) {
@@ -310,20 +309,21 @@ class CrossJumbleGame {
                     
                     const isSelected = this.selectedTile && this.selectedTile.r === r && this.selectedTile.c === c;
                     
-                    // Check if Correct (Green)
                     if (char === this.solutionGrid[r][c]) {
                         cell.classList.add('correct');
                     }
                     
-                    // Interaction Styling
                     if (isSelected) {
                         cell.classList.add('selected');
                     } else if (this.selectedTile && validTargets.has(`${r},${c}`)) {
-                        cell.classList.add('valid-target'); // Highlight valid swap spots
+                        cell.classList.add('valid-target');
                     } else if (this.selectedTile) {
-                        cell.classList.add('dimmed'); // Dim invalid spots
+                        cell.classList.add('dimmed');
                     }
 
+                    // Always allow clicks unless it's strictly locked by game design
+                    // (Here we allow clicking even 'correct' tiles to move them if needed, 
+                    // or you can block it. Let's block it if correct to be helpful)
                     if (char !== this.solutionGrid[r][c]) {
                          cell.addEventListener('click', () => this.handleTileClick(r, c));
                     }
@@ -341,31 +341,26 @@ class CrossJumbleGame {
             this.startTimer();
         }
 
-        // 1. Deselect if clicking same tile
         if (this.selectedTile && this.selectedTile.r === r && this.selectedTile.c === c) {
             this.selectedTile = null;
             this.renderBoard();
             return;
         }
 
-        // 2. Select First Tile
         if (!this.selectedTile) {
             this.selectedTile = {r, c};
             this.renderBoard();
             return;
         }
 
-        // 3. Try to Swap
         const pos1 = this.selectedTile;
         const pos2 = {r, c};
 
-        // CHECK: Do they share a word?
         const words1 = this.tileMap[pos1.r][pos1.c];
         const words2 = this.tileMap[pos2.r][pos2.c];
         const common = words1.filter(id => words2.includes(id));
 
         if (common.length > 0) {
-            // YES: They share a word. Swap allowed.
             this.swapTiles(pos1, pos2);
             this.selectedTile = null;
             this.moves++;
@@ -373,10 +368,8 @@ class CrossJumbleGame {
             this.renderBoard();
             this.checkWin();
         } else {
-            // NO: They are disjoint.
-            // Requirement: "Deselect first, move to other"
             this.selectedTile = {r, c};
-            this.playSound('click'); // Generic feedback
+            this.playSound('click'); 
             this.renderBoard();
         }
     }
@@ -417,7 +410,6 @@ class CrossJumbleGame {
         }
     }
 
-    // --- PAUSE & UTILS ---
     createPauseOverlay() {
         const overlay = document.createElement('div');
         overlay.className = 'pause-overlay';
@@ -487,7 +479,7 @@ class CrossJumbleGame {
         this.timer = state.time || 0;
         this.dom.movesDisplay.textContent = `Moves: ${this.moves}`;
         this.updateTimerDisplay();
-        this.dom.message.textContent = "You already solved today's puzzle!";
+        this.dom.message.textContent = "You already deciphered today's puzzle!";
         this.dom.shareBtn.style.display = 'inline-block';
         this.dom.pauseBtn.style.display = 'none';
         this.dom.board.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;">Come back tomorrow!</div>';
@@ -516,7 +508,7 @@ class CrossJumbleGame {
     }
 
     generateShareText() {
-        const epoch = new Date('2026-02-01T00:00:00');
+        const epoch = new Date('2026-02-12T00:00:00');
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const puzzleNumber = Math.max(1, Math.floor((today.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24)) + 1);
@@ -531,11 +523,10 @@ class CrossJumbleGame {
                 if (this.solutionGrid[r][c] !== null) rowStr += '🟩';
                 else rowStr += '⬛';
             }
-            // Optional: Filter empty rows if you want compact
             if (rowStr.includes('🟩')) art += rowStr + "\n";
         }
 
-        return `🔀 DECIPHERLY #${puzzleNumber}\n` +
+        return `🔀 Decipherly #${puzzleNumber}\n` +
                `Time: ${min}:${sec} | Moves: ${this.moves}\n\n` +
                `${art}\n` +
                `Play at: ${window.location.href}`;
