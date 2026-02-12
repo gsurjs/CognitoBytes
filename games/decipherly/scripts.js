@@ -288,7 +288,7 @@ class CrossJumbleGame {
 
     // --- ANCHORED SCRAMBLE LOGIC ---
     scrambleBoard(randFunc) {
-        // 1. Start with the solution
+        // 1. Start with the solution (Intersections are already correct here)
         this.currentGrid = this.solutionGrid.map(row => [...row]);
 
         // 2. Identify Movable Cells per Word
@@ -310,13 +310,25 @@ class CrossJumbleGame {
         // 3. Shuffle each bucket independently
         wordBuckets.forEach(bucket => {
             if (bucket.length > 1) {
-                const chars = bucket.map(b => b.char);
-                // Shuffle
-                for (let i = chars.length - 1; i > 0; i--) {
-                    const j = Math.floor(randFunc() * (i + 1));
-                    [chars[i], chars[j]] = [chars[j], chars[i]];
+                const originalStr = bucket.map(b => b.char).join('');
+                let chars = bucket.map(b => b.char);
+                let scrambledStr = originalStr;
+                let attempts = 0;
+
+                // EDGE CASE LOOP: Ensure it actually scrambles
+                // Check if new order is different from original order
+                // Safety break after 10 attempts (e.g. if word is "MOM", it might be hard to scramble if M's swap)
+                while (scrambledStr === originalStr && attempts < 10) {
+                    // Fisher-Yates Shuffle
+                    for (let i = chars.length - 1; i > 0; i--) {
+                        const j = Math.floor(randFunc() * (i + 1));
+                        [chars[i], chars[j]] = [chars[j], chars[i]];
+                    }
+                    scrambledStr = chars.join('');
+                    attempts++;
                 }
-                // Assign back
+
+                // Assign back to grid
                 bucket.forEach((item, i) => {
                     this.currentGrid[item.r][item.c] = chars[i];
                 });
