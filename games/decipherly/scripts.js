@@ -169,7 +169,7 @@ class CrossJumbleGame {
         let success = false;
         let attempts = 0;
         while (!success && attempts < 20) {
-            success = this.generateGrid(nextRand);
+            success = this.generateGrid(randFunc);
             attempts++;
         }
 
@@ -178,7 +178,7 @@ class CrossJumbleGame {
             return;
         }
 
-        this.scrambleBoard(nextRand); // FIX: Function name matches definition
+        this.scrambleBoard(randFunc);
         this.renderBoard();
         this.saveProgress();
     }
