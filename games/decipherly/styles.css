@@ -1,76 +1,96 @@
-/* Inherit base gradient and fonts from your main theme */
-body {
+/* --- GLOBAL RESET & LAYOUT --- */
+:root {
+    --header-height: auto;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Prevent scrolling */
+    overscroll-behavior: none; /* Prevent pull-to-refresh */
     font-family: 'Arial', sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    touch-action: manipulation;
+    touch-action: manipulation; /* Disable double-tap zoom */
+    -webkit-user-select: none; /* Disable text selection */
+    user-select: none;
 }
 
+/* The Main Container fits 100% of the viewport height (dvh handles mobile address bars) */
 .game-container {
+    height: 100dvh; 
     width: 100%;
     max-width: 600px;
-    padding: 20px;
+    margin: 0 auto;
+    padding: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    box-sizing: border-box;
 }
 
-/* --- HEADER & NAVIGATION --- */
+/* --- HEADER SECTION --- */
+/* Flex-shrink: 0 prevents these from squishing. */
 .header {
+    flex: 0 0 auto;
     text-align: center;
     width: 100%;
-    margin-bottom: 20px;
+    margin-bottom: 5px;
 }
 
 .title {
-    font-size: 2.5rem;
-    margin: 0;
+    font-size: 2rem;
+    margin: 0 0 5px 0;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
-.nav-button, .share-button, .new-game-button, .game-button {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    text-decoration: none;
-    font-weight: bold;
-    cursor: pointer;
-    margin: 5px;
-    backdrop-filter: blur(5px);
-    transition: background 0.2s;
-}
-
-.nav-button:hover, .game-button:hover {
-    background: rgba(255, 255, 255, 0.3);
+.navigation {
+    margin-bottom: 5px;
 }
 
 .button-container {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 5px;
-    margin-top: 10px;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.nav-button, .share-button, .new-game-button, .game-button {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 18px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    backdrop-filter: blur(5px);
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.nav-button:hover, .game-button:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .game-mode-selector {
     display: flex;
     justify-content: center;
     gap: 10px;
-    margin-top: 15px;
+    margin: 8px 0;
 }
 
 .mode-button {
     background: transparent;
-    border: 2px solid rgba(255,255,255,0.3);
+    border: 1px solid rgba(255,255,255,0.4);
     color: rgba(255,255,255,0.6);
-    padding: 5px 15px;
-    border-radius: 15px;
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
     cursor: pointer;
     font-weight: bold;
 }
@@ -83,100 +103,88 @@ body {
 
 /* --- SCOREBOARD --- */
 .game-info {
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-    min-height: 60px;
+    gap: 5px;
+    margin-bottom: 5px;
 }
 
 .score-board {
     display: flex;
     gap: 15px;
-    margin-bottom: 5px;
 }
 
 #timerDisplay, #movesDisplay {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: bold;
     background: rgba(0,0,0,0.2);
-    padding: 8px 15px;
-    border-radius: 10px;
-    font-family: monospace; /* Keeps numbers from jumping */
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-family: monospace;
 }
 
 .message {
-    height: 1.5em;
-    font-size: 1.1rem;
+    height: 1.4em;
+    font-size: 1rem;
     text-align: center;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
-/* --- THE GAME BOARD --- */
+/* --- THE GAME BOARD (Flexible Area) --- */
+/* This container grows/shrinks to fill remaining space */
 .board-container {
+    flex: 1 1 auto; 
     display: flex;
     justify-content: center;
-    margin-bottom: 20px;
-    width: 100%; /* Ensure full width available */
+    align-items: center; /* Centers the board vertically */
+    width: 100%;
+    min-height: 0; /* Important: Allows flexbox to shrink content if needed */
+    margin: 5px 0;
 }
 
 .game-board {
     display: grid;
-    /* Columns are set dynamically by JS, but usually repeat(7, 1fr) */
-    gap: 4px;
+    /* Grid columns are set by JS */
+    gap: 1.5%; /* Relative gap */
     background: rgba(255, 255, 255, 0.15);
-    padding: 10px;
+    padding: 2%;
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    position: relative; /* Anchor for Pause Overlay */
-    max-width: 95vw; /* Never exceed viewport width */
-}
-
-/* --- PAUSE OVERLAY --- */
-.pause-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6); /* Dark tint */
-    backdrop-filter: blur(8px);      /* The blur effect */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 2rem;
-    font-weight: bold;
-    color: white;
-    z-index: 100;
-    border-radius: 12px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-}
-
-.pause-overlay.active {
-    opacity: 1;
-    pointer-events: all; /* Blocks clicks on tiles */
+    position: relative;
+    
+    /* Responsive Magic: 
+       Width is whichever is smaller: 90% of width OR 55% of height.
+       This keeps it a perfect square that never overflows. */
+    width: min(90vw, 55vh); 
+    aspect-ratio: 1 / 1;
+    height: auto;
 }
 
 /* --- TILES --- */
 .tile {
-    width: clamp(30px, 10vw, 42px);
-    height: clamp(30px, 10vw, 42px);
+    /* Fill the grid cell exactly */
+    width: 100%;
+    height: 100%;
     background: white;
-    border-radius: 6px;
+    border-radius: 15%; /* Relative rounding */
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: clamp(1rem, 4vw, 1.4rem);
+    
+    /* Font scales with the viewport size */
+    font-size: min(5vh, 6vw);
     font-weight: bold;
     color: #333;
     cursor: pointer;
-    user-select: none;
-    transition: all 0.2s;
     box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+    transition: transform 0.1s, background-color 0.2s;
 }
 
 .tile.empty {
@@ -185,54 +193,87 @@ body {
     cursor: default;
 }
 
-/* 1. Correct Position (Solved) */
 .tile.correct {
-    background: #6aaa64; /* Green */
+    background: #6aaa64;
     color: white;
     cursor: default;
     box-shadow: inset 0 0 4px rgba(0,0,0,0.1);
-    transform: none !important; /* Prevent hover effects */
+    transform: none !important;
 }
 
-/* 2. Selected (First Tap) */
 .tile.selected {
-    background: #f1c40f; /* Yellow */
-    transform: scale(1.1);
+    background: #f1c40f;
+    transform: scale(1.05);
     z-index: 10;
     box-shadow: 0 0 10px rgba(241, 196, 15, 0.6);
 }
 
-/* 3. Valid Target (The Hint) */
 .tile.valid-target {
-    background: #fff8dc; /* Cornsilk / Very Light Yellow */
-    box-shadow: inset 0 0 0 2px #f1c40f; /* Yellow Ring inside */
-    transform: scale(1.05);
+    background: #fff8dc;
+    box-shadow: inset 0 0 0 2px #f1c40f;
+    transform: scale(1.02);
 }
 
-/* 4. Dimmed (Invalid for current selection) */
 .tile.dimmed {
     opacity: 0.4;
     transform: scale(0.95);
     cursor: not-allowed;
 }
 
-/* --- CONTROLS AREA --- */
+/* --- CONTROLS / FOOTER --- */
 .controls-area {
-    margin-top: 10px;
+    flex: 0 0 auto;
+    padding-bottom: 10px;
+    text-align: center;
 }
 
 .instruction {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     opacity: 0.8;
+    margin: 0;
+}
+
+/* --- OVERLAYS --- */
+.pause-overlay, .solved-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: white;
+    z-index: 200;
+    border-radius: 12px;
     text-align: center;
-    max-width: 400px;
+    line-height: 1.4;
+    pointer-events: all;
+}
+
+.pause-overlay {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 100;
+}
+.pause-overlay.active { opacity: 1; pointer-events: all; }
+
+.solved-overlay {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 /* --- STATS MODAL --- */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.85);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -241,12 +282,11 @@ body {
 
 .modal-content {
     background: #2c3e50;
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 15px;
     text-align: center;
-    width: 90%;
-    max-width: 400px;
-    position: relative;
+    width: 85%;
+    max-width: 350px;
     border: 1px solid rgba(255,255,255,0.1);
 }
 
@@ -264,53 +304,24 @@ body {
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    gap: 8px;
     margin-top: 15px;
 }
 
 .stat-item {
     background: rgba(255,255,255,0.1);
-    padding: 10px;
+    padding: 8px;
     border-radius: 8px;
 }
 
-.stat-value { font-size: 1.5rem; font-weight: bold; color: #f1c40f; }
-.stat-label { font-size: 0.8rem; opacity: 0.8; }
+.stat-value { font-size: 1.3rem; font-weight: bold; color: #f1c40f; }
+.stat-label { font-size: 0.75rem; opacity: 0.8; }
 
+h3 { margin-top: 15px; margin-bottom: 8px; font-size: 1.1rem; opacity: 0.9; }
 
-/* Records Section (Best Time) */
-h3 { margin-top: 20px; margin-bottom: 10px; font-size: 1.2rem; opacity: 0.9; }
-
-/* --- MOBILE RESPONSIVE --- */
+/* --- SMALL SCREENS --- */
 @media (max-width: 360px) {
-    .game-board { gap: 3px; padding: 6px; }
-    .title { font-size: 1.8rem; }
-}
-
-.solved-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-    backdrop-filter: blur(4px);      /* Blur effect */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 2rem;
-    font-weight: bold;
-    color: #fff;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-    z-index: 200; 
-    border-radius: 12px;
-    pointer-events: all; /* Blocks interaction with tiles */
-    text-align: center;
-    line-height: 1.4;
-    animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    .title { font-size: 1.6rem; }
+    .nav-button, .game-button { font-size: 0.8rem; padding: 5px 10px; }
+    .game-board { gap: 1%; padding: 1.5%; }
 }
