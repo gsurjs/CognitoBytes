@@ -138,10 +138,7 @@ class CrossJumbleGame {
         this.dom.board.innerHTML = ''; 
         this.createPauseOverlay();
         this.showMessage("Swap letters in each word to solve!", "");
-        if (!forceNew && this.loadProgress()) {
-            console.log("Resumed saved game.");
-            return;
-        }
+
 
         let randFunc;
         if (this.gameMode === 'daily') {
@@ -151,6 +148,41 @@ class CrossJumbleGame {
             randFunc = Math.random;
         }
 
+        // 1. PRIORITY CHECK: Has the user ALREADY SOLVED today's daily?
+        // We check this FIRST so we show the "Come back tomorrow" screen 
+        // instead of loading a potentially stale "in-progress" save.
+        if (this.gameMode === 'daily') {
+            const saveKey = 'cj-daily-state-' + this.activeDate;
+            const savedState = localStorage.getItem(saveKey);
+            if (savedState) {
+                try {
+                    const parsed = JSON.parse(savedState);
+                    if (parsed && parsed.solved === true) {
+                        // We MUST generate the grid first so we have something to show
+                        // because the 'Solved' save only contains stats, not the board.
+                        let success = false;
+                        let attempts = 0;
+                        while (!success && attempts < 50) {
+                            success = this.generateGrid(randFunc);
+                            attempts++;
+                        }
+                        
+                        if (success) {
+                            this.loadSavedState(parsed);
+                            return; // STOP HERE
+                        }
+                    }
+                } catch (e) { localStorage.removeItem(saveKey); }
+            }
+        }
+
+        // 2. CHECK IN-PROGRESS: If not solved, do we have a save to resume?
+        if (!forceNew && this.loadProgress()) {
+            console.log("Resumed in-progress game.");
+            return;
+        }
+
+        // 3. START FRESH: No solved state, no progress -> New Game
         let success = false;
         let attempts = 0;
         while (!success && attempts < 50) {
@@ -163,25 +195,11 @@ class CrossJumbleGame {
             return;
         }
 
-        if (this.gameMode === 'daily') {
-            const saveKey = 'cj-daily-state-' + new Date().toDateString();
-            const savedState = localStorage.getItem(saveKey);
-            if (savedState) {
-                try {
-                    const parsed = JSON.parse(savedState);
-                    if (parsed && parsed.solved === true) {
-                        // Pass the parsed state to the loader
-                        this.loadSavedState(parsed);
-                        return;
-                    }
-                } catch (e) { localStorage.removeItem(saveKey); }
-            }
-        }
-
         this.scrambleBoard(randFunc);
         this.renderBoard();
         this.saveProgress();
     }
+    
     loadSavedState(state) {
         // Restore Stats
         this.moves = state.moves;
