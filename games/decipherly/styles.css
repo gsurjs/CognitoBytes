@@ -302,7 +302,7 @@ h3 { margin-top: 20px; margin-bottom: 10px; font-size: 1.2rem; opacity: 0.9; }
     font-weight: bold;
     color: #fff;
     text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-    z-index: 20; 
+    z-index: 200; 
     border-radius: 12px;
     pointer-events: all; /* Blocks interaction with tiles */
     text-align: center;
