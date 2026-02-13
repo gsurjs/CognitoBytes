@@ -18,6 +18,8 @@ class CrossJumbleGame {
         this.timerInterval = null;
         this.hasStarted = false;
         this.isPaused = false;
+
+        this.audioCtx = null;
         
         this.init();
     }
@@ -55,13 +57,18 @@ class CrossJumbleGame {
     bindEvents() {
         this.dom.dailyBtn.addEventListener('click', () => this.setGameMode('daily'));
         this.dom.infiniteBtn.addEventListener('click', () => this.setGameMode('infinite'));
-        this.dom.newGameBtn.addEventListener('click', () => this.startNewGame());
+        this.dom.newGameBtn.addEventListener('click', () => this.startNewGame(true));
         this.dom.shareBtn.addEventListener('click', () => this.shareResult());
         this.dom.pauseBtn.addEventListener('click', () => this.togglePause());
         
         this.dom.closeModal.addEventListener('click', () => this.dom.statsModal.style.display = 'none');
         this.dom.statsModal.addEventListener('click', (e) => {
              if (e.target === this.dom.statsModal) this.dom.statsModal.style.display = 'none';
+        });
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && this.gameActive && !this.isPaused) {
+                this.togglePause();
+            }
         });
     }
 
@@ -106,7 +113,7 @@ class CrossJumbleGame {
         return Math.abs(hash);
     }
 
-    startNewGame() {
+    startNewGame(forceNew = false) {
         this.moves = 0;
         this.timer = 0;
         this.hasStarted = false;
@@ -115,6 +122,8 @@ class CrossJumbleGame {
         
         this.selectedTile = null;
         this.gameActive = true;
+
+        this.activeDate = new Date().toDateString();
         
         this.dom.movesDisplay.textContent = "Moves: 0";
         this.dom.timerDisplay.textContent = "Time: 00:00";
@@ -124,7 +133,11 @@ class CrossJumbleGame {
         
         this.dom.board.innerHTML = ''; 
         this.createPauseOverlay();
-        this.showMessage("Swap letters in each word to decipher the grid!", "");
+        this.showMessage("Swap letters in each word to solve!", "");
+        if (!forceNew && this.loadProgress()) {
+            console.log("Resumed saved game.");
+            return;
+        }
 
         // Check daily save
         if (this.gameMode === 'daily') {
@@ -163,6 +176,69 @@ class CrossJumbleGame {
 
         this.scrambleBoard(nextRand); // FIX: Function name matches definition
         this.renderBoard();
+        this.saveProgress();
+    }
+
+    saveProgress() {
+        if (!this.gameActive) return;
+
+        const state = {
+            mode: this.gameMode,
+            date: new Date().toDateString(),
+            moves: this.moves,
+            timer: this.timer,
+            solution: this.solutionGrid,
+            current: this.currentGrid,
+            wordDefs: this.wordDefs,
+            tileMap: this.tileMap,
+            solved: false
+        };
+
+        const key = this.gameMode === 'daily' ? 'cj-daily-progress' : 'cj-infinite-progress';
+        localStorage.setItem(key, JSON.stringify(state));
+    }
+
+    loadProgress() {
+        const key = this.gameMode === 'daily' ? 'cj-daily-progress' : 'cj-infinite-progress';
+        const saved = localStorage.getItem(key);
+        
+        if (!saved) return false;
+
+        try {
+            const state = JSON.parse(saved);
+            
+            // Validate Date for Daily
+            if (this.gameMode === 'daily' && state.date !== new Date().toDateString()) {
+                return false; 
+            }
+
+            // Restore State
+            this.moves = state.moves || 0;
+            this.timer = state.timer || 0;
+            this.solutionGrid = state.solution;
+            this.currentGrid = state.current;
+            this.wordDefs = state.wordDefs;
+            this.tileMap = state.tileMap;
+
+            this.dom.movesDisplay.textContent = `Moves: ${this.moves}`;
+            this.updateTimerDisplay();
+            
+            this.renderBoard();
+            this.hasStarted = true; 
+            
+            // Auto-pause on load
+            if (!this.isPaused) this.togglePause(); 
+
+            return true;
+        } catch (e) {
+            console.error("Save file corrupted", e);
+            return false;
+        }
+    }
+
+    clearProgress() {
+        const key = this.gameMode === 'daily' ? 'cj-daily-progress' : 'cj-infinite-progress';
+        localStorage.removeItem(key);
     }
 
     // --- GRID GENERATION ---
@@ -382,7 +458,11 @@ class CrossJumbleGame {
                     if (this.tileMap[r][c].length > 0) {
                          const targetIndices = this.tileMap[r][c];
                          const intersection = sourceWordIndices.filter(x => targetIndices.includes(x));
-                         if (intersection.length > 0) validTargets.add(`${r},${c}`);
+                         
+                         //Only highlight if it shares a word AND is not already solved/green
+                         if (intersection.length > 0 && this.currentGrid[r][c] !== this.solutionGrid[r][c]) {
+                             validTargets.add(`${r},${c}`);
+                         }
                     }
                 }
             }
@@ -457,6 +537,7 @@ class CrossJumbleGame {
             this.moves++;
             this.dom.movesDisplay.textContent = `Moves: ${this.moves}`;
             this.renderBoard();
+            this.saveProgress();
             this.checkWin();
         } else {
             this.selectedTile = {r, c};
@@ -489,9 +570,10 @@ class CrossJumbleGame {
             this.showMessage("🎉 Grid Deciphered!", "success");
             this.dom.pauseBtn.style.display = 'none';
             this.saveStats(true);
+            this.clearProgress();
             if(this.gameMode === 'daily') {
                 this.dom.shareBtn.style.display = 'inline-block';
-                localStorage.setItem('cj-daily-state-' + new Date().toDateString(), JSON.stringify({
+                localStorage.setItem('cj-daily-state-' + this.activeDate, JSON.stringify({
                     solved: true,
                     moves: this.moves,
                     time: this.timer
@@ -582,6 +664,13 @@ class CrossJumbleGame {
     }
 
     playSound(type) {
+        if (!this.audioCtx) {
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        // Browsers suspend audio until user interacts. Resume it if suspended.
+        if (this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+        }
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
