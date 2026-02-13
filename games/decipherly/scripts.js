@@ -138,38 +138,53 @@ class CrossJumbleGame {
         this.dom.board.innerHTML = ''; 
         this.createPauseOverlay();
         this.showMessage("Swap letters in each word to solve!", "");
-        if (!forceNew && this.loadProgress()) {
-            console.log("Resumed saved game.");
-            return;
+
+
+        let randFunc;
+        if (this.gameMode === 'daily') {
+            const seed = this.getDailySeed();
+            randFunc = this.mulberry32(seed);
+        } else {
+            randFunc = Math.random;
         }
 
-        // Check daily save
+        // --- PRIORITY 1: CHECK IF ALREADY SOLVED ---
+        // Must be checked FIRST so we don't accidentally load a stale "in-progress" file.
         if (this.gameMode === 'daily') {
-            const saveKey = 'cj-daily-state-' + new Date().toDateString();
+            const saveKey = 'cj-daily-state-' + this.activeDate;
             const savedState = localStorage.getItem(saveKey);
             if (savedState) {
                 try {
                     const parsed = JSON.parse(savedState);
                     if (parsed && parsed.solved === true) {
-                        this.loadSavedState(parsed);
-                        return;
+                        // 1. Generate the grid (we need it to show the solved state)
+                        let success = false;
+                        let attempts = 0;
+                        while (!success && attempts < 50) {
+                            success = this.generateGrid(randFunc);
+                            attempts++;
+                        }
+                        
+                        // 2. Load the solved view
+                        if (success) {
+                            this.loadSavedState(parsed);
+                            return; // EXIT FUNCTION HERE
+                        }
                     }
                 } catch (e) { localStorage.removeItem(saveKey); }
             }
         }
 
-        let randFunc;
-        if (this.gameMode === 'daily') {
-            const seed = this.getDailySeed();
-            randFunc = this.mulberry32(seed); // Deterministic for Daily
-        } else {
-            randFunc = Math.random; // Native True Random for Infinite
+        // --- PRIORITY 2: CHECK FOR IN-PROGRESS SAVE ---
+        if (!forceNew && this.loadProgress()) {
+            console.log("Resumed in-progress game.");
+            return;
         }
 
-        // Retry loop for valid grid
+        // --- PRIORITY 3: START FRESH GAME ---
         let success = false;
         let attempts = 0;
-        while (!success && attempts < 20) {
+        while (!success && attempts < 50) {
             success = this.generateGrid(randFunc);
             attempts++;
         }
@@ -182,6 +197,31 @@ class CrossJumbleGame {
         this.scrambleBoard(randFunc);
         this.renderBoard();
         this.saveProgress();
+    }
+
+    loadSavedState(state) {
+        // Restore Stats
+        this.moves = state.moves;
+        this.timer = state.time || 0;
+        this.dom.movesDisplay.textContent = `Moves: ${this.moves}`;
+        this.updateTimerDisplay();
+        
+        this.dom.message.textContent = "You already deciphered today's puzzle!";
+        this.dom.shareBtn.style.display = 'inline-block';
+        this.dom.pauseBtn.style.display = 'none';
+
+        // Set Board to Solved State
+        // Since we already generated the grid in startNewGame, we just copy solution to current
+        this.currentGrid = this.solutionGrid.map(row => [...row]);
+        this.gameActive = false; // Disable interaction
+        
+        this.renderBoard(); // Show the green solved board
+
+        // Add the "Come back tomorrow" overlay on top
+        const overlay = document.createElement('div');
+        overlay.className = 'solved-overlay';
+        overlay.innerHTML = 'Come back<br>tomorrow!';
+        this.dom.board.appendChild(overlay);
     }
 
     saveProgress() {
@@ -680,16 +720,17 @@ class CrossJumbleGame {
         const sec = (this.timer % 60).toString().padStart(2, '0');
         
         let art = "";
-        for (let r = 0; r < this.gridSize; r++) {
+        const size = this.solutionGrid.length;
+        for (let r = 0; r < size; r++) {
             let rowStr = '';
-            for (let c = 0; c < this.gridSize; c++) {
+            for (let c = 0; c < size; c++) {
                 if (this.solutionGrid[r][c] !== null) rowStr += '🟩';
                 else rowStr += '⬛';
             }
             if (rowStr.includes('🟩')) art += rowStr + "\n";
         }
 
-        return `🔀 Decipherly #${puzzleNumber}\n` +
+        return `Decipherly ${puzzleNumber}\n` +
                `Time: ${min}:${sec} | Moves: ${this.moves}\n\n` +
                `${art}\n` +
                `Play at: ${window.location.href}`;
