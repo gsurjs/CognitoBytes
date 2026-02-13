@@ -118,6 +118,7 @@ class CrossJumbleGame {
     }
 
     startNewGame(forceNew = false) {
+        // Reset Game State
         this.moves = 0;
         this.timer = 0;
         this.hasStarted = false;
@@ -126,9 +127,9 @@ class CrossJumbleGame {
         
         this.selectedTile = null;
         this.gameActive = true;
-
         this.activeDate = new Date().toDateString();
         
+        // Reset UI
         this.dom.movesDisplay.textContent = "Moves: 0";
         this.dom.timerDisplay.textContent = "Time: 00:00";
         this.dom.shareBtn.style.display = 'none';
@@ -139,7 +140,7 @@ class CrossJumbleGame {
         this.createPauseOverlay();
         this.showMessage("Swap letters in each word to solve!", "");
 
-
+        // --- PREPARE GENERATOR ---
         let randFunc;
         if (this.gameMode === 'daily') {
             const seed = this.getDailySeed();
@@ -149,26 +150,35 @@ class CrossJumbleGame {
         }
 
         // --- PRIORITY 1: CHECK IF ALREADY SOLVED ---
-        // Must be checked FIRST so we don't accidentally load a stale "in-progress" file.
         if (this.gameMode === 'daily') {
             const saveKey = 'cj-daily-state-' + this.activeDate;
             const savedState = localStorage.getItem(saveKey);
+            
             if (savedState) {
                 try {
                     const parsed = JSON.parse(savedState);
                     if (parsed && parsed.solved === true) {
-                        // 1. Generate the grid (we need it to show the solved state)
+                        console.log("Daily already solved. Reconstructing board...");
+                        
+                        // SAFETY: If we solved it, we shouldn't have 'progress'. 
+                        // Force delete any zombie progress save to prevent conflicts.
+                        this.clearProgress();
+
+                        // Generate the specific grid for this seed
                         let success = false;
                         let attempts = 0;
-                        while (!success && attempts < 50) {
+                        // Increased attempts to 200 to ensure we don't accidentally skip 
+                        // the solved state just because the generator was unlucky.
+                        while (!success && attempts < 200) {
                             success = this.generateGrid(randFunc);
                             attempts++;
                         }
                         
-                        // 2. Load the solved view
                         if (success) {
                             this.loadSavedState(parsed);
-                            return; // EXIT FUNCTION HERE
+                            return; // STOP HERE. Do not load progress. Do not start new.
+                        } else {
+                            console.error("Critical: Could not regenerate solved grid.");
                         }
                     }
                 } catch (e) { localStorage.removeItem(saveKey); }
@@ -182,6 +192,7 @@ class CrossJumbleGame {
         }
 
         // --- PRIORITY 3: START FRESH GAME ---
+        // (Only happens if not solved and no save file found)
         let success = false;
         let attempts = 0;
         while (!success && attempts < 50) {
@@ -198,7 +209,6 @@ class CrossJumbleGame {
         this.renderBoard();
         this.saveProgress();
     }
-
     loadSavedState(state) {
         // Restore Stats
         this.moves = state.moves;
