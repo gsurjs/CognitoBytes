@@ -148,6 +148,40 @@ class CrossJumbleGame {
             randFunc = Math.random;
         }
 
+        // --- PRIORITY 1: CHECK IF ALREADY SOLVED ---
+        // Must be checked FIRST so we don't accidentally load a stale "in-progress" file.
+        if (this.gameMode === 'daily') {
+            const saveKey = 'cj-daily-state-' + this.activeDate;
+            const savedState = localStorage.getItem(saveKey);
+            if (savedState) {
+                try {
+                    const parsed = JSON.parse(savedState);
+                    if (parsed && parsed.solved === true) {
+                        // 1. Generate the grid (we need it to show the solved state)
+                        let success = false;
+                        let attempts = 0;
+                        while (!success && attempts < 50) {
+                            success = this.generateGrid(randFunc);
+                            attempts++;
+                        }
+                        
+                        // 2. Load the solved view
+                        if (success) {
+                            this.loadSavedState(parsed);
+                            return; // EXIT FUNCTION HERE
+                        }
+                    }
+                } catch (e) { localStorage.removeItem(saveKey); }
+            }
+        }
+
+        // --- PRIORITY 2: CHECK FOR IN-PROGRESS SAVE ---
+        if (!forceNew && this.loadProgress()) {
+            console.log("Resumed in-progress game.");
+            return;
+        }
+
+        // --- PRIORITY 3: START FRESH GAME ---
         let success = false;
         let attempts = 0;
         while (!success && attempts < 50) {
@@ -157,26 +191,6 @@ class CrossJumbleGame {
 
         if (!success) {
             this.showMessage("Generator failed. Try refresh.", "error");
-            return;
-        }
-
-        if (this.gameMode === 'daily') {
-            const saveKey = 'cj-daily-state-' + this.activeDate;
-            const savedState = localStorage.getItem(saveKey);
-            if (savedState) {
-                try {
-                    const parsed = JSON.parse(savedState);
-                    if (parsed && parsed.solved === true) {
-                        this.loadSavedState(parsed);
-                        return; // STOP HERE -> Show Solved Overlay
-                    }
-                } catch (e) { localStorage.removeItem(saveKey); }
-            }
-        }
-
-        // 2. CHECK IN-PROGRESS: If not solved, do we have a save to resume?
-        if (!forceNew && this.loadProgress()) {
-            console.log("Resumed in-progress game.");
             return;
         }
 
