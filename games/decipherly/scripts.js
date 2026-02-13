@@ -86,6 +86,7 @@ class CrossJumbleGame {
     }
 
     setGameMode(mode) {
+        if (this.gameMode === mode) return;
         this.gameMode = mode;
         this.dom.dailyBtn.classList.toggle('active', mode === 'daily');
         this.dom.infiniteBtn.classList.toggle('active', mode === 'infinite');
