@@ -94,20 +94,23 @@ class CrossJumbleGame {
         this.startNewGame();
     }
 
-    seededRandom(seed) {
-        let t = seed += 0x6D2B79F5;
-        t = Math.imul(t ^ t >>> 15, t | 1);
-        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    mulberry32(a) {
+        return function() {
+          var t = a += 0x6D2B79F5;
+          t = Math.imul(t ^ t >>> 15, t | 1);
+          t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+          return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        }
     }
 
-    getSeed() {
-        if (this.gameMode === 'infinite') return Math.random() * 100000;
+    getDailySeed() {
         const d = new Date();
-        const str = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        // Create a unique integer for the date (YYYYMMDD)
+        const seedStr = `${d.getFullYear()}${d.getMonth()+1}${d.getDate()}`;
+        // Simple hash to convert string to 32-bit integer
+        let hash = 0; 
+        for (let i = 0; i < seedStr.length; i++) {
+            hash = ((hash << 5) - hash) + seedStr.charCodeAt(i);
             hash |= 0;
         }
         return Math.abs(hash);
@@ -154,12 +157,13 @@ class CrossJumbleGame {
             }
         }
 
-        const seed = this.getSeed();
-        let rng = this.seededRandom(seed);
-        const nextRand = () => {
-            rng = this.seededRandom(rng * 100000);
-            return rng;
-        };
+        let randFunc;
+        if (this.gameMode === 'daily') {
+            const seed = this.getDailySeed();
+            randFunc = this.mulberry32(seed); // Deterministic for Daily
+        } else {
+            randFunc = Math.random; // Native True Random for Infinite
+        }
 
         // Retry loop for valid grid
         let success = false;
@@ -364,16 +368,12 @@ class CrossJumbleGame {
 
     // --- ANCHORED SCRAMBLE LOGIC ---
     scrambleBoard(randFunc) {
-        // 1. Copy Solution
         this.currentGrid = this.solutionGrid.map(row => [...row]);
-
-        // 2. Identify Movable Cells (Buckets)
         const wordBuckets = this.wordDefs.map(() => []); 
 
         for(let r=0; r<this.gridSize; r++) {
             for(let c=0; c<this.gridSize; c++) {
                 const indices = this.tileMap[r][c];
-                // Only non-intersections are movable
                 if (indices && indices.length === 1) {
                     const wordIdx = indices[0];
                     wordBuckets[wordIdx].push({r, c, char: this.solutionGrid[r][c]});
@@ -381,32 +381,21 @@ class CrossJumbleGame {
             }
         }
 
-        // 3. Shuffle Buckets with "Difficulty Check"
         wordBuckets.forEach((bucket, wordIdx) => {
             if (bucket.length > 1) {
-                // A. Calculate constraints
-                // How many letters are already locked (Anchors)?
                 const totalWordLen = this.wordDefs[wordIdx].len;
                 const anchorCount = totalWordLen - bucket.length;
-                
-                // We want Max 2 Green letters TOTAL per word.
-                // So allowed matches in this bucket = 2 - anchorCount
-                // (If anchors >= 2, allowed is 0. If anchors < 2, allowed is remainder)
                 const maxBucketMatches = Math.max(0, 2 - anchorCount);
 
-                const originalChars = bucket.map(b => b.char); // Reference for checking matches
+                const originalChars = bucket.map(b => b.char);
                 let chars = [...originalChars];
                 let scrambledStr = chars.join('');
                 let attempts = 0;
-                let matchCount = bucket.length; // Start assuming worst case
+                let matchCount = bucket.length;
 
-                // B. Retry Loop: 
-                // Keep shuffling if:
-                // 1. It looks exactly like the solution
-                // 2. OR it has too many correct letters (Too easy)
+                // Loop runs until word is visually scrambled OR attempts run out
                 while ((scrambledStr === originalChars.join('') || matchCount > maxBucketMatches) && attempts < 50) {
                     
-                    // Fisher-Yates Shuffle
                     for (let i = chars.length - 1; i > 0; i--) {
                         const j = Math.floor(randFunc() * (i + 1));
                         [chars[i], chars[j]] = [chars[j], chars[i]];
@@ -414,23 +403,18 @@ class CrossJumbleGame {
                     
                     scrambledStr = chars.join('');
                     
-                    // Count how many letters are in the correct spot
                     matchCount = 0;
                     for(let k=0; k<chars.length; k++) {
                         if (chars[k] === originalChars[k]) matchCount++;
                     }
-                    
                     attempts++;
                 }
 
-                // C. Safety Fallback: 
-                // If we timed out (impossible constraint due to double letters e.g. "MOM"), 
-                // at least ensure it's not identical to original.
+                // Fallback: If RNG failed to scramble, force a swap
                 if (scrambledStr === originalChars.join('')) {
                     [chars[0], chars[1]] = [chars[1], chars[0]];
                 }
 
-                // Apply back to grid
                 bucket.forEach((item, i) => {
                     this.currentGrid[item.r][item.c] = chars[i];
                 });
@@ -446,7 +430,6 @@ class CrossJumbleGame {
         this.dom.board.style.display = 'grid';
         this.dom.board.style.gridTemplateColumns = `repeat(${this.gridSize}, 1fr)`;
 
-        // Calculate valid swap targets
         let validTargets = new Set();
         if (this.selectedTile) {
             const sR = this.selectedTile.r;
@@ -459,7 +442,6 @@ class CrossJumbleGame {
                          const targetIndices = this.tileMap[r][c];
                          const intersection = sourceWordIndices.filter(x => targetIndices.includes(x));
                          
-                         //Only highlight if it shares a word AND is not already solved/green
                          if (intersection.length > 0 && this.currentGrid[r][c] !== this.solutionGrid[r][c]) {
                              validTargets.add(`${r},${c}`);
                          }
