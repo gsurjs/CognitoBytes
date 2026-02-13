@@ -703,16 +703,17 @@ class CrossJumbleGame {
         const sec = (this.timer % 60).toString().padStart(2, '0');
         
         let art = "";
-        for (let r = 0; r < this.gridSize; r++) {
+        const size = this.solutionGrid.length;
+        for (let r = 0; r < size; r++) {
             let rowStr = '';
-            for (let c = 0; c < this.gridSize; c++) {
+            for (let c = 0; c < size; c++) {
                 if (this.solutionGrid[r][c] !== null) rowStr += '🟩';
                 else rowStr += '⬛';
             }
             if (rowStr.includes('🟩')) art += rowStr + "\n";
         }
 
-        return `🔀 Decipherly #${puzzleNumber}\n` +
+        return `Decipherly ${puzzleNumber}\n` +
                `Time: ${min}:${sec} | Moves: ${this.moves}\n\n` +
                `${art}\n` +
                `Play at: ${window.location.href}`;
