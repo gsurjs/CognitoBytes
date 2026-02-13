@@ -118,6 +118,7 @@ class CrossJumbleGame {
     }
 
     startNewGame(forceNew = false) {
+        // Reset Game State
         this.moves = 0;
         this.timer = 0;
         this.hasStarted = false;
@@ -126,9 +127,9 @@ class CrossJumbleGame {
         
         this.selectedTile = null;
         this.gameActive = true;
-
         this.activeDate = new Date().toDateString();
         
+        // Reset UI
         this.dom.movesDisplay.textContent = "Moves: 0";
         this.dom.timerDisplay.textContent = "Time: 00:00";
         this.dom.shareBtn.style.display = 'none';
@@ -139,7 +140,7 @@ class CrossJumbleGame {
         this.createPauseOverlay();
         this.showMessage("Swap letters in each word to solve!", "");
 
-
+        // --- PREPARE GENERATOR ---
         let randFunc;
         if (this.gameMode === 'daily') {
             const seed = this.getDailySeed();
@@ -149,26 +150,35 @@ class CrossJumbleGame {
         }
 
         // --- PRIORITY 1: CHECK IF ALREADY SOLVED ---
-        // Must be checked FIRST so we don't accidentally load a stale "in-progress" file.
         if (this.gameMode === 'daily') {
             const saveKey = 'cj-daily-state-' + this.activeDate;
             const savedState = localStorage.getItem(saveKey);
+            
             if (savedState) {
                 try {
                     const parsed = JSON.parse(savedState);
                     if (parsed && parsed.solved === true) {
-                        // 1. Generate the grid (we need it to show the solved state)
+                        console.log("Daily already solved. Reconstructing board...");
+                        
+                        // SAFETY: If we solved it, we shouldn't have 'progress'. 
+                        // Force delete any zombie progress save to prevent conflicts.
+                        this.clearProgress();
+
+                        // Generate the specific grid for this seed
                         let success = false;
                         let attempts = 0;
-                        while (!success && attempts < 50) {
+                        // Increased attempts to 200 to ensure we don't accidentally skip 
+                        // the solved state just because the generator was unlucky.
+                        while (!success && attempts < 200) {
                             success = this.generateGrid(randFunc);
                             attempts++;
                         }
                         
-                        // 2. Load the solved view
                         if (success) {
                             this.loadSavedState(parsed);
-                            return; // EXIT FUNCTION HERE
+                            return; // STOP HERE. Do not load progress. Do not start new.
+                        } else {
+                            console.error("Critical: Could not regenerate solved grid.");
                         }
                     }
                 } catch (e) { localStorage.removeItem(saveKey); }
@@ -182,6 +192,7 @@ class CrossJumbleGame {
         }
 
         // --- PRIORITY 3: START FRESH GAME ---
+        // (Only happens if not solved and no save file found)
         let success = false;
         let attempts = 0;
         while (!success && attempts < 50) {
@@ -198,7 +209,6 @@ class CrossJumbleGame {
         this.renderBoard();
         this.saveProgress();
     }
-
     loadSavedState(state) {
         // Restore Stats
         this.moves = state.moves;
@@ -671,14 +681,51 @@ class CrossJumbleGame {
     }
 
     loadSavedState(state) {
+        // 1. Restore Stats UI
         this.moves = state.moves;
         this.timer = state.time || 0;
         this.dom.movesDisplay.textContent = `Moves: ${this.moves}`;
         this.updateTimerDisplay();
+        
+        // 2. Set Game Over UI
         this.dom.message.textContent = "You already deciphered today's puzzle!";
+        this.dom.message.style.color = '#f1c40f'; // Ensure yellow text
         this.dom.shareBtn.style.display = 'inline-block';
         this.dom.pauseBtn.style.display = 'none';
-        this.dom.board.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;">Come back tomorrow!</div>';
+        this.gameActive = false;
+
+        // 3. FORCE REBUILD BOARD (Bypassing renderBoard)
+        this.dom.board.innerHTML = ''; // Clear everything (including pause overlay)
+        this.dom.board.style.display = 'grid';
+        this.dom.board.style.gridTemplateColumns = `repeat(${this.gridSize}, 1fr)`;
+
+        // Manually render the static solved grid (All Green)
+        for(let r=0; r<this.gridSize; r++) {
+            for(let c=0; c<this.gridSize; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'tile';
+                
+                // Use solutionGrid directly since we know it's solved
+                const char = this.solutionGrid[r][c];
+                
+                if (char === null) {
+                    cell.classList.add('empty');
+                } else {
+                    cell.textContent = char;
+                    cell.classList.add('correct'); // Force Green Style
+                    cell.style.cursor = 'default'; // No hand cursor
+                }
+                this.dom.board.appendChild(cell);
+            }
+        }
+
+        // 4. Append Overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'solved-overlay';
+        overlay.innerHTML = 'Come back<br>tomorrow!';
+        this.dom.board.appendChild(overlay);
+        
+        console.log("Solved state loaded with explicit render.");
     }
 
     showMessage(msg, type) {
