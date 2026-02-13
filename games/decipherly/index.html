@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Security-Policy" 
+      content="default-src 'self'; 
+               script-src 'self' 'unsafe-inline' https://www.google-analytics.com https://www.googletagmanager.com https://vercel.live; 
+               style-src 'self' 'unsafe-inline'; 
+               img-src 'self' data:; 
+               connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com;
+               frame-src 'self' https://vercel.live;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🔀 Decipherly - Decoding Puzzle</title>
+    <link rel="stylesheet" href="/games/decipherly/styles.css">
+    <script src="/analytics.js"></script>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1 class="title">🔀 Decipherly</h1>
+            <div class="navigation">
+                <a href="../../" class="nav-button">🕹️ Back To Games</a>
+            </div>
+            <div class="button-container">
+                 <button class="share-button" id="shareButton" style="display: none;">💬 SHARE</button>
+                 <button class="game-button" id="pauseButton" style="display: none;">PAUSE</button>
+                 <button class="new-game-button" id="newGameButton" style="display: none;">NEW GAME</button>
+            </div>
+             <div class="game-mode-selector">
+                <button class="mode-button active" id="dailyMode">📅 Daily</button>
+                <button class="mode-button" id="infiniteMode">♾️ Infinite</button>
+            </div>
+        </div>
+
+        <div class="game-content">
+            <div class="game-info">
+                <div class="score-board">
+                    <div id="timerDisplay">Time: 00:00</div>
+                    <div id="movesDisplay">Moves: 0</div>
+                </div>
+                <div id="message" class="message">Swap letters to fix the grid!</div>
+            </div>
+
+            <div class="board-container">
+                <div id="gameBoard" class="game-board">
+                    </div>
+            </div>
+
+            <div class="controls-area">
+                <p class="instruction">Tap two letters to swap. Green letters are correct & lock.</p>
+            </div>
+        </div>
+
+        <div id="statsModal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <button class="modal-close-button">&times;</button>
+                <h2>Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div id="statsPlayed" class="stat-value">0</div>
+                        <div class="stat-label">Played</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="statsWinRate" class="stat-value">0</div>
+                        <div class="stat-label">Win %</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="statsStreak" class="stat-value">0</div>
+                        <div class="stat-label">Streak</div>
+                    </div>
+                </div>
+                <h3>Records</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div id="statsBestTime" class="stat-value">--:--</div>
+                        <div class="stat-label">Fastest Time</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/games/decipherly/scripts.js"></script>
+    <script src="/games/alpha-bit/orientation-lock.js"></script>
+</body>
+</html>
