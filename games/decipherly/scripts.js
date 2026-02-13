@@ -681,14 +681,51 @@ class CrossJumbleGame {
     }
 
     loadSavedState(state) {
+        // 1. Restore Stats UI
         this.moves = state.moves;
         this.timer = state.time || 0;
         this.dom.movesDisplay.textContent = `Moves: ${this.moves}`;
         this.updateTimerDisplay();
+        
+        // 2. Set Game Over UI
         this.dom.message.textContent = "You already deciphered today's puzzle!";
+        this.dom.message.style.color = '#f1c40f'; // Ensure yellow text
         this.dom.shareBtn.style.display = 'inline-block';
         this.dom.pauseBtn.style.display = 'none';
-        this.dom.board.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;">Come back tomorrow!</div>';
+        this.gameActive = false;
+
+        // 3. FORCE REBUILD BOARD (Bypassing renderBoard)
+        this.dom.board.innerHTML = ''; // Clear everything (including pause overlay)
+        this.dom.board.style.display = 'grid';
+        this.dom.board.style.gridTemplateColumns = `repeat(${this.gridSize}, 1fr)`;
+
+        // Manually render the static solved grid (All Green)
+        for(let r=0; r<this.gridSize; r++) {
+            for(let c=0; c<this.gridSize; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'tile';
+                
+                // Use solutionGrid directly since we know it's solved
+                const char = this.solutionGrid[r][c];
+                
+                if (char === null) {
+                    cell.classList.add('empty');
+                } else {
+                    cell.textContent = char;
+                    cell.classList.add('correct'); // Force Green Style
+                    cell.style.cursor = 'default'; // No hand cursor
+                }
+                this.dom.board.appendChild(cell);
+            }
+        }
+
+        // 4. Append Overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'solved-overlay';
+        overlay.innerHTML = 'Come back<br>tomorrow!';
+        this.dom.board.appendChild(overlay);
+        
+        console.log("Solved state loaded with explicit render.");
     }
 
     showMessage(msg, type) {
