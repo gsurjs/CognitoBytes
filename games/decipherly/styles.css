@@ -277,6 +277,25 @@ body {
 .stat-value { font-size: 1.5rem; font-weight: bold; color: #f1c40f; }
 .stat-label { font-size: 0.8rem; opacity: 0.8; }
 
+.solved-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* See-through dark tint */
+    backdrop-filter: blur(2px);      /* Slight blur for style */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    z-index: 20; 
+    border-radius: 12px;
+    pointer-events: all; /* Blocks clicks */
+    text-align: center;
+    line-height: 1.4;
+}
+
 /* Records Section (Best Time) */
 h3 { margin-top: 20px; margin-bottom: 10px; font-size: 1.2rem; opacity: 0.9; }
 

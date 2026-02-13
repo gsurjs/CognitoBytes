@@ -143,33 +143,17 @@ class CrossJumbleGame {
             return;
         }
 
-        // Check daily save
-        if (this.gameMode === 'daily') {
-            const saveKey = 'cj-daily-state-' + new Date().toDateString();
-            const savedState = localStorage.getItem(saveKey);
-            if (savedState) {
-                try {
-                    const parsed = JSON.parse(savedState);
-                    if (parsed && parsed.solved === true) {
-                        this.loadSavedState(parsed);
-                        return;
-                    }
-                } catch (e) { localStorage.removeItem(saveKey); }
-            }
-        }
-
         let randFunc;
         if (this.gameMode === 'daily') {
             const seed = this.getDailySeed();
-            randFunc = this.mulberry32(seed); // Deterministic for Daily
+            randFunc = this.mulberry32(seed);
         } else {
-            randFunc = Math.random; // Native True Random for Infinite
+            randFunc = Math.random;
         }
 
-        // Retry loop for valid grid
         let success = false;
         let attempts = 0;
-        while (!success && attempts < 20) {
+        while (!success && attempts < 50) {
             success = this.generateGrid(randFunc);
             attempts++;
         }
@@ -179,9 +163,48 @@ class CrossJumbleGame {
             return;
         }
 
+        if (this.gameMode === 'daily') {
+            const saveKey = 'cj-daily-state-' + new Date().toDateString();
+            const savedState = localStorage.getItem(saveKey);
+            if (savedState) {
+                try {
+                    const parsed = JSON.parse(savedState);
+                    if (parsed && parsed.solved === true) {
+                        // Pass the parsed state to the loader
+                        this.loadSavedState(parsed);
+                        return;
+                    }
+                } catch (e) { localStorage.removeItem(saveKey); }
+            }
+        }
+
         this.scrambleBoard(randFunc);
         this.renderBoard();
         this.saveProgress();
+    }
+    loadSavedState(state) {
+        // Restore Stats
+        this.moves = state.moves;
+        this.timer = state.time || 0;
+        this.dom.movesDisplay.textContent = `Moves: ${this.moves}`;
+        this.updateTimerDisplay();
+        
+        this.dom.message.textContent = "You already deciphered today's puzzle!";
+        this.dom.shareBtn.style.display = 'inline-block';
+        this.dom.pauseBtn.style.display = 'none';
+
+        // Set Board to Solved State
+        // Since we already generated the grid in startNewGame, we just copy solution to current
+        this.currentGrid = this.solutionGrid.map(row => [...row]);
+        this.gameActive = false; // Disable interaction
+        
+        this.renderBoard(); // Show the green solved board
+
+        // Add the "Come back tomorrow" overlay on top
+        const overlay = document.createElement('div');
+        overlay.className = 'solved-overlay';
+        overlay.innerHTML = 'Come back<br>tomorrow!';
+        this.dom.board.appendChild(overlay);
     }
 
     saveProgress() {
