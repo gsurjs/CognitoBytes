@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(45deg, #252b5a 0%, #3a2158 50%, #6b2a5e 100%);
+    background: linear-gradient(45deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
     min-height: 100vh;
     min-height: 100dvh;
     display: flex;
@@ -18,7 +18,7 @@ body {
 }
 
 .game-container {
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     border-radius: 15px;
     padding: 1rem;
@@ -409,10 +409,9 @@ body {
     height: 350px;
     margin: 0 auto 0.6rem auto;
     flex-shrink: 0;
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    padding: 7px;
-    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 3px;
+    border-radius: 6px;
 }
 
 .cell {
@@ -548,12 +547,12 @@ body {
 }
 
 /* Color definitions */
-.color-0 { background-color: #b82622; } /* Red */
-.color-1 { background-color: #1e70b7; } /* Blue */
-.color-2 { background-color: #179352; } /* Green */
-.color-3 { background-color: #c67310; } /* Orange */
-.color-4 { background-color: #8132aa; } /* Purple */
-.color-5 { background-color: #ba2661; } /* Pink */
+.color-0 { background-color: #e74c3c; } /* Red */
+.color-1 { background-color: #3498db; } /* Blue */
+.color-2 { background-color: #2ecc71; } /* Green */
+.color-3 { background-color: #f39c12; } /* Orange */
+.color-4 { background-color: #9b59b6; } /* Purple */
+.color-5 { background-color: #fa4180; } /* Pink */
 
 /* Mobile optimizations */
 @media (max-width: 600px) {
@@ -635,7 +634,7 @@ body {
         height: 90vw;
         gap: 0px;
         margin-bottom: 0.5rem;
-        padding: 6px;
+        padding: 2px;
     }
 
     .cell {

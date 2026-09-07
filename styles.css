@@ -78,7 +78,7 @@ body {
 }
 
 .menu-container {
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(15px);
     border-radius: 20px;
     padding: 2rem;
@@ -156,7 +156,7 @@ body {
 }
 
 .game-card {
-    background: rgba(0, 0, 0, 0.28);
+    background: rgba(255, 255, 255, 0.12);
     border-radius: 18px;
     padding: 1.8rem;
     text-decoration: none;
@@ -187,7 +187,7 @@ body {
     transform: translateY(-8px) scale(1.02);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     border-color: rgba(255, 255, 255, 0.4);
-    background: rgba(0, 0, 0, 0.18);
+    background: rgba(255, 255, 255, 0.18);
 }
 
 .game-card:active {
@@ -211,6 +211,15 @@ body {
     50% { transform: translateY(-10px); }
 }
 
+.game-card-text {
+    position: relative;
+    z-index: 1;
+    background: rgba(10, 10, 25, 0.45);
+    border-radius: 12px;
+    padding: 0.8rem 0.9rem;
+    margin-top: 0.4rem;
+}
+
 .game-title {
     font-size: 1.4rem;
     font-weight: bold;
@@ -228,7 +237,7 @@ body {
 .stats-section {
     position: relative;
     z-index: 1;
-    background: rgba(0, 0, 0, 0.25);
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 15px;
     padding: 1.5rem;
     margin-top: 1.5rem;
