@@ -190,6 +190,17 @@ temp/
 *~
 
 # ===========================
+# AI Assistant Files
+# ===========================
+
+.claude/
+.claude*
+CLAUDE.md
+CLAUDE.local.md
+claude.json
+.mcp.json
+
+# ===========================
 # Project Specific
 # ===========================
 

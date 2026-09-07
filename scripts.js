@@ -65,6 +65,12 @@ class BrainGamesMenu {
         const woordleTotalPlayed = (woordleDailyStats.gamesPlayed || 0) + (woordleInfiniteStats.gamesPlayed || 0);
         const woordleTotalWon = (woordleDailyStats.gamesWon || 0) + (woordleInfiniteStats.gamesWon || 0);
 
+        // Aggregate stats for TerraByte from both modes
+        const terraByteDailyStats = this.getGameStats('terraByte-stats-daily');
+        const terraBytePracticeStats = this.getGameStats('terraByte-stats-practice');
+        const terraByteTotalPlayed = (terraByteDailyStats.gamesPlayed || 0) + (terraBytePracticeStats.gamesPlayed || 0);
+        const terraByteTotalWon = (terraByteDailyStats.gamesWon || 0) + (terraBytePracticeStats.gamesWon || 0);
+
         // Aggregate stats for Flood-This from all modes
         const floodItDailyStats = this.getGameStats('flood-this-stats-v2-daily');
         const floodItEasyStats = this.getGameStats('flood-this-stats-v2-easy');
@@ -74,19 +80,21 @@ class BrainGamesMenu {
         const floodItTotalWon = (floodItDailyStats.gamesWon || 0) + (floodItEasyStats.gamesWon || 0) + (floodItMediumStats.gamesWon || 0) + (floodItHardStats.gamesWon || 0);
 
         // Calculate totals with proper field mapping
-        const totalPlayed = 
-            (numberGameStats.totalGames || 0) + 
+        const totalPlayed =
+            (numberGameStats.totalGames || 0) +
             (memoryGameStats.gamesPlayed || 0) +
-            slidingPuzzleTotalPlayed + 
+            slidingPuzzleTotalPlayed +
             woordleTotalPlayed +
-            floodItTotalPlayed;
-            
-        const totalWon = 
-            (numberGameStats.gamesWon || 0) + 
-            (memoryGameStats.gamesWon || 0) + 
+            floodItTotalPlayed +
+            terraByteTotalPlayed;
+
+        const totalWon =
+            (numberGameStats.gamesWon || 0) +
+            (memoryGameStats.gamesWon || 0) +
             slidingPuzzleTotalWon +
             woordleTotalWon +
-            floodItTotalWon;
+            floodItTotalWon +
+            terraByteTotalWon;
             
         const winRate = totalPlayed > 0 ? Math.round((totalWon / totalPlayed) * 100) : 0;
 
