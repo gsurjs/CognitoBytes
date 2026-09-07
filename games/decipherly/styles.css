@@ -11,7 +11,7 @@ html, body {
     overflow: hidden; /* Prevent scrolling */
     overscroll-behavior: none; /* Prevent pull-to-refresh */
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #252b5a 0%, #3a2158 100%);
     color: white;
     touch-action: manipulation; /* Disable double-tap zoom */
     -webkit-user-select: none; /* Disable text selection */

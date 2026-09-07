@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(45deg, #8e44ad 0%, #3498db 50%, #e74c3c 100%);
+    background: linear-gradient(45deg, #3b1d49 0%, #164161 50%, #5f1d15 100%);
     min-height: 100vh;
     min-height: 100dvh; /* Dynamic viewport height for mobile */
     display: flex;
@@ -18,7 +18,7 @@ body {
 }
 
 .game-container {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(10px);
     border-radius: 15px;
     padding: 1rem;

@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(45deg, #667eea 0%, #66ea7e 0%, #764ba2 100%);
+    background: linear-gradient(45deg, #252b5a 0%, #1c4a30 0%, #3a2158 100%);
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -16,7 +16,7 @@ body {
 }
 
 .game-container {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(10px);
     border-radius: 15px;
     padding: 1rem;

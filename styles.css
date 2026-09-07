@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+    background: linear-gradient(135deg, #252b5a 0%, #3a2158 25%, #6b2a5e 50%, #701f2b 75%, #14344e 100%);
     background-size: 400% 400%;
     animation: gradientShift 8s ease infinite;
     min-height: 100vh;
@@ -24,7 +24,7 @@ body {
 }
 
 .menu-container {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(15px);
     border-radius: 20px;
     padding: 2rem;
@@ -102,7 +102,7 @@ body {
 }
 
 .game-card {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.28);
     border-radius: 18px;
     padding: 1.8rem;
     text-decoration: none;
@@ -133,7 +133,7 @@ body {
     transform: translateY(-8px) scale(1.02);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     border-color: rgba(255, 255, 255, 0.4);
-    background: rgba(255, 255, 255, 0.18);
+    background: rgba(0, 0, 0, 0.18);
 }
 
 .game-card:active {
@@ -174,7 +174,7 @@ body {
 .stats-section {
     position: relative;
     z-index: 1;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.25);
     border-radius: 15px;
     padding: 1.5rem;
     margin-top: 1.5rem;
@@ -224,7 +224,7 @@ body {
         min-height: 100dvh;
         align-items: flex-start;
         padding-top: 30px;
-        background: linear-gradient(45deg, #667eea 0%, #66ea7e 0%, #764ba2 100%);
+        background: linear-gradient(45deg, #252b5a 0%, #1c4a30 0%, #3a2158 100%);
         background-size: 200% 200%;
     }
     
