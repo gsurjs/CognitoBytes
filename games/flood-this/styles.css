@@ -409,9 +409,10 @@ body {
     height: 350px;
     margin: 0 auto 0.6rem auto;
     flex-shrink: 0;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 3px;
-    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    padding: 7px;
+    border-radius: 12px;
 }
 
 .cell {
@@ -547,12 +548,12 @@ body {
 }
 
 /* Color definitions */
-.color-0 { background-color: #c9271b; } /* Red */
-.color-1 { background-color: #1a7bc4; } /* Blue */
-.color-2 { background-color: #12a251; } /* Green */
-.color-3 { background-color: #d97e06; } /* Orange */
-.color-4 { background-color: #8b34b5; } /* Purple */
-.color-5 { background-color: #cc2762; } /* Pink */
+.color-0 { background-color: #b82622; } /* Red */
+.color-1 { background-color: #1e70b7; } /* Blue */
+.color-2 { background-color: #179352; } /* Green */
+.color-3 { background-color: #c67310; } /* Orange */
+.color-4 { background-color: #8132aa; } /* Purple */
+.color-5 { background-color: #ba2661; } /* Pink */
 
 /* Mobile optimizations */
 @media (max-width: 600px) {
@@ -634,7 +635,7 @@ body {
         height: 90vw;
         gap: 0px;
         margin-bottom: 0.5rem;
-        padding: 2px;
+        padding: 6px;
     }
 
     .cell {
