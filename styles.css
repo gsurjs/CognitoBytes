@@ -7,14 +7,68 @@
 body {
     font-family: 'Arial', sans-serif;
     background: linear-gradient(135deg, #252b5a 0%, #3a2158 25%, #6b2a5e 50%, #701f2b 75%, #14344e 100%);
-    background-size: 400% 400%;
-    animation: gradientShift 8s ease infinite;
+    background-attachment: fixed;
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     color: white;
     overflow-x: hidden;
+}
+
+/* Aurora glow layer - colorful drifting lights behind the dark base.
+   Animates transform only, so it stays smooth on mobile. */
+.floating-elements {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.floating-elements::before,
+.floating-elements::after {
+    content: '';
+    position: absolute;
+    width: 85vmax;
+    height: 85vmax;
+    border-radius: 50%;
+    will-change: transform;
+}
+
+.floating-elements::before {
+    top: -30vmax;
+    left: -25vmax;
+    background:
+        radial-gradient(circle at 35% 35%, rgba(240, 147, 251, 0.4) 0%, rgba(240, 147, 251, 0) 55%),
+        radial-gradient(circle at 70% 60%, rgba(102, 126, 234, 0.35) 0%, rgba(102, 126, 234, 0) 55%);
+    animation: auroraDrift 21s ease-in-out infinite alternate;
+}
+
+.floating-elements::after {
+    bottom: -32vmax;
+    right: -28vmax;
+    background:
+        radial-gradient(circle at 60% 60%, rgba(79, 172, 254, 0.38) 0%, rgba(79, 172, 254, 0) 55%),
+        radial-gradient(circle at 30% 40%, rgba(88, 214, 141, 0.26) 0%, rgba(88, 214, 141, 0) 55%),
+        radial-gradient(circle at 50% 20%, rgba(245, 87, 108, 0.28) 0%, rgba(245, 87, 108, 0) 50%);
+    animation: auroraDrift2 27s ease-in-out infinite alternate;
+}
+
+@keyframes auroraDrift {
+    from { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+    to   { transform: translate3d(16vw, 10vh, 0) scale(1.18) rotate(25deg); }
+}
+
+@keyframes auroraDrift2 {
+    from { transform: translate3d(0, 0, 0) scale(1.15); }
+    to   { transform: translate3d(-14vw, -12vh, 0) scale(0.95); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .floating-elements::before,
+    .floating-elements::after {
+        animation: none;
+    }
 }
 
 @keyframes gradientShift {
@@ -224,8 +278,6 @@ body {
         min-height: 100dvh;
         align-items: flex-start;
         padding-top: 30px;
-        background: linear-gradient(45deg, #252b5a 0%, #1c4a30 0%, #3a2158 100%);
-        background-size: 200% 200%;
     }
     
     .menu-container {
