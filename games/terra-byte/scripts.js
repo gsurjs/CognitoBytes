@@ -1428,7 +1428,7 @@ class TerraByteGame {
             else emojiLine += '⬜';
         }
 
-        let shareText = `TerraByte ${puzzleNumber} 🌍 ${count} ${count === 1 ? 'guess' : 'guesses'}\n\n`;
+        let shareText = `TerraByte ${puzzleNumber} 🌍 \n${count} ${count === 1 ? 'guess' : 'guesses'}\n\n`;
         shareText += emojiLine + '\n';
         shareText += '\nPlay at: ' + window.location.href;
         return shareText;
