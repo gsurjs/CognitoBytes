@@ -259,15 +259,15 @@ html, body {
 }
 
 .tile.selected {
-    background: #dcae10;
+    background: #d4a90e;
     transform: scale(1.05);
     z-index: 10;
-    box-shadow: 0 0 10px rgba(241, 196, 15, 0.6);
+    box-shadow: 0 0 10px rgba(212, 169, 14, 0.6);
 }
 
 .tile.valid-target {
     background: #ece2bc;
-    box-shadow: inset 0 0 0 2px #dcae10;
+    box-shadow: inset 0 0 0 2px #d4a90e;
     transform: scale(1.02);
 }
 

@@ -547,12 +547,12 @@ body {
 }
 
 /* Color definitions */
-.color-0 { background-color: #c44234; } /* Red */
-.color-1 { background-color: #2f86c0; } /* Blue */
-.color-2 { background-color: #29ab62; } /* Green */
-.color-3 { background-color: #d9880f; } /* Orange */
-.color-4 { background-color: #8a4da3; } /* Purple */
-.color-5 { background-color: #d63a70; } /* Pink */
+.color-0 { background-color: #c9271b; } /* Red */
+.color-1 { background-color: #1a7bc4; } /* Blue */
+.color-2 { background-color: #12a251; } /* Green */
+.color-3 { background-color: #d97e06; } /* Orange */
+.color-4 { background-color: #8b34b5; } /* Purple */
+.color-5 { background-color: #cc2762; } /* Pink */
 
 /* Mobile optimizations */
 @media (max-width: 600px) {
