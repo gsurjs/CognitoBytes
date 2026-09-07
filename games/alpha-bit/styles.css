@@ -252,14 +252,14 @@ body {
 }
 
 .letter-tile.correct {
-    background: linear-gradient(45deg, #27ae60, #2ecc71);
-    border-color: #27ae60;
+    background: linear-gradient(45deg, #0f9448, #12a251);
+    border-color: #0c7a3c;
     animation: bounce 0.5s ease-in-out;
 }
 
 .letter-tile.present {
-    background: linear-gradient(45deg, #d1c93f, #d1c93f);
-    border-color: #f3fa00;
+    background: linear-gradient(45deg, #ab920a, #bfa50c);
+    border-color: #8f7a08;
     animation: bounce 0.5s ease-in-out;
 }
 
@@ -324,11 +324,11 @@ body {
 }
 
 .key.correct {
-    background: linear-gradient(45deg, #27ae60, #2ecc71);
+    background: linear-gradient(45deg, #0f9448, #12a251);
 }
 
 .key.present {
-    background: linear-gradient(45deg, #d1c93f, #d1c93f);
+    background: linear-gradient(45deg, #ab920a, #bfa50c);
 }
 
 .key.absent {
