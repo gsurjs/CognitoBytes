@@ -136,7 +136,9 @@ const TB_EPOCH = '2026-09-07T00:00:00'; // puzzle #1
 const TB_COLORS = {
     ocean: '#31a2e2',
     land: '#e8d8a8',
+    ice: '#e6ece9',
     border: 'rgba(80, 52, 30, 0.75)',
+    guessedBorder: 'rgba(66, 25, 10, 0.9)',
     found: '#2ecc71',
     heatStops: [
         [0.00, [255, 247, 217]],  // freezing (very far)
@@ -147,6 +149,18 @@ const TB_COLORS = {
         [1.00, [143, 14, 14]]     // blazing (borders the target)
     ]
 };
+
+// Muted atlas colors for unguessed countries (political-map style).
+// Cool/earthy tones only, so the warm heat colors of guesses stand out.
+const TB_POLITICAL_PALETTE = [
+    '#a5cd85',  // light green
+    '#7cbd93',  // medium green
+    '#cfc98a',  // olive khaki
+    '#8ec9b6',  // seafoam
+    '#dbc994',  // warm sand
+    '#74b3a5',  // muted teal
+    '#b7d693'   // pale lime
+];
 
 // ============================================================
 // Small helpers
@@ -304,6 +318,55 @@ class TerraByteWorld {
         }
         this.guessableNames.sort((a, b) => a.localeCompare(b));
         this.answerPool.sort((a, b) => a.localeCompare(b)); // stable order for daily seeding
+
+        this.assignPoliticalColors();
+    }
+
+    // Give every country an atlas color, greedily ensuring neighbors differ
+    // (adjacency comes from shared TopoJSON border arcs)
+    assignPoliticalColors() {
+        const arcOwners = new Map();
+        for (const record of this.countries.values()) {
+            for (const arc of record.arcSet) {
+                if (!arcOwners.has(arc)) arcOwners.set(arc, []);
+                arcOwners.get(arc).push(record.name);
+            }
+        }
+
+        const neighbors = new Map();
+        for (const name of this.countries.keys()) neighbors.set(name, new Set());
+        for (const owners of arcOwners.values()) {
+            for (let i = 0; i < owners.length; i++) {
+                for (let j = i + 1; j < owners.length; j++) {
+                    neighbors.get(owners[i]).add(owners[j]);
+                    neighbors.get(owners[j]).add(owners[i]);
+                }
+            }
+        }
+
+        // Color high-degree countries first; name tiebreak keeps it deterministic
+        const order = [...this.countries.keys()].sort((a, b) =>
+            (neighbors.get(b).size - neighbors.get(a).size) || a.localeCompare(b));
+
+        for (const name of order) {
+            const record = this.countries.get(name);
+            const used = new Set();
+            for (const neighborName of neighbors.get(name)) {
+                const neighbor = this.countries.get(neighborName);
+                if (neighbor.colorIndex !== undefined) used.add(neighbor.colorIndex);
+            }
+            // Start from a name-hashed offset so islands vary instead of all
+            // taking the first palette color
+            const start = Math.abs(tbHashCode(name)) % TB_POLITICAL_PALETTE.length;
+            record.colorIndex = start;
+            for (let k = 0; k < TB_POLITICAL_PALETTE.length; k++) {
+                const idx = (start + k) % TB_POLITICAL_PALETTE.length;
+                if (!used.has(idx)) {
+                    record.colorIndex = idx;
+                    break;
+                }
+            }
+        }
     }
 
     computeSamplesAndCentroid(record) {
@@ -528,14 +591,19 @@ class GlobeRenderer {
         ctx.fillStyle = TB_COLORS.ocean;
         ctx.fillRect(0, 0, TB_TEX_W, TB_TEX_H);
 
-        ctx.lineWidth = 0.6;
-        ctx.strokeStyle = TB_COLORS.border;
         ctx.lineJoin = 'round';
 
         for (const record of this.world.countries.values()) {
+            const guessedColor = colorMap.get(record.name);
+            const baseColor = record.name === 'Antarctica'
+                ? TB_COLORS.ice
+                : (TB_POLITICAL_PALETTE[record.colorIndex] || TB_COLORS.land);
             this.tracePath(ctx, record);
-            ctx.fillStyle = colorMap.get(record.name) || TB_COLORS.land;
+            ctx.fillStyle = guessedColor || baseColor;
             ctx.fill('evenodd');
+            // Guessed countries get a heavier, darker outline so they pop
+            ctx.strokeStyle = guessedColor ? TB_COLORS.guessedBorder : TB_COLORS.border;
+            ctx.lineWidth = guessedColor ? 1 : 0.6;
             ctx.stroke();
         }
 
