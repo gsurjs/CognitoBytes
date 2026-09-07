@@ -11,7 +11,7 @@ html, body {
     overflow: hidden; /* Prevent scrolling */
     overscroll-behavior: none; /* Prevent pull-to-refresh */
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #252b5a 0%, #3a2158 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     touch-action: manipulation; /* Disable double-tap zoom */
     -webkit-user-select: none; /* Disable text selection */
@@ -229,7 +229,7 @@ html, body {
     /* Fill the grid cell exactly */
     width: 100%;
     height: 100%;
-    background: #e5e0d4;
+    background: white;
     border-radius: 15%; /* Relative rounding */
     display: flex;
     justify-content: center;
@@ -259,15 +259,15 @@ html, body {
 }
 
 .tile.selected {
-    background: #d4a90e;
+    background: #f1c40f;
     transform: scale(1.05);
     z-index: 10;
-    box-shadow: 0 0 10px rgba(212, 169, 14, 0.6);
+    box-shadow: 0 0 10px rgba(241, 196, 15, 0.6);
 }
 
 .tile.valid-target {
-    background: #ece2bc;
-    box-shadow: inset 0 0 0 2px #d4a90e;
+    background: #fff8dc;
+    box-shadow: inset 0 0 0 2px #f1c40f;
     transform: scale(1.02);
 }
 
