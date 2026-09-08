@@ -127,8 +127,8 @@ const TB_ALIASES = {
 // Tuning constants
 // ============================================================
 
-const TB_TEX_W = 512;             // texture width (low = chunkier pixels)
-const TB_TEX_H = 256;
+const TB_TEX_W = 1024;            // texture width (low = chunkier pixels)
+const TB_TEX_H = 512;
 const TB_MAX_DIST_KM = 15000;     // distance mapped to the coldest color
 const TB_SAMPLE_BUDGET = 350;     // max border points sampled per country
 const TB_EPOCH = '2026-09-07T00:00:00'; // puzzle #1
@@ -541,6 +541,7 @@ class TerraByteWorld {
                 for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
                     const xi = ring[i][0], yi = ring[i][1];
                     const xj = ring[j][0], yj = ring[j][1];
+                    if (Math.abs(xj - xi) > 180) continue; // antimeridian jump edge
                     if ((yi > lat) !== (yj > lat) &&
                         lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) {
                         inside = !inside;
@@ -589,17 +590,47 @@ class GlobeRenderer {
     }
 
     initTexture() {
+        this.texScale = 1;
+        this.texW = TB_TEX_W;
+        this.texH = TB_TEX_H;
         this.texCanvas = document.createElement('canvas');
-        this.texCanvas.width = TB_TEX_W;
-        this.texCanvas.height = TB_TEX_H;
+        this.texCanvas.width = this.texW;
+        this.texCanvas.height = this.texH;
         this.texCtx = this.texCanvas.getContext('2d');
-        this.paint(new Map());
+        this.lastColorMap = new Map();
+        this.paint(this.lastColorMap);
+    }
+
+    // Re-render the texture at higher detail while zoomed in, back to
+    // chunky pixels when zoomed out. Debounced so pinching doesn't thrash.
+    updateTextureDetail() {
+        clearTimeout(this._detailTimer);
+        this._detailTimer = setTimeout(() => {
+            const desired = this.camDist < 1.65 ? 4 : (this.camDist < 2.2 ? 2 : 1);
+            if (desired === this.texScale) return;
+            this.texScale = desired;
+            this.texW = TB_TEX_W * desired;
+            this.texH = TB_TEX_H * desired;
+            this.texCanvas.width = this.texW;
+            this.texCanvas.height = this.texH;
+
+            const oldTexture = this.texture;
+            this.texture = new THREE.CanvasTexture(this.texCanvas);
+            this.texture.magFilter = THREE.NearestFilter;
+            this.texture.minFilter = THREE.LinearFilter;
+            this.texture.generateMipmaps = false;
+            this.globe.material.map = this.texture;
+            this.globe.material.needsUpdate = true;
+            if (oldTexture) oldTexture.dispose();
+
+            this.paint(this.lastColorMap);
+        }, 250);
     }
 
     lonLatToPx(lon, lat) {
         return [
-            (lon + 180) / 360 * TB_TEX_W,
-            (90 - lat) / 180 * TB_TEX_H
+            (lon + 180) / 360 * this.texW,
+            (90 - lat) / 180 * this.texH
         ];
     }
 
@@ -607,10 +638,18 @@ class GlobeRenderer {
         ctx.beginPath();
         for (const rings of record.polygons) {
             for (const ring of rings) {
+                let prevLon = null;
                 for (let i = 0; i < ring.length; i++) {
-                    const [x, y] = this.lonLatToPx(ring[i][0], ring[i][1]);
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
+                    const lon = ring[i][0];
+                    const [x, y] = this.lonLatToPx(lon, ring[i][1]);
+                    // Split unsplit antimeridian crossings (Russia, Fiji,
+                    // Antarctica) - never draw across the whole texture
+                    if (i === 0 || Math.abs(lon - prevLon) > 180) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                    prevLon = lon;
                 }
                 ctx.closePath();
             }
@@ -619,9 +658,11 @@ class GlobeRenderer {
 
     // colorMap: dataset name -> fill color for guessed countries
     paint(colorMap) {
+        this.lastColorMap = colorMap;
+        const s = this.texScale || 1;
         const ctx = this.texCtx;
         ctx.fillStyle = TB_COLORS.ocean;
-        ctx.fillRect(0, 0, TB_TEX_W, TB_TEX_H);
+        ctx.fillRect(0, 0, this.texW, this.texH);
 
         ctx.lineJoin = 'round';
 
@@ -635,7 +676,7 @@ class GlobeRenderer {
             ctx.fill('evenodd');
             // Guessed countries get a heavier, darker outline so they pop
             ctx.strokeStyle = guessedColor ? TB_COLORS.guessedBorder : TB_COLORS.border;
-            ctx.lineWidth = guessedColor ? 1 : 0.6;
+            ctx.lineWidth = (guessedColor ? 1.8 : 1.1) * s;
             ctx.stroke();
         }
 
@@ -645,9 +686,9 @@ class GlobeRenderer {
             if (!record || !record.tiny) continue;
             const [x, y] = this.lonLatToPx(record.centroid[0], record.centroid[1]);
             ctx.fillStyle = 'rgba(40, 25, 12, 0.9)';
-            ctx.fillRect(Math.round(x) - 2.5, Math.round(y) - 2.5, 5, 5);
+            ctx.fillRect(Math.round(x) - 5 * s, Math.round(y) - 5 * s, 10 * s, 10 * s);
             ctx.fillStyle = color;
-            ctx.fillRect(Math.round(x) - 1.5, Math.round(y) - 1.5, 3, 3);
+            ctx.fillRect(Math.round(x) - 3 * s, Math.round(y) - 3 * s, 6 * s, 6 * s);
         }
 
         if (this.texture) this.texture.needsUpdate = true;
@@ -722,7 +763,7 @@ class GlobeRenderer {
 
     flyTo(lon, lat) {
         this.targetLon = lon;
-        this.targetLat = Math.max(-72, Math.min(72, lat));
+        this.targetLat = Math.max(-87, Math.min(87, lat));
         this.flying = true;
         this.velocityLon = 0;
         this.velocityLat = 0;
@@ -763,7 +804,7 @@ class GlobeRenderer {
                 const degPerPx = 0.25 * (this.camDist - 0.9) / 1.8;
                 this.viewLon -= dx * degPerPx;
                 this.viewLat += dy * degPerPx;
-                this.viewLat = Math.max(-72, Math.min(72, this.viewLat));
+                this.viewLat = Math.max(-87, Math.min(87, this.viewLat));
                 this.velocityLon = -dx * degPerPx;
                 this.velocityLat = dy * degPerPx;
                 this.targetLon = this.viewLon;
@@ -773,9 +814,10 @@ class GlobeRenderer {
                 const pts = [...this.pointers.values()];
                 const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
                 if (this.pinchStartDist > 0) {
-                    this.camDist = Math.max(1.5, Math.min(3.6,
+                    this.camDist = Math.max(1.35, Math.min(3.6,
                         this.pinchStartCam * this.pinchStartDist / dist));
                     this.camera.position.set(0, 0, this.camDist);
+                    this.updateTextureDetail();
                 }
             }
         });
@@ -799,8 +841,9 @@ class GlobeRenderer {
         el.addEventListener('wheel', (e) => {
             e.preventDefault();
             this.lastInteraction = performance.now();
-            this.camDist = Math.max(1.5, Math.min(3.6, this.camDist + e.deltaY * 0.0015));
+            this.camDist = Math.max(1.35, Math.min(3.6, this.camDist + e.deltaY * 0.0015));
             this.camera.position.set(0, 0, this.camDist);
+            this.updateTextureDetail();
         }, { passive: false });
     }
 
@@ -880,7 +923,7 @@ class GlobeRenderer {
             // Inertia after a fling
             if (Math.abs(this.velocityLon) > 0.01 || Math.abs(this.velocityLat) > 0.01) {
                 this.viewLon += this.velocityLon;
-                this.viewLat = Math.max(-72, Math.min(72, this.viewLat + this.velocityLat));
+                this.viewLat = Math.max(-87, Math.min(87, this.viewLat + this.velocityLat));
                 this.velocityLon *= 0.93;
                 this.velocityLat *= 0.93;
                 this.targetLon = this.viewLon;
