@@ -937,41 +937,26 @@ body {
 .control-button,
 .definition-button,
 .game-button {
-    background: rgba(255, 255, 255, 0.16);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: none;
     border-radius: 999px;
     color: #ffffff;
-    padding: 9px 13px;
+    padding: 10px 14px;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    box-shadow: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
     white-space: nowrap;
     flex: 0 1 auto;
     min-width: 0;
     max-width: none;
 }
 
-.new-game-button::before,
-.share-button::before,
-.control-button::before,
-.definition-button::before,
-.game-button::before {
-    content: '';
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    margin-right: 6px;
-    vertical-align: 1px;
-}
-
-.share-button::before { background: #2ecc71; }
-.control-button::before { background: #b06ee0; }
-.new-game-button::before { background: #ff7a6e; }
-.definition-button::before { background: #5aa9ff; }
-.game-button::before { background: #f2a33c; }
+.share-button { background: linear-gradient(45deg, #27ae60, #2ecc71); }
+.control-button { background: linear-gradient(45deg, #8e44ad, #b06ee0); }
+.new-game-button { background: linear-gradient(45deg, #d94a3a, #ff7a6e); }
+.definition-button { background: linear-gradient(45deg, #3d8fe8, #5aa9ff); }
+.game-button { background: linear-gradient(45deg, #e08e1f, #f2a33c); }
 
 /* Segmented mode control, gold active */
 .game-mode-selector {
