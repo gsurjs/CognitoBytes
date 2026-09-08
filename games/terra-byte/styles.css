@@ -808,3 +808,72 @@ body {
 .difficulty-button.active:hover {
     background: linear-gradient(90deg, #ffb700, #ffd700);
 }
+
+/* Tap-to-identify pin and popup */
+.globe-pin {
+    position: absolute;
+    z-index: 40;
+    transform: translate(-50%, -100%);
+    pointer-events: none;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
+}
+
+.globe-pop {
+    position: absolute;
+    z-index: 41;
+    transform: translate(-50%, -100%);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    background: rgba(10, 10, 25, 0.94);
+    border: 1px solid rgba(255, 215, 0, 0.5);
+    border-radius: 12px;
+    padding: 8px 9px 8px 13px;
+    white-space: nowrap;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+.globe-pop-text {
+    text-align: left;
+}
+
+.globe-pop-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.globe-pop-sub {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.65);
+    margin-top: 1px;
+}
+
+.globe-pop-guess {
+    background: linear-gradient(90deg, #ffb700, #ffd700);
+    border: none;
+    border-radius: 9px;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #241a3d;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.globe-pop-guess:active {
+    transform: scale(0.95);
+}
+
+.globe-pop-close {
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 999px;
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    touch-action: manipulation;
+    flex: none;
+}

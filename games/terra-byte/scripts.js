@@ -417,6 +417,7 @@ class TerraByteWorld {
             record.centroid = [sumLon / biggestRing.length, sumLat / biggestRing.length];
         }
 
+        record.bbox = [minLon, minLat, maxLon, maxLat];
         record.tiny = (maxLon - minLon) < 1.0 && (maxLat - minLat) < 1.0;
     }
 
@@ -498,10 +499,14 @@ class TerraByteWorld {
         return out.filter((_, i) => i % stride === 0);
     }
 
-    countryAt(lon, lat, candidateNames) {
-        for (const name of candidateNames) {
-            const record = this.countries.get(name);
-            if (record && this.pointInCountry(lon, lat, record)) return record;
+    countryAt(lon, lat, candidateNames = null) {
+        const records = candidateNames
+            ? candidateNames.map(name => this.countries.get(name)).filter(Boolean)
+            : [...this.countries.values()].filter(r => r.guessable);
+        for (const record of records) {
+            const [minLon, minLat, maxLon, maxLat] = record.bbox;
+            if (lon < minLon || lon > maxLon || lat < minLat || lat > maxLat) continue;
+            if (this.pointInCountry(lon, lat, record)) return record;
         }
         return null;
     }
@@ -529,10 +534,14 @@ class TerraByteWorld {
 // ============================================================
 
 class GlobeRenderer {
-    constructor(container, world, onTap) {
+    constructor(container, world, onTap, onPinTrack) {
         this.container = container;
         this.world = world;
         this.onTap = onTap;
+        this.onPinTrack = onPinTrack || null;
+        this.pinLonLat = null;
+        this._pinLocal = null;
+        this._pinWorld = null;
 
         this.viewLat = 20;
         this.viewLon = 0;
@@ -791,6 +800,36 @@ class GlobeRenderer {
         if (this.onTap) this.onTap(lon, lat);
     }
 
+    setPin(lonLat) {
+        this.pinLonLat = lonLat; // [lon, lat] or null
+    }
+
+    projectLonLat(lon, lat) {
+        if (!this._pinLocal) {
+            this._pinLocal = new THREE.Vector3();
+            this._pinWorld = new THREE.Vector3();
+        }
+        const latR = lat * Math.PI / 180;
+        const phi = (lon + 180) * Math.PI / 180;
+        this._pinLocal.set(
+            -Math.cos(phi) * Math.cos(latR),
+            Math.sin(latR),
+            Math.sin(phi) * Math.cos(latR)
+        );
+        this._pinWorld.copy(this._pinLocal);
+        this.globe.localToWorld(this._pinWorld);
+        // Facing check: hide the pin when its country rotates behind the globe
+        const visible = this._pinWorld.x * (this.camera.position.x - this._pinWorld.x) +
+            this._pinWorld.y * (this.camera.position.y - this._pinWorld.y) +
+            this._pinWorld.z * (this.camera.position.z - this._pinWorld.z) > 0;
+        this._pinWorld.project(this.camera);
+        return {
+            x: (this._pinWorld.x + 1) / 2 * this.container.clientWidth,
+            y: (-this._pinWorld.y + 1) / 2 * this.container.clientHeight,
+            visible: visible
+        };
+    }
+
     animate(now) {
         requestAnimationFrame(this.animate);
 
@@ -826,6 +865,10 @@ class GlobeRenderer {
         }
 
         this.renderer.render(this.scene, this.camera);
+
+        if (this.pinLonLat && this.onPinTrack) {
+            this.onPinTrack(this.projectLonLat(this.pinLonLat[0], this.pinLonLat[1]));
+        }
     }
 }
 
@@ -862,7 +905,9 @@ class TerraByteGame {
             this.world = new TerraByteWorld(topology);
 
             const wrap = document.getElementById('globeWrap');
-            this.globe = new GlobeRenderer(wrap, this.world, (lon, lat) => this.handleGlobeTap(lon, lat));
+            this.globe = new GlobeRenderer(wrap, this.world,
+                (lon, lat) => this.handleGlobeTap(lon, lat),
+                (pos) => this.trackPin(pos));
             const loading = document.getElementById('globeLoading');
             if (loading) loading.style.display = 'none';
 
@@ -902,6 +947,12 @@ class TerraByteGame {
         this.newGameButton = document.getElementById('newGameButton');
         this.shareButton = document.getElementById('shareButton');
         this.statsButton = document.getElementById('statsButton');
+        this.globePin = document.getElementById('globePin');
+        this.globePop = document.getElementById('globePop');
+        this.popName = document.getElementById('popName');
+        this.popSub = document.getElementById('popSub');
+        this.popGuess = document.getElementById('popGuess');
+        this.popClose = document.getElementById('popClose');
     }
 
     setupEventListeners() {
@@ -910,6 +961,14 @@ class TerraByteGame {
         this.newGameButton.addEventListener('click', () => this.startNewGame(true));
         this.shareButton.addEventListener('click', () => this.shareResults());
         this.statsButton.addEventListener('click', () => this.showStatsModal());
+
+        this.popClose.addEventListener('click', () => this.hidePin());
+        this.popGuess.addEventListener('click', () => {
+            if (this.pinnedCountry) {
+                this.gameAnalytics.trackButtonClick('pin_guess');
+                this.submitGuess(this.pinnedCountry.displayName);
+            }
+        });
 
         this.guessForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -961,6 +1020,7 @@ class TerraByteGame {
         if (!this.world) return;
         this.hideAllButtons();
         this.hideSuggestions();
+        this.hidePin();
 
         if (!forceNew && this.loadGameState()) {
             console.log('Loaded saved game state.');
@@ -1046,6 +1106,7 @@ class TerraByteGame {
 
         this.guessInput.value = '';
         this.hideSuggestions();
+        this.hidePin();
         this.guessInput.blur();
 
         this.refreshBoard();
@@ -1109,18 +1170,61 @@ class TerraByteGame {
     }
 
     handleGlobeTap(lon, lat) {
-        if (!this.world || this.guesses.length === 0) return;
-        const guessedNames = this.guesses.map(g => g.name);
-        const record = this.world.countryAt(lon, lat, guessedNames);
-        if (!record) return;
-        const guess = this.guesses.find(g => g.name === record.name);
-        if (guess.isTarget) {
-            this.updateMessage(`🎯 ${record.displayName} — the mystery country!`, 'success');
-        } else if (guess.distance === 0) {
-            this.updateMessage(`${record.displayName} borders the mystery country!`, 'info');
-        } else {
-            this.updateMessage(`${record.displayName}: ${guess.distance.toLocaleString()} km away`, 'info');
+        if (!this.world) return;
+        const record = this.world.countryAt(lon, lat);
+        if (!record) {
+            this.hidePin();
+            return;
         }
+
+        this.pinnedCountry = record;
+        const guess = this.guesses.find(g => g.name === record.name);
+
+        this.popName.textContent = record.displayName;
+        if (guess && guess.isTarget) {
+            this.popSub.textContent = '🎯 The mystery country!';
+            this.popGuess.style.display = 'none';
+        } else if (guess && guess.distance === 0) {
+            this.popSub.textContent = 'Borders the mystery country!';
+            this.popGuess.style.display = 'none';
+        } else if (guess) {
+            this.popSub.textContent = `${guess.distance.toLocaleString()} km away`;
+            this.popGuess.style.display = 'none';
+        } else if (this.gameActive) {
+            this.popSub.textContent = 'Tap GUESS to try it';
+            this.popGuess.style.display = '';
+        } else {
+            this.popSub.textContent = 'Not one of your guesses';
+            this.popGuess.style.display = 'none';
+        }
+
+        this.globePin.style.display = '';
+        this.globePop.style.display = '';
+        if (this.globe) this.globe.setPin([lon, lat]);
+    }
+
+    trackPin(pos) {
+        if (!this.globePin) return;
+        if (!pos.visible) {
+            this.globePin.style.visibility = 'hidden';
+            this.globePop.style.visibility = 'hidden';
+            return;
+        }
+        this.globePin.style.visibility = '';
+        this.globePop.style.visibility = '';
+        this.globePin.style.left = pos.x + 'px';
+        this.globePin.style.top = pos.y + 'px';
+        const wrapWidth = this.globePin.parentElement.clientWidth;
+        const clampedX = Math.min(Math.max(pos.x, 86), wrapWidth - 86);
+        this.globePop.style.left = clampedX + 'px';
+        this.globePop.style.top = Math.max(pos.y - 30, 44) + 'px';
+    }
+
+    hidePin() {
+        this.pinnedCountry = null;
+        if (this.globe) this.globe.setPin(null);
+        if (this.globePin) this.globePin.style.display = 'none';
+        if (this.globePop) this.globePop.style.display = 'none';
     }
 
     // ------------------------------------------------------------
