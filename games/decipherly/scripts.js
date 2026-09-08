@@ -664,9 +664,10 @@ class CrossJumbleGame {
         stats.played++;
         if(win) {
             stats.wins++;
-            stats.streak++;
+            // Streak counts DAILY solves only - quickplay wins don't touch it
+            if (this.gameMode === 'daily') stats.streak++;
             if (stats.bestTime === null || this.timer < stats.bestTime) stats.bestTime = this.timer;
-        } else { stats.streak = 0; }
+        } else if (this.gameMode === 'daily') { stats.streak = 0; }
         localStorage.setItem('cj-stats', JSON.stringify(stats));
         
         document.getElementById('statsPlayed').textContent = stats.played;
@@ -793,5 +794,28 @@ class CrossJumbleGame {
         }
     }
 }
+
+// One-time repair: rebuild the streak from daily-solve records only
+// (earlier versions counted quickplay wins into the streak)
+(function fixDailyStreak() {
+    try {
+        if (localStorage.getItem('cj-streak-daily-fix')) return;
+        const stats = JSON.parse(localStorage.getItem('cj-stats') || '{"played":0, "wins":0, "streak":0, "bestTime":null}');
+        let streak = 0;
+        for (let offset = 0; offset < 400; offset++) {
+            const day = new Date();
+            day.setDate(day.getDate() - offset);
+            const rec = localStorage.getItem('cj-daily-state-' + day.toDateString());
+            let solved = false;
+            try { solved = !!(rec && JSON.parse(rec).solved); } catch (e) {}
+            if (solved) streak++;
+            else if (offset === 0) continue;
+            else break;
+        }
+        stats.streak = streak;
+        localStorage.setItem('cj-stats', JSON.stringify(stats));
+        localStorage.setItem('cj-streak-daily-fix', '1');
+    } catch (e) {}
+})();
 
 window.onload = () => new CrossJumbleGame();

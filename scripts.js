@@ -125,10 +125,20 @@ class DailyStatusTracker {
             }
             case 'decipherly': {
                 const dayState = readJSON('cj-daily-state-' + this.legacyDateString);
-                const stats = readJSON('cj-stats') || {};
+                // Derive the streak from daily-solve records: the game's own
+                // cj-stats.streak historically mixed quickplay wins in
+                let streak = 0;
+                for (let offset = 0; offset < 400; offset++) {
+                    const day = new Date();
+                    day.setDate(day.getDate() - offset);
+                    const rec = readJSON('cj-daily-state-' + day.toDateString());
+                    if (rec && rec.solved) streak++;
+                    else if (offset === 0) continue;
+                    else break;
+                }
                 return {
                     done: !!(dayState && dayState.solved),
-                    streak: parseInt(stats.streak) || 0
+                    streak: streak
                 };
             }
             case 'pixslate': {
