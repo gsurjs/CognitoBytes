@@ -96,6 +96,7 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
+    padding: 0 8px;
 }
 
 .brand-mark {
@@ -145,6 +146,7 @@ body {
 .hub-date {
     font-size: 13px;
     color: rgba(255, 255, 255, 0.65);
+    padding: 0 8px;
 }
 
 /* The roaming selection card - expands inside whichever game is tapped */
