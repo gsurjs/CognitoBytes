@@ -1,18 +1,417 @@
+// CognitoBytes daily hub: reads each game's localStorage to show today's
+// daily status, expands a roaming selection card, and tracks day history.
+
+const DAILY_GAMES = [
+    {
+        id: 'terrabyte',
+        name: 'TERRABYTE',
+        icon: '🌍',
+        href: 'games/terra-byte/',
+        gradClass: 'g-terrabyte',
+        desc: 'Guess the mystery country on the pixel globe'
+    },
+    {
+        id: 'alphabit',
+        name: 'ALPHABIT',
+        icon: '🔤',
+        href: 'games/alpha-bit/',
+        gradClass: 'g-alphabit',
+        desc: 'Guess the 5-letter word in 6 tries'
+    },
+    {
+        id: 'floodthis',
+        name: 'FLOOD-THIS',
+        icon: '🌊',
+        href: 'games/flood-this/',
+        gradClass: 'g-floodthis',
+        desc: 'Flood the whole grid in 25 moves'
+    },
+    {
+        id: 'decipherly',
+        name: 'DECIPHERLY',
+        icon: '🔀',
+        href: 'games/decipherly/',
+        gradClass: 'g-decipherly',
+        desc: 'Swap tiles to fix the crossword grid'
+    },
+    {
+        id: 'pixslate',
+        name: 'PIXSLATE',
+        icon: '🧩',
+        href: 'games/pix-slate/',
+        gradClass: 'g-pixslate',
+        desc: 'Solve the sliding puzzle for your best time'
+    }
+];
+
+const HISTORY_KEY = 'cognito-daily-history';
+
+// Same seed helpers the games use, so the hub computes identical dailies
+function hubHashCode(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    return hash;
+}
+
+function hubSeededRandom(seed) {
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+}
+
+function readJSON(key) {
+    try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+class DailyStatusTracker {
+    constructor() {
+        const now = new Date();
+        // The games seed their dailies from the unpadded local date string
+        this.gameDateString = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+        this.pixSlateSeed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+        this.legacyDateString = now.toDateString();
+        this.isoDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        this.todaysWord = null; // AlphaBit's answer, computed from its own word list
+    }
+
+    async loadAlphaBitWord() {
+        try {
+            const response = await fetch('games/alpha-bit/data/wordle-answers-alphabetical.txt');
+            if (!response.ok) return;
+            const text = await response.text();
+            const words = text.split('\n')
+                .map(word => word.trim().toUpperCase())
+                .filter(word => word.length === 5);
+            if (words.length === 0) return;
+            const seed = hubHashCode(this.gameDateString);
+            this.todaysWord = words[Math.floor(hubSeededRandom(seed) * words.length)];
+        } catch (error) {
+            // Offline or blocked: AlphaBit just shows as not-done
+        }
+    }
+
+    getStatus(gameId) {
+        switch (gameId) {
+            case 'terrabyte': {
+                const stats = readJSON('terraByte-stats-daily') || {};
+                return {
+                    done: stats.lastGamePlayed === this.gameDateString,
+                    streak: parseInt(stats.currentStreak) || 0
+                };
+            }
+            case 'alphabit': {
+                const stats = readJSON('woordle-stats-v2-daily') || {};
+                return {
+                    done: this.todaysWord !== null && stats.lastGamePlayed === this.todaysWord,
+                    streak: parseInt(stats.currentStreak) || 0
+                };
+            }
+            case 'floodthis': {
+                const stats = readJSON('flood-this-stats-v2-daily') || {};
+                return {
+                    done: stats.lastGameCompleted === `daily-${this.gameDateString}`,
+                    streak: parseInt(stats.currentStreak) || 0
+                };
+            }
+            case 'decipherly': {
+                const dayState = readJSON('cj-daily-state-' + this.legacyDateString);
+                const stats = readJSON('cj-stats') || {};
+                return {
+                    done: !!(dayState && dayState.solved),
+                    streak: parseInt(stats.streak) || 0
+                };
+            }
+            case 'pixslate': {
+                const stats = readJSON('pixSlate-stats-daily') || {};
+                return {
+                    done: stats.lastGamePlayedSeed === this.pixSlateSeed,
+                    streak: parseInt(stats.currentStreak) || 0
+                };
+            }
+        }
+        return { done: false, streak: 0 };
+    }
+
+    getAllStatuses() {
+        const statuses = {};
+        for (const game of DAILY_GAMES) {
+            statuses[game.id] = this.getStatus(game.id);
+        }
+        return statuses;
+    }
+
+    // Record today's completion count so the week strip fills in over time
+    recordHistory(doneCount) {
+        try {
+            const history = readJSON(HISTORY_KEY) || {};
+            history[this.isoDate] = { done: doneCount, total: DAILY_GAMES.length };
+            const keys = Object.keys(history).sort();
+            while (keys.length > 60) {
+                delete history[keys.shift()];
+            }
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+            return history;
+        } catch (error) {
+            return {};
+        }
+    }
+}
+
 class BrainGamesMenu {
     constructor() {
-        // Performance optimizations
         this.audioContext = null;
         this.isVisible = true;
-        
+        this.tracker = new DailyStatusTracker();
+        this.selectedId = null;
+        this.listOrder = [...DAILY_GAMES];
+
         this.initializeElements();
         this.loadAndDisplayStats();
-        this.setupEventListeners();
         this.setupVisibilityHandling();
-        
-        // Removed floating elements for better performance
-        // this.startFloatingElements();
         this.setupStatsRefresh();
+        this.renderDateLine();
+        this.initDailyHub();
     }
+
+    async initDailyHub() {
+        await this.tracker.loadAlphaBitWord();
+        this.buildGameList();
+        this.refreshDailyHub();
+    }
+
+    // Build the accordion once per page load: up-next game first, then the rest
+    buildGameList() {
+        const container = document.getElementById('gameRows');
+        if (!container) return;
+
+        const statuses = this.tracker.getAllStatuses();
+        const next = DAILY_GAMES.find(g => !statuses[g.id].done);
+        this.listOrder = next
+            ? [next, ...DAILY_GAMES.filter(g => g.id !== next.id)]
+            : [...DAILY_GAMES];
+        this.selectedId = (next || DAILY_GAMES[0]).id;
+
+        container.innerHTML = this.listOrder.map(game => `
+            <div class="game-item" data-game="${game.id}">
+                <button class="game-row" type="button" aria-expanded="false">
+                    <div class="row-icon ${game.gradClass}">${game.icon}</div>
+                    <div class="row-text">
+                        <div class="row-name">${game.name}</div>
+                        <div class="row-sub">${game.desc}</div>
+                    </div>
+                    <div class="row-status"></div>
+                </button>
+                <div class="game-expand">
+                    <div class="hero-top">
+                        <div class="hero-label"></div>
+                        <div class="hero-note"></div>
+                    </div>
+                    <div class="hero-week">
+                        <div class="week-dots"></div>
+                        <div class="week-caption"></div>
+                    </div>
+                    <div class="hero-game">
+                        <div class="hero-icon ${game.gradClass}">${game.icon}</div>
+                        <div class="hero-text">
+                            <div class="hero-name">${game.name}</div>
+                            <div class="hero-desc">${game.desc}</div>
+                        </div>
+                    </div>
+                    <a class="hero-play" href="${game.href}">
+                        <span class="hero-play-text">PLAY NOW</span>
+                        <svg viewBox="0 0 16 16" width="14" height="14"><path d="M6 3l5 5-5 5" fill="none" stroke="#241a3d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                    </a>
+                </div>
+            </div>`).join('');
+
+        container.addEventListener('click', (event) => {
+            if (event.target.closest('.hero-play')) {
+                this.playSound('click');
+                return; // Let the link navigate
+            }
+            const row = event.target.closest('.game-row');
+            if (!row) return;
+            const item = row.closest('.game-item');
+            if (item && item.dataset.game !== this.selectedId) {
+                this.selectedId = item.dataset.game;
+                this.playSound('click');
+                this.refreshDailyHub();
+            }
+        });
+    }
+
+    refreshDailyHub() {
+        try {
+            const statuses = this.tracker.getAllStatuses();
+            const doneCount = DAILY_GAMES.filter(g => statuses[g.id].done).length;
+            const history = this.tracker.recordHistory(doneCount);
+            const nextGame = this.listOrder.find(g => !statuses[g.id].done);
+
+            const banner = document.getElementById('allClearBanner');
+            if (banner) banner.style.display = nextGame ? 'none' : '';
+
+            document.querySelectorAll('.game-item').forEach(item => {
+                const game = DAILY_GAMES.find(g => g.id === item.dataset.game);
+                if (!game) return;
+                const status = statuses[game.id];
+                const expanded = game.id === this.selectedId;
+
+                item.classList.toggle('expanded', expanded);
+                const row = item.querySelector('.game-row');
+                if (row) row.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+
+                this.renderRowState(item, game, status);
+                this.renderExpandState(item, game, status, nextGame, doneCount, history);
+            });
+
+            this.renderStreakChip(statuses);
+        } catch (error) {
+            console.error('Daily hub refresh failed:', error);
+        }
+    }
+
+    renderRowState(item, game, status) {
+        const sub = item.querySelector('.row-sub');
+        const statusEl = item.querySelector('.row-status');
+        if (!sub || !statusEl) return;
+
+        sub.textContent = status.streak > 0 ? `🔥 ${status.streak} streak` : game.desc;
+
+        if (status.done) {
+            statusEl.innerHTML = `
+                <div class="done-badge">
+                    <svg viewBox="0 0 20 20" width="20" height="20"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#2ecc71" stroke-width="2"></circle><path d="M6 10.5l2.5 2.5L14 7.5" fill="none" stroke="#2ecc71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                    <span>Done</span>
+                </div>`;
+        } else {
+            statusEl.innerHTML = `
+                <div class="play-pill">
+                    <span>Play</span>
+                    <svg viewBox="0 0 16 16" width="11" height="11"><path d="M6 3l5 5-5 5" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>`;
+        }
+    }
+
+    renderExpandState(item, game, status, nextGame, doneCount, history) {
+        const expand = item.querySelector('.game-expand');
+        const label = item.querySelector('.hero-label');
+        const note = item.querySelector('.hero-note');
+        const playText = item.querySelector('.hero-play-text');
+        if (!expand || !label || !note || !playText) return;
+
+        expand.classList.toggle('done', status.done);
+
+        if (status.done) {
+            label.textContent = 'DONE TODAY';
+            note.textContent = status.streak > 0 ? `🔥 ${status.streak} streak` : 'Nice work!';
+            playText.textContent = 'VIEW RESULT';
+        } else if (nextGame && game.id === nextGame.id) {
+            label.textContent = 'UP NEXT';
+            note.textContent = status.streak > 0 ? `🔥 ${status.streak} streak on the line` : 'Start a new streak';
+            playText.textContent = 'PLAY NOW';
+        } else {
+            label.textContent = 'READY';
+            note.textContent = status.streak > 0 ? `🔥 ${status.streak} streak on the line` : 'Start a new streak';
+            playText.textContent = 'PLAY NOW';
+        }
+
+        this.renderWeek(history, doneCount,
+            item.querySelector('.week-dots'), item.querySelector('.week-caption'));
+    }
+
+    renderDateLine() {
+        const el = document.getElementById('hubDate');
+        if (!el) return;
+        try {
+            el.textContent = new Date().toLocaleDateString(undefined, {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric'
+            });
+        } catch (error) {
+            // Keep the static fallback text
+        }
+    }
+
+    renderWeek(history, doneCount, dots, caption) {
+        if (!dots || !caption) return;
+
+        dots.innerHTML = '';
+        const total = DAILY_GAMES.length;
+        let perfectRun = 0;
+
+        for (let offset = 6; offset >= 0; offset--) {
+            const day = new Date();
+            day.setDate(day.getDate() - offset);
+            const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+            const entry = history[iso];
+            const isToday = offset === 0;
+
+            const dot = document.createElement('div');
+            let cls = 'day';
+            if (isToday) {
+                cls += ' today';
+                if (entry && entry.done >= entry.total) cls += ' perfect';
+            } else if (entry && entry.done >= entry.total) {
+                cls += ' perfect';
+            } else if (entry && entry.done > 0) {
+                cls += ' partial';
+            } else {
+                cls += ' unknown';
+            }
+            dot.className = cls;
+            dot.title = 'SunMonTueWedThuFriSat'.substr(day.getDay() * 3, 3) +
+                (entry ? ` · ${entry.done}/${entry.total}` : '');
+            dots.appendChild(dot);
+        }
+
+        // Count consecutive perfect days ending today (or yesterday if today isn't done yet)
+        for (let offset = 0; offset < 60; offset++) {
+            const day = new Date();
+            day.setDate(day.getDate() - offset);
+            const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+            const entry = history[iso];
+            const perfect = entry && entry.done >= entry.total;
+            if (perfect) {
+                perfectRun++;
+            } else if (offset === 0) {
+                continue; // today isn't over yet; don't break the run
+            } else {
+                break;
+            }
+        }
+
+        caption.textContent = perfectRun > 0
+            ? `${perfectRun}-day perfect run · today ${doneCount} of ${total}`
+            : `today ${doneCount} of ${total}`;
+    }
+
+    renderStreakChip(statuses) {
+        const chip = document.getElementById('bestStreakChip');
+        const value = document.getElementById('bestStreakValue');
+        if (!chip || !value) return;
+        const best = Math.max(...DAILY_GAMES.map(g => statuses[g.id].streak));
+        if (best > 0) {
+            value.textContent = best;
+            chip.style.display = '';
+        } else {
+            chip.style.display = 'none';
+        }
+    }
+
+    // ------------------------------------------------------------
+    // Aggregate stats (all games, all modes)
+    // ------------------------------------------------------------
 
     setupVisibilityHandling() {
         document.addEventListener('visibilitychange', () => {
@@ -20,14 +419,13 @@ class BrainGamesMenu {
             if (!this.isVisible && this.audioContext) {
                 this.audioContext.suspend();
             } else if (this.isVisible) {
-                // Refresh stats when returning to the page
                 this.loadAndDisplayStats();
+                this.refreshDailyHub();
             }
         });
     }
 
     setupStatsRefresh() {
-        // Refresh stats every 2 seconds when page is visible
         setInterval(() => {
             if (this.isVisible) {
                 this.loadAndDisplayStats();
@@ -39,19 +437,9 @@ class BrainGamesMenu {
         this.totalGamesPlayedEl = document.getElementById('totalGamesPlayed');
         this.totalGamesWonEl = document.getElementById('totalGamesWon');
         this.winPercentageEl = document.getElementById('winPercentage');
-        this.floatingElementsEl = document.getElementById('floatingElements');
-    }
-
-    setupEventListeners() {
-        // Add hover sound effects with passive listeners
-        document.querySelectorAll('.game-card').forEach(card => {
-            card.addEventListener('mouseenter', () => this.playSound('hover'), { passive: true });
-            card.addEventListener('click', () => this.playSound('click'), { passive: true });
-        });
     }
 
     loadAndDisplayStats() {
-        // Aggregate stats from all games with proper handling of different data structures
         const numberGameStats = this.getGameStats('number-game-stats');
         const memoryGameStats = this.getGameStats('memory-game-stats');
         const slidingPuzzleDailyStats = this.getGameStats('pixSlate-stats-daily');
@@ -59,7 +447,6 @@ class BrainGamesMenu {
         const slidingPuzzleTotalPlayed = (slidingPuzzleDailyStats.gamesPlayed || 0) + (slidingPuzzleRandomStats.gamesPlayed || 0);
         const slidingPuzzleTotalWon = (slidingPuzzleDailyStats.gamesWon || 0) + (slidingPuzzleRandomStats.gamesWon || 0);
 
-        // Aggregate stats for Alpha-Bit (Woordle) from both modes
         const woordleDailyStats = this.getGameStats('woordle-stats-v2-daily');
         const woordleInfiniteStats = this.getGameStats('woordle-stats-v2-infinite');
         const woordleTotalPlayed = (woordleDailyStats.gamesPlayed || 0) + (woordleInfiniteStats.gamesPlayed || 0);
@@ -71,7 +458,11 @@ class BrainGamesMenu {
         const terraByteTotalPlayed = (terraByteDailyStats.gamesPlayed || 0) + (terraBytePracticeStats.gamesPlayed || 0);
         const terraByteTotalWon = (terraByteDailyStats.gamesWon || 0) + (terraBytePracticeStats.gamesWon || 0);
 
-        // Aggregate stats for Flood-This from all modes
+        // Decipherly keeps a single combined stats object
+        const decipherlyStats = readJSON('cj-stats') || {};
+        const decipherlyPlayed = parseInt(decipherlyStats.played) || 0;
+        const decipherlyWon = parseInt(decipherlyStats.wins) || 0;
+
         const floodItDailyStats = this.getGameStats('flood-this-stats-v2-daily');
         const floodItEasyStats = this.getGameStats('flood-this-stats-v2-easy');
         const floodItMediumStats = this.getGameStats('flood-this-stats-v2-medium');
@@ -79,14 +470,14 @@ class BrainGamesMenu {
         const floodItTotalPlayed = (floodItDailyStats.gamesPlayed || 0) + (floodItEasyStats.gamesPlayed || 0) + (floodItMediumStats.gamesPlayed || 0) + (floodItHardStats.gamesPlayed || 0);
         const floodItTotalWon = (floodItDailyStats.gamesWon || 0) + (floodItEasyStats.gamesWon || 0) + (floodItMediumStats.gamesWon || 0) + (floodItHardStats.gamesWon || 0);
 
-        // Calculate totals with proper field mapping
         const totalPlayed =
             (numberGameStats.totalGames || 0) +
             (memoryGameStats.gamesPlayed || 0) +
             slidingPuzzleTotalPlayed +
             woordleTotalPlayed +
             floodItTotalPlayed +
-            terraByteTotalPlayed;
+            terraByteTotalPlayed +
+            decipherlyPlayed;
 
         const totalWon =
             (numberGameStats.gamesWon || 0) +
@@ -94,8 +485,9 @@ class BrainGamesMenu {
             slidingPuzzleTotalWon +
             woordleTotalWon +
             floodItTotalWon +
-            terraByteTotalWon;
-            
+            terraByteTotalWon +
+            decipherlyWon;
+
         const winRate = totalPlayed > 0 ? Math.round((totalWon / totalPlayed) * 100) : 0;
 
         const currentPlayed = parseInt(this.totalGamesPlayedEl.textContent) || 0;
@@ -103,17 +495,13 @@ class BrainGamesMenu {
         const currentRate = parseInt(this.winPercentageEl.textContent.replace('%', '')) || 0;
 
         if (currentPlayed !== totalPlayed || currentWon !== totalWon || currentRate !== winRate) {
-            // Update display with animation only if user prefers motion
             if (this.prefersReducedMotion()) {
-                // No animations for users who prefer reduced motion
                 this.totalGamesPlayedEl.textContent = totalPlayed;
                 this.totalGamesWonEl.textContent = totalWon;
                 this.winPercentageEl.textContent = winRate + '%';
             } else {
-                // Simplified, faster animations
                 this.animateValue(this.totalGamesPlayedEl, currentPlayed, totalPlayed, 800);
                 this.animateValue(this.totalGamesWonEl, currentWon, totalWon, 800);
-                
                 setTimeout(() => {
                     this.animateValue(this.winPercentageEl, currentRate, winRate, 600, '%');
                 }, 200);
@@ -131,26 +519,24 @@ class BrainGamesMenu {
             gamesPlayed: 0,
             totalGames: 0
         };
-        
+
         try {
             const saved = localStorage.getItem(key);
             if (saved) {
                 const parsed = JSON.parse(saved);
-                
-                // Validate that the parsed data has expected structure
                 if (typeof parsed === 'object' && parsed !== null) {
                     return {
                         gamesWon: parseInt(parsed.gamesWon) || 0,
                         gamesPlayed: parseInt(parsed.gamesPlayed) || parseInt(parsed.totalGames) || 0,
                         totalGames: parseInt(parsed.totalGames) || parseInt(parsed.gamesPlayed) || 0,
-                        ...parsed // Include any other fields
+                        ...parsed
                     };
                 }
             }
         } catch (error) {
             console.error(`Error loading stats for ${key}:`, error);
         }
-        
+
         return defaultStats;
     }
 
@@ -159,23 +545,23 @@ class BrainGamesMenu {
             element.textContent = end + suffix;
             return;
         }
-        
+
         const startTime = performance.now();
-        
+
         const animate = (currentTime) => {
-            if (!this.isVisible) return; // Pause if not visible
-            
+            if (!this.isVisible) return;
+
             const elapsed = currentTime - startTime;
             const progress = Math.min(elapsed / duration, 1);
-            
+
             const current = Math.floor(start + (end - start) * this.easeOutQuart(progress));
             element.textContent = current + suffix;
-            
+
             if (progress < 1) {
                 requestAnimationFrame(animate);
             }
         };
-        
+
         requestAnimationFrame(animate);
     }
 
@@ -185,64 +571,37 @@ class BrainGamesMenu {
 
     playSound(type) {
         if (!this.isVisible) return;
-        
-        // Reuse AudioContext for better performance
-        if (!this.audioContext) {
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        try {
+            if (!this.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (this.audioContext.state === 'suspended') {
+                this.audioContext.resume();
+            }
+
+            const oscillator = this.audioContext.createOscillator();
+            const gainNode = this.audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(this.audioContext.destination);
+
+            oscillator.frequency.setValueAtTime(550, this.audioContext.currentTime);
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.03, this.audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.1);
+
+            oscillator.start(this.audioContext.currentTime);
+            oscillator.stop(this.audioContext.currentTime + 0.1);
+        } catch (error) {
+            // Audio is a nice-to-have; never let it break the menu
         }
-        
-        if (this.audioContext.state === 'suspended') {
-            this.audioContext.resume();
-        }
-        
-        const oscillator = this.audioContext.createOscillator();
-        const gainNode = this.audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(this.audioContext.destination);
-        
-        let frequency, duration;
-        
-        switch(type) {
-            case 'hover':
-                frequency = 440;
-                duration = 0.05; // Reduced duration
-                break;
-            case 'click':
-                frequency = 550;
-                duration = 0.1; // Reduced duration
-                break;
-            default:
-                frequency = 440;
-                duration = 0.05;
-        }
-        
-        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-        oscillator.type = 'sine';
-        
-        gainNode.gain.setValueAtTime(0.03, this.audioContext.currentTime); // Reduced volume
-        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
-        
-        oscillator.start(this.audioContext.currentTime);
-        oscillator.stop(this.audioContext.currentTime + duration);
     }
 
-    // Method to manually refresh stats (can be called from other scripts)
     refreshStats() {
         this.loadAndDisplayStats();
-    }
-
-    // Method to reset all stats (for testing purposes)
-    resetAllStats() {
-        if (confirm('Are you sure you want to reset all game statistics? This cannot be undone.')) {
-            localStorage.removeItem('number-game-stats');
-            localStorage.removeItem('memory-game-stats');
-            localStorage.removeItem('woordle-stats');
-            localStorage.removeItem('flood-it-stats');
-            localStorage.removeItem('sliding-puzzle-stats');
-            this.loadAndDisplayStats();
-            console.log('All stats have been reset');
-        }
+        this.refreshDailyHub();
     }
 
     cleanup() {
@@ -255,19 +614,16 @@ class BrainGamesMenu {
 // Make the menu instance globally available so games can call refreshStats
 window.brainGamesMenu = null;
 
-// Cleanup on page unload
 window.addEventListener('beforeunload', () => {
     if (window.brainGamesMenu) {
         window.brainGamesMenu.cleanup();
     }
 });
 
-// Initialize menu when page loads
 window.addEventListener('load', () => {
     window.brainGamesMenu = new BrainGamesMenu();
 });
 
-// Also refresh stats when the page gains focus (user returns to tab)
 window.addEventListener('focus', () => {
     if (window.brainGamesMenu) {
         window.brainGamesMenu.refreshStats();
