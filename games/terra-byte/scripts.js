@@ -127,8 +127,8 @@ const TB_ALIASES = {
 // Tuning constants
 // ============================================================
 
-const TB_TEX_W = 512;             // texture width (low = chunkier pixels)
-const TB_TEX_H = 256;
+const TB_TEX_W = 1024;            // texture width (low = chunkier pixels)
+const TB_TEX_H = 512;
 const TB_MAX_DIST_KM = 15000;     // distance mapped to the coldest color
 const TB_SAMPLE_BUDGET = 350;     // max border points sampled per country
 const TB_EPOCH = '2026-09-07T00:00:00'; // puzzle #1
@@ -635,7 +635,7 @@ class GlobeRenderer {
             ctx.fill('evenodd');
             // Guessed countries get a heavier, darker outline so they pop
             ctx.strokeStyle = guessedColor ? TB_COLORS.guessedBorder : TB_COLORS.border;
-            ctx.lineWidth = guessedColor ? 1 : 0.6;
+            ctx.lineWidth = guessedColor ? 1.8 : 1.1;
             ctx.stroke();
         }
 
@@ -645,9 +645,9 @@ class GlobeRenderer {
             if (!record || !record.tiny) continue;
             const [x, y] = this.lonLatToPx(record.centroid[0], record.centroid[1]);
             ctx.fillStyle = 'rgba(40, 25, 12, 0.9)';
-            ctx.fillRect(Math.round(x) - 2.5, Math.round(y) - 2.5, 5, 5);
+            ctx.fillRect(Math.round(x) - 5, Math.round(y) - 5, 10, 10);
             ctx.fillStyle = color;
-            ctx.fillRect(Math.round(x) - 1.5, Math.round(y) - 1.5, 3, 3);
+            ctx.fillRect(Math.round(x) - 3, Math.round(y) - 3, 6, 6);
         }
 
         if (this.texture) this.texture.needsUpdate = true;
