@@ -424,3 +424,176 @@ h3 { margin-top: 15px; margin-bottom: 8px; font-size: 1.1rem; opacity: 0.9; }
     .new-game-button, .share-button, .game-button { padding: 0.45rem 0.5rem; font-size: 0.6rem; max-width: 85px; }
     .game-board { gap: 1%; padding: 1.5%; }
 }
+
+
+/* ============================================================
+   Kit A header (shared brand with the home hub)
+   ============================================================ */
+
+@font-face {
+    font-family: 'Righteous';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/assets/fonts/righteous.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Silkscreen';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/assets/fonts/silkscreen-700.woff2') format('woff2');
+}
+
+.nav-mini {
+    display: flex;
+    width: max-content;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+    padding: 5px 11px 5px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #ffffff;
+    text-decoration: none;
+    margin-bottom: 0.6rem;
+    touch-action: manipulation;
+}
+
+.nav-mini:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.lockup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 11px;
+    margin-bottom: 0.9rem;
+}
+
+.badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    flex: none;
+}
+
+.lockup-text {
+    text-align: left;
+}
+
+.game-name {
+    font-family: 'Righteous', 'Arial Rounded MT Bold', Arial, sans-serif;
+    font-size: 23px;
+    font-weight: 400;
+    letter-spacing: 1.5px;
+    line-height: 1;
+    margin: 0;
+    animation: none;
+    text-shadow: 1px 2px 5px rgba(0, 0, 0, 0.45);
+}
+
+.game-tag {
+    font-family: 'Silkscreen', 'Courier New', monospace;
+    font-weight: 700;
+    font-size: 8px;
+    letter-spacing: 2px;
+    margin-top: 3px;
+    color: #ffe36e;
+}
+
+/* Unified action pills: one glass shape, a color dot per action */
+.new-game-button,
+.share-button,
+.control-button,
+.definition-button,
+.game-button {
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+    color: #ffffff;
+    padding: 9px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    box-shadow: none;
+}
+
+.new-game-button::before,
+.share-button::before,
+.control-button::before,
+.definition-button::before,
+.game-button::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    margin-right: 6px;
+    vertical-align: 1px;
+}
+
+.share-button::before { background: #2ecc71; }
+.control-button::before { background: #b06ee0; }
+.new-game-button::before { background: #ff7a6e; }
+.definition-button::before { background: #5aa9ff; }
+.game-button::before { background: #f2a33c; }
+
+/* Segmented mode control, gold active */
+.game-mode-selector {
+    display: flex;
+    background: rgba(10, 10, 25, 0.32);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    padding: 4px;
+    gap: 4px;
+    margin-bottom: 0.8rem;
+}
+
+.mode-button,
+.difficulty-button {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 4px;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: rgba(255, 255, 255, 0.8);
+    box-shadow: none;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.mode-button:hover,
+.difficulty-button:hover {
+    transform: none;
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.mode-button.active,
+.difficulty-button.active {
+    background: linear-gradient(90deg, #ffb700, #ffd700);
+    color: #241a3d;
+    box-shadow: none;
+}
+
+.mode-button.active:hover,
+.difficulty-button.active:hover {
+    background: linear-gradient(90deg, #ffb700, #ffd700);
+}
