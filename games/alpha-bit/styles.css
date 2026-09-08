@@ -864,21 +864,26 @@ body {
     width: max-content;
     align-items: center;
     gap: 5px;
-    background: rgba(255, 255, 255, 0.18);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: linear-gradient(90deg, #ffb700, #ffd700);
+    border: none;
     border-radius: 999px;
-    padding: 5px 11px 5px 8px;
-    font-size: 11px;
+    padding: 7px 13px 7px 9px;
+    font-size: 11.5px;
     font-weight: 700;
     letter-spacing: 0.5px;
-    color: #ffffff;
+    color: #241a3d;
     text-decoration: none;
     margin-bottom: 0.6rem;
+    box-shadow: 0 3px 9px rgba(0, 0, 0, 0.3);
     touch-action: manipulation;
 }
 
+.nav-mini svg path {
+    stroke: #241a3d;
+}
+
 .nav-mini:hover {
-    background: rgba(255, 255, 255, 0.28);
+    background: linear-gradient(90deg, #ffc61a, #ffe14d);
 }
 
 .lockup {
