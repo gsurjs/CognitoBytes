@@ -95,12 +95,14 @@ body {
 .hub-header {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     padding: 0 8px;
 }
 
 .brand-mark {
     flex: none;
+    width: 58px;
+    height: 49px;
     filter: drop-shadow(0 3px 8px rgba(240, 147, 251, 0.35));
 }
 
@@ -112,7 +114,7 @@ body {
 
 .wordmark-top {
     font-family: 'Righteous', 'Arial Rounded MT Bold', Arial, sans-serif;
-    font-size: 21px;
+    font-size: 26px;
     letter-spacing: 1.5px;
     line-height: 1;
     text-shadow: 1px 2px 5px rgba(0, 0, 0, 0.5);
@@ -121,8 +123,8 @@ body {
 .wordmark-sub {
     font-family: 'Silkscreen', 'Courier New', monospace;
     font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 2px;
+    font-size: 15px;
+    letter-spacing: 2.5px;
     line-height: 1.2;
     background: linear-gradient(90deg, #f093fb 0%, #4facfe 100%);
     -webkit-background-clip: text;
@@ -144,7 +146,7 @@ body {
 }
 
 .hub-date {
-    font-size: 13px;
+    font-size: 16px;
     color: rgba(255, 255, 255, 0.65);
     padding: 0 8px;
 }
@@ -479,11 +481,11 @@ body {
     }
 
     .wordmark-top {
-        font-size: 24px;
+        font-size: 28px;
     }
 
     .wordmark-sub {
-        font-size: 13px;
+        font-size: 16px;
     }
 }
 
