@@ -911,6 +911,14 @@ class TerraByteGame {
             const loading = document.getElementById('globeLoading');
             if (loading) loading.style.display = 'none';
 
+            try {
+                if (this.globeHint && !localStorage.getItem('terraByte-pin-hint-seen')) {
+                    this.globeHint.style.display = '';
+                }
+            } catch (error) {
+                // Hint is a nice-to-have
+            }
+
             const savedMode = localStorage.getItem('terraByte-gameMode');
             this.gameMode = savedMode === 'practice' ? 'practice' : 'daily';
             this.dailyModeButton.classList.toggle('active', this.gameMode === 'daily');
@@ -947,6 +955,7 @@ class TerraByteGame {
         this.newGameButton = document.getElementById('newGameButton');
         this.shareButton = document.getElementById('shareButton');
         this.statsButton = document.getElementById('statsButton');
+        this.globeHint = document.getElementById('globeHint');
         this.globePin = document.getElementById('globePin');
         this.globePop = document.getElementById('globePop');
         this.popName = document.getElementById('popName');
@@ -1178,6 +1187,10 @@ class TerraByteGame {
         }
 
         this.pinnedCountry = record;
+        if (this.globeHint && this.globeHint.style.display !== 'none') {
+            this.globeHint.style.display = 'none';
+            try { localStorage.setItem('terraByte-pin-hint-seen', '1'); } catch (error) {}
+        }
         const guess = this.guesses.find(g => g.name === record.name);
 
         this.popName.textContent = record.displayName;
