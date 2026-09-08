@@ -511,6 +511,29 @@ class TerraByteWorld {
         return null;
     }
 
+    // Nearest guessable country within maxKm of a point - lets fat fingers
+    // hit tiny countries by tapping near them
+    nearestCountry(lon, lat, maxKm) {
+        const point = [lon, lat];
+        const degPad = maxKm / 111 + 0.2;
+        let best = null;
+        let bestDist = maxKm;
+        for (const record of this.countries.values()) {
+            if (!record.guessable) continue;
+            const [minLon, minLat, maxLon, maxLat] = record.bbox;
+            if (lon < minLon - degPad || lon > maxLon + degPad ||
+                lat < minLat - degPad || lat > maxLat + degPad) continue;
+            for (const p of record.samplePoints) {
+                const d = tbHaversineKm(point, p);
+                if (d < bestDist) {
+                    bestDist = d;
+                    best = record;
+                }
+            }
+        }
+        return best;
+    }
+
     pointInCountry(lon, lat, record) {
         let inside = false;
         for (const rings of record.polygons) {
@@ -828,6 +851,13 @@ class GlobeRenderer {
             y: (-this._pinWorld.y + 1) / 2 * this.container.clientHeight,
             visible: visible
         };
+    }
+
+    getKmPerPixel() {
+        const halfAngle = Math.asin(Math.min(1, 1 / this.camDist));
+        const projectedRadius = (this.container.clientHeight / 2) *
+            Math.tan(halfAngle) / Math.tan(this.camera.fov / 2 * Math.PI / 180);
+        return 6371 / Math.max(projectedRadius, 1);
     }
 
     animate(now) {
@@ -1180,12 +1210,23 @@ class TerraByteGame {
 
     handleGlobeTap(lon, lat) {
         if (!this.world) return;
-        const record = this.world.countryAt(lon, lat);
+        let record = this.world.countryAt(lon, lat);
+        let pinAt = [lon, lat];
+
+        // Near-miss: snap to the closest country within a finger-sized
+        // radius, scaled to the current zoom level
+        if (!record && this.globe) {
+            const toleranceKm = Math.min(Math.max(12 * this.globe.getKmPerPixel(), 60), 350);
+            record = this.world.nearestCountry(lon, lat, toleranceKm);
+            if (record) pinAt = [record.centroid[0], record.centroid[1]];
+        }
+
         if (!record) {
             this.hidePin();
             return;
         }
 
+        this.pinTarget = pinAt;
         this.pinnedCountry = record;
         if (this.globeHint && this.globeHint.style.display !== 'none') {
             this.globeHint.style.display = 'none';
@@ -1213,7 +1254,7 @@ class TerraByteGame {
 
         this.globePin.style.display = '';
         this.globePop.style.display = '';
-        if (this.globe) this.globe.setPin([lon, lat]);
+        if (this.globe) this.globe.setPin(this.pinTarget);
     }
 
     trackPin(pos) {
