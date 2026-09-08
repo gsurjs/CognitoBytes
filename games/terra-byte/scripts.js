@@ -541,6 +541,7 @@ class TerraByteWorld {
                 for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
                     const xi = ring[i][0], yi = ring[i][1];
                     const xj = ring[j][0], yj = ring[j][1];
+                    if (Math.abs(xj - xi) > 180) continue; // antimeridian jump edge
                     if ((yi > lat) !== (yj > lat) &&
                         lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) {
                         inside = !inside;
@@ -637,10 +638,18 @@ class GlobeRenderer {
         ctx.beginPath();
         for (const rings of record.polygons) {
             for (const ring of rings) {
+                let prevLon = null;
                 for (let i = 0; i < ring.length; i++) {
-                    const [x, y] = this.lonLatToPx(ring[i][0], ring[i][1]);
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
+                    const lon = ring[i][0];
+                    const [x, y] = this.lonLatToPx(lon, ring[i][1]);
+                    // Split unsplit antimeridian crossings (Russia, Fiji,
+                    // Antarctica) - never draw across the whole texture
+                    if (i === 0 || Math.abs(lon - prevLon) > 180) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                    prevLon = lon;
                 }
                 ctx.closePath();
             }
