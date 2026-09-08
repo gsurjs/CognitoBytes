@@ -4,108 +4,123 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🧠 Cognito Bytes</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&family=Silkscreen:wght@400;700&display=swap">
     <link rel="stylesheet" href="styles.css">
     <script src="analytics.js"></script>
 </head>
 <body>
     <div class="floating-elements" id="floatingElements"></div>
-    
-    <div class="menu-container">
-        <div class="header">
-            <h1 class="title">🧠 COGNITO BYTES</h1>
-            <div class="subtitle">Challenge Your Mind</div>
-        </div>
-        
-        <div class="games-grid">
-            <a href="games/alpha-bit/" class="game-card" id="woordleGame">
-                <div class="game-icon">🔤</div>
-                <div class="game-card-text">
-                    <div class="game-title">ALPHABIT</div>
-                    <div class="game-description">Guess the 5-letter word in 6 tries. Daily puzzle or infinite mode!</div>
-                </div>
-            </a>
 
-            <a href="games/flood-this/" class="game-card" id="floodThisGame">
-                <div class="game-icon">🌊</div>
-                <div class="game-card-text">
-                    <div class="game-title">FLOOD-THIS</div>
-                    <div class="game-description">Swap pixel colors in least amount of moves, starting from top left pixel. Change until the whole grid is <b>flooded!</b> <b>Daily</b> and <b>infinite</b> modes.</div>
-                </div>
-            </a>
+    <div class="hub">
+        <header class="hub-header">
+            <svg class="brand-mark" viewBox="0 0 13 11" width="44" height="37" shape-rendering="crispEdges" aria-label="Cognito Bytes pixel brain logo">
+                <path fill="#f2a7ee" d="M3 0h3v1H3z M5 1h1v1H5z M1 2h5v1H1z M1 3h1v1H1z M4 3h2v1H4z M0 4h4v1H0z M5 4h1v1H5z M0 5h1v1H0z M3 5h3v1H3z M0 6h3v1H0z M5 6h1v1H5z M1 7h5v1H1z M1 8h1v1H1z M4 8h2v1H4z M2 9h2v1H2z M5 9h1v1H5z M3 10h3v1H3z M7 0h3v1H7z M7 1h1v1H7z M10 1h1v1H10z M7 2h5v1H7z M7 3h2v1H7z M11 3h1v1H11z M7 4h1v1H7z M9 4h4v1H9z M7 5h3v1H7z M12 5h1v1h-1z M7 6h1v1H7z M10 6h3v1H10z M7 7h5v1H7z M7 8h2v1H7z M11 8h1v1H11z M7 9h1v1H7z M9 9h2v1H9z M7 10h3v1H7z"></path>
+                <path fill="#c95fd6" d="M3 1h2v1H3z M2 3h2v1H2z M4 4h1v1H4z M1 5h2v1H1z M3 6h2v1H3z M2 8h2v1H2z M4 9h1v1H4z M8 1h2v1H8z M9 3h2v1H9z M8 4h1v1H8z M10 5h2v1H10z M8 6h2v1H8z M9 8h2v1H9z M8 9h1v1H8z"></path>
+                <path fill="#ffe1fd" d="M2 1h1v1H2z"></path>
+            </svg>
+            <div class="wordmark">
+                <div class="wordmark-top">COGNITO</div>
+                <div class="wordmark-sub">BYTES</div>
+            </div>
+            <div class="streak-chip" id="bestStreakChip" style="display: none;">🔥 <span id="bestStreakValue">0</span></div>
+        </header>
 
-            <a href="games/decipherly/" class="game-card" id="decipherGame">
-                <div class="game-icon">🔀</div>
-                <div class="game-card-text">
-                    <div class="game-title">DECIPHERLY</div>
-                    <div class="game-description">(NEW PUZZLE!) Swap scrambled tiles to fix the crossword grid. Compete for the <b>fewest</b> moves and <b>quickest</b> time!</div>
-                </div>
-            </a>
+        <div class="hub-date" id="hubDate">Daily brain games</div>
 
-            <a href="games/terra-byte/" class="game-card" id="terraByteGame">
-                <div class="game-icon">🌍</div>
-                <div class="game-card-text">
-                    <div class="game-title">TERRABYTE</div>
-                    <div class="game-description">(NEW DAILY!) Guess the mystery country on a pixelated 3D globe. <b>Warmer</b> colors mean you're closer! <b>Daily</b> and <b>practice</b> modes.</div>
+        <section class="hero" id="heroCard">
+            <div class="hero-top">
+                <div class="hero-label" id="heroLabel">UP NEXT</div>
+                <div class="hero-note" id="heroNote"></div>
+            </div>
+            <div class="hero-week">
+                <div class="week-dots" id="weekDots"></div>
+                <div class="week-caption" id="weekCaption"></div>
+            </div>
+            <div class="hero-game">
+                <div class="hero-icon g-terrabyte" id="heroIcon">🌍</div>
+                <div class="hero-text">
+                    <div class="hero-name" id="heroName">TERRABYTE</div>
+                    <div class="hero-desc" id="heroDesc">Guess the mystery country on the pixel globe</div>
                 </div>
+            </div>
+            <a class="hero-play" id="heroPlay" href="games/terra-byte/">
+                <span id="heroPlayText">PLAY NOW</span>
+                <svg viewBox="0 0 16 16" width="14" height="14"><path d="M6 3l5 5-5 5" fill="none" stroke="#241a3d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
             </a>
+        </section>
 
-            <a href="games/pix-slate/" class="game-card" id="slidingPuzzleGame">
-                <div class="game-icon">🧩</div>
-                <div class="game-card-text">
-                    <div class="game-title">PIXSLATE</div>
-                    <div class="game-description">A classic 4x4 sliding puzzle. Solve it in the fewest moves and least time!</div>
+        <section class="game-rows" id="gameRows">
+            <a class="game-row" data-game="terrabyte" href="games/terra-byte/">
+                <div class="row-icon g-terrabyte">🌍</div>
+                <div class="row-text">
+                    <div class="row-name">TERRABYTE</div>
+                    <div class="row-sub">Daily country guess</div>
                 </div>
+                <div class="row-status"></div>
             </a>
-            
-            <!--<a href="games/memory-match/" class="game-card" id="memoryGame">
-                <div class="game-icon">🃏</div>
-                <div class="game-card-text">
-                    <div class="game-title">Memory Match</div>
-                    <div class="game-description">Memorize card positions and find matching pairs before time runs out!</div>
+            <a class="game-row" data-game="alphabit" href="games/alpha-bit/">
+                <div class="row-icon g-alphabit">🔤</div>
+                <div class="row-text">
+                    <div class="row-name">ALPHABIT</div>
+                    <div class="row-sub">Daily 5-letter word</div>
                 </div>
-            </a>-->
+                <div class="row-status"></div>
+            </a>
+            <a class="game-row" data-game="floodthis" href="games/flood-this/">
+                <div class="row-icon g-floodthis">🌊</div>
+                <div class="row-text">
+                    <div class="row-name">FLOOD-THIS</div>
+                    <div class="row-sub">Daily color flood</div>
+                </div>
+                <div class="row-status"></div>
+            </a>
+            <a class="game-row" data-game="decipherly" href="games/decipherly/">
+                <div class="row-icon g-decipherly">🔀</div>
+                <div class="row-text">
+                    <div class="row-name">DECIPHERLY</div>
+                    <div class="row-sub">Daily crossword fix</div>
+                </div>
+                <div class="row-status"></div>
+            </a>
+            <a class="game-row" data-game="pixslate" href="games/pix-slate/">
+                <div class="row-icon g-pixslate">🧩</div>
+                <div class="row-text">
+                    <div class="row-name">PIXSLATE</div>
+                    <div class="row-sub">Daily sliding puzzle</div>
+                </div>
+                <div class="row-status"></div>
+            </a>
+        </section>
 
-            <!--hiding number guessing game for now-->
-            
-            <!--<a href="games/number-guessing/" class="game-card" id="numberGame">
-                <div class="game-icon">🤔</div>
-                <div class="game-card-text">
-                    <div class="game-title">Number Guessing</div>
-                    <div class="game-description">Guess the secret number between 1-100 with hints and time pressure!</div>
-                </div>
-            </a>-->
-        </div>
-        
-        <div class="stats-section">
-            <div class="stats-title">🏆 Your Gaming Stats</div>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-value" id="totalGamesPlayed">0</div>
-                    <div class="stat-label">Games Played</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="totalGamesWon">0</div>
-                    <div class="stat-label">Games Won</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="winPercentage">0%</div>
-                    <div class="stat-label">Win Rate</div>
-                </div>
+        <div class="stats-row">
+            <div class="stat-tile">
+                <div class="stat-value" id="totalGamesPlayed">0</div>
+                <div class="stat-label">Games Played</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-value" id="totalGamesWon">0</div>
+                <div class="stat-label">Games Won</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-value" id="winPercentage">0%</div>
+                <div class="stat-label">Win Rate</div>
             </div>
         </div>
     </div>
+
     <script src="scripts.js"></script>
     <script>// Orientation Lock Script
         class OrientationLock {
             constructor() {
                 this.createRotationOverlay();
                 this.checkOrientation();
-                
+
                 // Listen for orientation changes
                 window.addEventListener('orientationchange', () => {
                     setTimeout(() => this.checkOrientation(), 100);
                 });
-                
+
                 window.addEventListener('resize', () => {
                     this.checkOrientation();
                 });
@@ -124,7 +139,7 @@
                         <p>This app works best in portrait mode</p>
                     </div>
                 `;
-                
+
                 // Add styles
                 const style = document.createElement('style');
                 style.textContent = `
@@ -141,38 +156,38 @@
                         z-index: 999999;
                         font-family: Arial, sans-serif;
                     }
-                    
+
                     .rotation-content {
                         text-align: center;
                         color: white;
                         padding: 2rem;
                         max-width: 90%;
                     }
-                    
+
                     .rotation-icon {
                         font-size: 4rem;
                         margin-bottom: 1rem;
                         animation: rotate 2s ease-in-out infinite;
                     }
-                    
+
                     .rotation-content h2 {
                         font-size: 1.5rem;
                         margin-bottom: 0.5rem;
                         text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
                     }
-                    
+
                     .rotation-content p {
                         font-size: 1rem;
                         opacity: 0.9;
                         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
                     }
-                    
+
                     @keyframes rotate {
                         0%, 100% { transform: rotate(0deg); }
                         25% { transform: rotate(-10deg); }
                         75% { transform: rotate(10deg); }
                     }
-                    
+
                     /* Show overlay in landscape on mobile devices */
                     @media screen and (max-width: 768px) and (orientation: landscape) {
                         #rotation-overlay {
@@ -180,7 +195,7 @@
                         }
                     }
                 `;
-                
+
                 document.head.appendChild(style);
                 document.body.appendChild(this.overlay);
             }
@@ -188,7 +203,7 @@
             checkOrientation() {
                 const isMobile = window.innerWidth <= 768;
                 const isLandscape = window.innerWidth > window.innerHeight;
-                
+
                 if (isMobile && isLandscape) {
                     this.overlay.style.display = 'flex';
                     document.body.style.overflow = 'hidden';
