@@ -1,5 +1,5 @@
 // CognitoBytes daily hub: reads each game's localStorage to show today's
-// daily status, picks the "Up Next" game, and tracks day-by-day history.
+// daily status, expands a roaming selection card, and tracks day history.
 
 const DAILY_GAMES = [
     {
@@ -172,10 +172,11 @@ class BrainGamesMenu {
         this.audioContext = null;
         this.isVisible = true;
         this.tracker = new DailyStatusTracker();
+        this.selectedId = null;
+        this.listOrder = [...DAILY_GAMES];
 
         this.initializeElements();
         this.loadAndDisplayStats();
-        this.setupEventListeners();
         this.setupVisibilityHandling();
         this.setupStatsRefresh();
         this.renderDateLine();
@@ -183,9 +184,70 @@ class BrainGamesMenu {
     }
 
     async initDailyHub() {
-        this.refreshDailyHub(); // First paint from what's already known
         await this.tracker.loadAlphaBitWord();
-        this.refreshDailyHub(); // Repaint once AlphaBit's word is known
+        this.buildGameList();
+        this.refreshDailyHub();
+    }
+
+    // Build the accordion once per page load: up-next game first, then the rest
+    buildGameList() {
+        const container = document.getElementById('gameRows');
+        if (!container) return;
+
+        const statuses = this.tracker.getAllStatuses();
+        const next = DAILY_GAMES.find(g => !statuses[g.id].done);
+        this.listOrder = next
+            ? [next, ...DAILY_GAMES.filter(g => g.id !== next.id)]
+            : [...DAILY_GAMES];
+        this.selectedId = (next || DAILY_GAMES[0]).id;
+
+        container.innerHTML = this.listOrder.map(game => `
+            <div class="game-item" data-game="${game.id}">
+                <button class="game-row" type="button" aria-expanded="false">
+                    <div class="row-icon ${game.gradClass}">${game.icon}</div>
+                    <div class="row-text">
+                        <div class="row-name">${game.name}</div>
+                        <div class="row-sub">${game.desc}</div>
+                    </div>
+                    <div class="row-status"></div>
+                </button>
+                <div class="game-expand">
+                    <div class="hero-top">
+                        <div class="hero-label"></div>
+                        <div class="hero-note"></div>
+                    </div>
+                    <div class="hero-week">
+                        <div class="week-dots"></div>
+                        <div class="week-caption"></div>
+                    </div>
+                    <div class="hero-game">
+                        <div class="hero-icon ${game.gradClass}">${game.icon}</div>
+                        <div class="hero-text">
+                            <div class="hero-name">${game.name}</div>
+                            <div class="hero-desc">${game.desc}</div>
+                        </div>
+                    </div>
+                    <a class="hero-play" href="${game.href}">
+                        <span class="hero-play-text">PLAY NOW</span>
+                        <svg viewBox="0 0 16 16" width="14" height="14"><path d="M6 3l5 5-5 5" fill="none" stroke="#241a3d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                    </a>
+                </div>
+            </div>`).join('');
+
+        container.addEventListener('click', (event) => {
+            if (event.target.closest('.hero-play')) {
+                this.playSound('click');
+                return; // Let the link navigate
+            }
+            const row = event.target.closest('.game-row');
+            if (!row) return;
+            const item = row.closest('.game-item');
+            if (item && item.dataset.game !== this.selectedId) {
+                this.selectedId = item.dataset.game;
+                this.playSound('click');
+                this.refreshDailyHub();
+            }
+        });
     }
 
     refreshDailyHub() {
@@ -193,14 +255,78 @@ class BrainGamesMenu {
             const statuses = this.tracker.getAllStatuses();
             const doneCount = DAILY_GAMES.filter(g => statuses[g.id].done).length;
             const history = this.tracker.recordHistory(doneCount);
+            const nextGame = this.listOrder.find(g => !statuses[g.id].done);
 
-            this.renderHero(statuses, doneCount);
-            this.renderRows(statuses);
-            this.renderWeek(history, doneCount);
+            const banner = document.getElementById('allClearBanner');
+            if (banner) banner.style.display = nextGame ? 'none' : '';
+
+            document.querySelectorAll('.game-item').forEach(item => {
+                const game = DAILY_GAMES.find(g => g.id === item.dataset.game);
+                if (!game) return;
+                const status = statuses[game.id];
+                const expanded = game.id === this.selectedId;
+
+                item.classList.toggle('expanded', expanded);
+                const row = item.querySelector('.game-row');
+                if (row) row.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+
+                this.renderRowState(item, game, status);
+                this.renderExpandState(item, game, status, nextGame, doneCount, history);
+            });
+
             this.renderStreakChip(statuses);
         } catch (error) {
             console.error('Daily hub refresh failed:', error);
         }
+    }
+
+    renderRowState(item, game, status) {
+        const sub = item.querySelector('.row-sub');
+        const statusEl = item.querySelector('.row-status');
+        if (!sub || !statusEl) return;
+
+        sub.textContent = status.streak > 0 ? `🔥 ${status.streak} streak` : game.desc;
+
+        if (status.done) {
+            statusEl.innerHTML = `
+                <div class="done-badge">
+                    <svg viewBox="0 0 20 20" width="20" height="20"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#2ecc71" stroke-width="2"></circle><path d="M6 10.5l2.5 2.5L14 7.5" fill="none" stroke="#2ecc71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                    <span>Done</span>
+                </div>`;
+        } else {
+            statusEl.innerHTML = `
+                <div class="play-pill">
+                    <span>Play</span>
+                    <svg viewBox="0 0 16 16" width="11" height="11"><path d="M6 3l5 5-5 5" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>`;
+        }
+    }
+
+    renderExpandState(item, game, status, nextGame, doneCount, history) {
+        const expand = item.querySelector('.game-expand');
+        const label = item.querySelector('.hero-label');
+        const note = item.querySelector('.hero-note');
+        const playText = item.querySelector('.hero-play-text');
+        if (!expand || !label || !note || !playText) return;
+
+        expand.classList.toggle('done', status.done);
+
+        if (status.done) {
+            label.textContent = 'DONE TODAY';
+            note.textContent = status.streak > 0 ? `🔥 ${status.streak} streak` : 'Nice work!';
+            playText.textContent = 'VIEW RESULT';
+        } else if (nextGame && game.id === nextGame.id) {
+            label.textContent = 'UP NEXT';
+            note.textContent = status.streak > 0 ? `🔥 ${status.streak} streak on the line` : 'Start a new streak';
+            playText.textContent = 'PLAY NOW';
+        } else {
+            label.textContent = 'READY';
+            note.textContent = status.streak > 0 ? `🔥 ${status.streak} streak on the line` : 'Start a new streak';
+            playText.textContent = 'PLAY NOW';
+        }
+
+        this.renderWeek(history, doneCount,
+            item.querySelector('.week-dots'), item.querySelector('.week-caption'));
     }
 
     renderDateLine() {
@@ -217,84 +343,12 @@ class BrainGamesMenu {
         }
     }
 
-    renderHero(statuses, doneCount) {
-        const card = document.getElementById('heroCard');
-        const label = document.getElementById('heroLabel');
-        const note = document.getElementById('heroNote');
-        const icon = document.getElementById('heroIcon');
-        const name = document.getElementById('heroName');
-        const desc = document.getElementById('heroDesc');
-        const play = document.getElementById('heroPlay');
-        if (!card || !label || !icon || !name || !desc || !play) return;
-
-        const nextGame = DAILY_GAMES.find(g => !statuses[g.id].done);
-        this.heroGameId = nextGame ? nextGame.id : null;
-
-        if (nextGame) {
-            const streak = statuses[nextGame.id].streak;
-            card.classList.remove('all-done');
-            label.textContent = 'UP NEXT';
-            note.textContent = streak > 0 ? `🔥 ${streak} streak on the line` : 'Start a new streak';
-            icon.textContent = nextGame.icon;
-            icon.className = 'hero-icon ' + nextGame.gradClass;
-            icon.style.background = '';
-            name.textContent = nextGame.name;
-            desc.textContent = nextGame.desc;
-            play.href = nextGame.href;
-            play.style.display = '';
-        } else {
-            card.classList.add('all-done');
-            label.textContent = 'ALL CLEAR';
-            note.textContent = `${doneCount} of ${DAILY_GAMES.length} done`;
-            icon.textContent = '🏆';
-            icon.className = 'hero-icon';
-            icon.style.background = 'linear-gradient(135deg, #b8860b, #ffd700)';
-            name.textContent = 'All dailies done!';
-            desc.textContent = 'Come back tomorrow for fresh puzzles';
-            play.style.display = 'none';
-        }
-    }
-
-    renderRows(statuses) {
-        document.querySelectorAll('.game-row').forEach(row => {
-            const game = DAILY_GAMES.find(g => g.id === row.dataset.game);
-            if (!game) return;
-
-            // The hero already features the up-next game; hide its row
-            row.style.display = game.id === this.heroGameId ? 'none' : '';
-
-            const status = statuses[game.id];
-            const sub = row.querySelector('.row-sub');
-            const statusEl = row.querySelector('.row-status');
-            if (!sub || !statusEl) return;
-
-            sub.textContent = status.streak > 0 ? `🔥 ${status.streak} streak` : game.desc;
-
-            if (status.done) {
-                statusEl.innerHTML = `
-                    <div class="done-badge">
-                        <svg viewBox="0 0 20 20" width="20" height="20"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#2ecc71" stroke-width="2"></circle><path d="M6 10.5l2.5 2.5L14 7.5" fill="none" stroke="#2ecc71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                        <span>Done</span>
-                    </div>`;
-            } else {
-                statusEl.innerHTML = `
-                    <div class="play-pill">
-                        <span>Play</span>
-                        <svg viewBox="0 0 16 16" width="11" height="11"><path d="M6 3l5 5-5 5" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                    </div>`;
-            }
-        });
-    }
-
-    renderWeek(history, doneCount) {
-        const dots = document.getElementById('weekDots');
-        const caption = document.getElementById('weekCaption');
+    renderWeek(history, doneCount, dots, caption) {
         if (!dots || !caption) return;
 
         dots.innerHTML = '';
         const total = DAILY_GAMES.length;
         let perfectRun = 0;
-        let runBroken = false;
 
         for (let offset = 6; offset >= 0; offset--) {
             const day = new Date();
@@ -383,12 +437,6 @@ class BrainGamesMenu {
         this.totalGamesPlayedEl = document.getElementById('totalGamesPlayed');
         this.totalGamesWonEl = document.getElementById('totalGamesWon');
         this.winPercentageEl = document.getElementById('winPercentage');
-    }
-
-    setupEventListeners() {
-        document.querySelectorAll('.game-row, .hero-play').forEach(el => {
-            el.addEventListener('click', () => this.playSound('click'), { passive: true });
-        });
     }
 
     loadAndDisplayStats() {

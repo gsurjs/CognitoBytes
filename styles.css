@@ -71,6 +71,11 @@ body {
     .floating-elements::after {
         animation: none;
     }
+
+    .game-expand,
+    .game-row {
+        transition: none;
+    }
 }
 
 /* ============================================================
@@ -142,21 +147,58 @@ body {
     color: rgba(255, 255, 255, 0.65);
 }
 
-/* The Up Next hero card */
-.hero {
+/* The roaming selection card - expands inside whichever game is tapped */
+.game-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.game-expand {
     background: rgba(255, 255, 255, 0.14);
     backdrop-filter: blur(10px);
-    border: 2px solid rgba(255, 215, 0, 0.45);
+    border: 0 solid rgba(255, 215, 0, 0.45);
     border-radius: 20px;
-    padding: 16px;
+    padding: 0 16px;
     display: flex;
     flex-direction: column;
     gap: 13px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.22s ease, padding 0.3s ease, border-width 0.3s ease;
 }
 
-.hero.all-done {
+.game-item.expanded .game-expand {
+    border-width: 2px;
+    padding: 16px;
+    max-height: 380px;
+    opacity: 1;
+}
+
+.game-item.expanded .game-row {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
+    opacity: 0;
+    border-width: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.game-expand.done {
     border-color: rgba(46, 204, 113, 0.55);
+}
+
+.all-clear {
+    background: rgba(46, 204, 113, 0.14);
+    border: 1px solid rgba(46, 204, 113, 0.4);
+    border-radius: 14px;
+    padding: 11px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
 }
 
 .hero-top {
@@ -173,7 +215,7 @@ body {
     color: #ffd700;
 }
 
-.hero.all-done .hero-label {
+.game-expand.done .hero-label {
     color: #2ecc71;
 }
 
@@ -304,9 +346,15 @@ body {
     display: flex;
     align-items: center;
     gap: 11px;
+    width: 100%;
+    max-height: 80px;
     text-decoration: none;
+    text-align: left;
+    font-family: inherit;
     color: white;
-    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease,
+        max-height 0.3s ease, padding 0.3s ease, opacity 0.2s ease, border-width 0.3s ease;
     touch-action: manipulation;
 }
 
