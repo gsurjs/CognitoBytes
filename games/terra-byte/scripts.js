@@ -959,6 +959,7 @@ class TerraByteGame {
         this.guesses = [];          // { name, displayName, distance, isTarget }
         this.practiceGameId = null;
         this.suggestionIndex = -1;
+        this.hintDismissed = false;
 
         this.audioContext = null;
         this.gameAnalytics = new GameAnalytics('terra_byte');
@@ -984,12 +985,8 @@ class TerraByteGame {
             const loading = document.getElementById('globeLoading');
             if (loading) loading.style.display = 'none';
 
-            try {
-                if (this.globeHint && !localStorage.getItem('terraByte-pin-hint-seen')) {
-                    this.globeHint.style.display = '';
-                }
-            } catch (error) {
-                // Hint is a nice-to-have
+            if (this.globeHint && !this.hintDismissed) {
+                this.globeHint.style.display = '';
             }
 
             const savedMode = localStorage.getItem('terraByte-gameMode');
@@ -1103,6 +1100,10 @@ class TerraByteGame {
         this.hideAllButtons();
         this.hideSuggestions();
         this.hidePin();
+
+        if (this.globeHint && this.globe && !this.hintDismissed) {
+            this.globeHint.style.display = '';
+        }
 
         if (!forceNew && this.loadGameState()) {
             console.log('Loaded saved game state.');
@@ -1271,9 +1272,9 @@ class TerraByteGame {
 
         this.pinTarget = pinAt;
         this.pinnedCountry = record;
-        if (this.globeHint && this.globeHint.style.display !== 'none') {
+        if (this.globeHint) {
             this.globeHint.style.display = 'none';
-            try { localStorage.setItem('terraByte-pin-hint-seen', '1'); } catch (error) {}
+            this.hintDismissed = true;
         }
         const guess = this.guesses.find(g => g.name === record.name);
 
