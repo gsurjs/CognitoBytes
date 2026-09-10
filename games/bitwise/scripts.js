@@ -454,7 +454,7 @@ class BitwiseGame {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const puzzleNumber = Math.max(1, Math.floor((today.getTime() - epoch.getTime()) / 86400000) + 1);
-        let shareText = `BitWise ${puzzleNumber} 🧮\n${this.puzzle.target} in ${this.ops} op${this.ops === 1 ? '' : 's'} (par ${this.puzzle.par})\n`;
+        let shareText = `BitWise ${puzzleNumber}\n${this.puzzle.target} in ${this.ops} op${this.ops === 1 ? '' : 's'} (par ${this.puzzle.par})\n`;
         shareText += this.opEmojis.join('') + '\n';
         shareText += '\nPlay at: ' + window.location.href;
         return shareText;
