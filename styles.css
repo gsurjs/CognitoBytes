@@ -437,6 +437,8 @@ body {
 .g-floodthis { background: linear-gradient(135deg, #667eea, #f093fb); }
 .g-decipherly { background: linear-gradient(135deg, #667eea, #764ba2); }
 .g-pixslate { background: linear-gradient(135deg, #3498db, #e74c3c); }
+.g-grep { background: linear-gradient(135deg, #d68910, #f4d03f); }
+.g-bitwise { background: linear-gradient(135deg, #6c3483, #2e86c1); }
 
 /* Stats */
 .stats-row {

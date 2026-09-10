@@ -41,6 +41,22 @@ const DAILY_GAMES = [
         href: 'games/pix-slate/',
         gradClass: 'g-pixslate',
         desc: 'Solve the sliding puzzle for your best time'
+    },
+    {
+        id: 'grep',
+        name: 'GREP-IT',
+        icon: '🔎',
+        href: 'games/grep-it/',
+        gradClass: 'g-grep',
+        desc: 'Six hidden words share one secret thread'
+    },
+    {
+        id: 'bitwise',
+        name: 'BITWISE',
+        icon: '🧮',
+        href: 'games/bitwise/',
+        gradClass: 'g-bitwise',
+        desc: 'Hit the target number in the fewest ops'
     }
 ];
 
@@ -145,6 +161,20 @@ class DailyStatusTracker {
                 const stats = readJSON('pixSlate-stats-daily') || {};
                 return {
                     done: stats.lastGamePlayedSeed === this.pixSlateSeed,
+                    streak: parseInt(stats.currentStreak) || 0
+                };
+            }
+            case 'grep': {
+                const stats = readJSON('grep-stats-daily') || {};
+                return {
+                    done: stats.lastGamePlayed === this.gameDateString,
+                    streak: parseInt(stats.currentStreak) || 0
+                };
+            }
+            case 'bitwise': {
+                const stats = readJSON('bitwise-stats-daily') || {};
+                return {
+                    done: stats.lastGamePlayed === this.gameDateString,
                     streak: parseInt(stats.currentStreak) || 0
                 };
             }
@@ -473,6 +503,12 @@ class BrainGamesMenu {
         const decipherlyPlayed = parseInt(decipherlyStats.played) || 0;
         const decipherlyWon = parseInt(decipherlyStats.wins) || 0;
 
+        // GREP + BitWise, both modes each
+        const grepTotalPlayed = (this.getGameStats('grep-stats-daily').gamesPlayed || 0) + (this.getGameStats('grep-stats-practice').gamesPlayed || 0);
+        const grepTotalWon = (this.getGameStats('grep-stats-daily').gamesWon || 0) + (this.getGameStats('grep-stats-practice').gamesWon || 0);
+        const bitwiseTotalPlayed = (this.getGameStats('bitwise-stats-daily').gamesPlayed || 0) + (this.getGameStats('bitwise-stats-practice').gamesPlayed || 0);
+        const bitwiseTotalWon = (this.getGameStats('bitwise-stats-daily').gamesWon || 0) + (this.getGameStats('bitwise-stats-practice').gamesWon || 0);
+
         const floodItDailyStats = this.getGameStats('flood-this-stats-v2-daily');
         const floodItEasyStats = this.getGameStats('flood-this-stats-v2-easy');
         const floodItMediumStats = this.getGameStats('flood-this-stats-v2-medium');
@@ -487,7 +523,9 @@ class BrainGamesMenu {
             woordleTotalPlayed +
             floodItTotalPlayed +
             terraByteTotalPlayed +
-            decipherlyPlayed;
+            decipherlyPlayed +
+            grepTotalPlayed +
+            bitwiseTotalPlayed;
 
         const totalWon =
             (numberGameStats.gamesWon || 0) +
@@ -496,7 +534,9 @@ class BrainGamesMenu {
             woordleTotalWon +
             floodItTotalWon +
             terraByteTotalWon +
-            decipherlyWon;
+            decipherlyWon +
+            grepTotalWon +
+            bitwiseTotalWon;
 
         const winRate = totalPlayed > 0 ? Math.round((totalWon / totalPlayed) * 100) : 0;
 
