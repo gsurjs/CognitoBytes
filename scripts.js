@@ -44,9 +44,9 @@ const DAILY_GAMES = [
     },
     {
         id: 'grep',
-        name: 'GREP',
+        name: 'GREP-IT',
         icon: '🔎',
-        href: 'games/grep/',
+        href: 'games/grep-it/',
         gradClass: 'g-grep',
         desc: 'Six hidden words share one secret thread'
     },

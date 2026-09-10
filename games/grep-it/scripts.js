@@ -645,7 +645,7 @@ class GrepGame {
 
     generateShareText() {
         const medal = medalFor(this.elapsed);
-        let shareText = `GREP ${this.getPuzzleNumber()} 🔎\n`;
+        let shareText = `GREP-IT ${this.getPuzzleNumber()} 🔎\n`;
         shareText += `“${this.theme.clue}” · ${medal.emoji} ${WORD_COUNT}/${WORD_COUNT} in ${this.formatTime(this.elapsed)}\n`;
         shareText += '🟩'.repeat(WORD_COUNT) + '\n';
         shareText += '\nPlay at: ' + window.location.href;
