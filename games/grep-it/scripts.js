@@ -10,6 +10,7 @@ const DIRECTIONS = [[1, 0], [0, 1], [1, 1], [1, -1]];
 const ALL_DIRECTIONS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]];
 const FOUND_COLORS = ['#27ae60', '#2e86c1', '#d68910', '#8e44ad', '#d94a3a', '#16a085'];
 const COMBO_WINDOW_MS = 8000;
+const HINT_MAX = 3; // hint 1 reveals the theme, hints 2-3 each un-hide a word chip
 const MEDALS = [
     { limit: 120, emoji: '🥇', name: 'GOLD' },
     { limit: 210, emoji: '🥈', name: 'SILVER' },
@@ -159,6 +160,9 @@ class GrepGame {
         this.timerStarted = false;
         this.isPaused = false;
         this.lastFoundAt = null;
+        this.hintsUsed = 0;
+        this.revealedWords = [];
+        this.themeRevealed = false;
         this.practiceSeed = null;
         this.selectAnchor = null;
         this.selectPath = [];
@@ -197,6 +201,7 @@ class GrepGame {
         this.timerEl = document.getElementById('timer');
         this.themeClueEl = document.getElementById('themeClue');
         this.pauseButton = document.getElementById('pauseButton');
+        this.hintButton = document.getElementById('hintButton');
         this.pauseOverlay = document.getElementById('pauseOverlay');
         this.gamesWon = document.getElementById('gamesWon');
         this.gamesPlayed = document.getElementById('gamesPlayed');
@@ -215,6 +220,7 @@ class GrepGame {
         this.shareButton.addEventListener('click', () => this.shareResults());
         this.statsButton.addEventListener('click', () => this.showStatsModal());
         this.pauseButton.addEventListener('click', () => this.togglePause());
+        this.hintButton.addEventListener('click', () => this.useHint());
         this.pauseOverlay.addEventListener('click', () => {
             if (this.isPaused) this.togglePause();
         });
@@ -301,6 +307,9 @@ class GrepGame {
         this.timerStarted = false;
         this.isPaused = false;
         this.lastFoundAt = null;
+        this.hintsUsed = 0;
+        this.revealedWords = [];
+        this.themeRevealed = false;
         this.gameActive = true;
 
         if (this.gameMode === 'practice') {
@@ -348,7 +357,8 @@ class GrepGame {
             this.chipsEl.appendChild(chip);
         });
 
-        // Re-apply already-found words (restored games)
+        // Re-apply hint reveals, then already-found words (restored games)
+        this.revealedWords.forEach(word => this.applyPeek(word));
         this.found.forEach(word => this.markFound(word, false));
 
         this.updateThemeBanner();
@@ -391,6 +401,8 @@ class GrepGame {
         if (!this.themeClueEl || !this.theme) return;
         if (this.found.length === WORD_COUNT) {
             this.themeClueEl.textContent = `${this.theme.answer} ✨`;
+        } else if (this.themeRevealed) {
+            this.themeClueEl.textContent = `${this.theme.answer} 🏳️`;
         } else {
             this.themeClueEl.textContent = `“${this.theme.clue}” 🤔`;
         }
@@ -503,6 +515,49 @@ class GrepGame {
     }
 
     // ------------------------------------------------------------
+    // Hints (white-flag): 1st reveals the theme, later ones un-hide a word chip
+    // ------------------------------------------------------------
+
+    useHint() {
+        if (!this.gameActive || this.isPaused || this.hintsUsed >= HINT_MAX) return;
+        if (!this.timerStarted) {
+            this.timerStarted = true;
+            this.resumeTimer();
+        }
+        if (!this.themeRevealed) {
+            this.themeRevealed = true;
+            this.updateThemeBanner();
+            this.updateMessage('🏳️ The thread is out — now hunt its words!', 'info');
+        } else {
+            const word = this.puzzle.words.find(w =>
+                !this.found.includes(w) && !this.revealedWords.includes(w));
+            if (!word) return;
+            this.revealedWords.push(word);
+            this.applyPeek(word);
+            this.updateMessage(`🏳️ “${word}” is in the grid — find it!`, 'info');
+        }
+        this.hintsUsed++;
+        this.updateHintButton();
+        this.saveGameState();
+        this.gameAnalytics.trackButtonClick('hint');
+    }
+
+    applyPeek(word) {
+        const idx = this.puzzle.words.indexOf(word);
+        const chip = this.chipsEl.querySelector(`[data-idx="${idx}"]`);
+        if (chip && !chip.classList.contains('hit')) {
+            chip.classList.add('peeked');
+            chip.textContent = word;
+        }
+    }
+
+    updateHintButton() {
+        const left = HINT_MAX - this.hintsUsed;
+        this.hintButton.textContent = `🏳️ HINT ×${left}`;
+        this.hintButton.disabled = left <= 0;
+    }
+
+    // ------------------------------------------------------------
     // Pause
     // ------------------------------------------------------------
 
@@ -593,6 +648,8 @@ class GrepGame {
         this.statsButton.style.display = gameOver ? 'inline-block' : 'none';
         this.newGameButton.style.display = this.gameMode === 'practice' ? 'inline-block' : 'none';
         this.pauseButton.style.display = this.gameActive ? 'inline-block' : 'none';
+        this.hintButton.style.display = this.gameActive ? 'inline-block' : 'none';
+        this.updateHintButton();
     }
 
     hideAllButtons() {
@@ -645,9 +702,11 @@ class GrepGame {
 
     generateShareText() {
         const medal = medalFor(this.elapsed);
-        let shareText = `GREP-IT ${this.getPuzzleNumber()} 🔎\n`;
-        shareText += `“${this.theme.clue}” · ${medal.emoji} ${WORD_COUNT}/${WORD_COUNT} in ${this.formatTime(this.elapsed)}\n`;
-        shareText += '🟩'.repeat(WORD_COUNT) + '\n';
+        const themeFlag = this.themeRevealed ? '🏳️' : '';
+        const squares = this.found.map(w => this.revealedWords.includes(w) ? '🏳️' : '🟩').join('');
+        let shareText = `GREP-IT ${this.getPuzzleNumber()}\n`;
+        shareText += `“${this.theme.clue}”${themeFlag}\n${medal.emoji} ${WORD_COUNT}/${WORD_COUNT} in ${this.formatTime(this.elapsed)}\n`;
+        shareText += (squares || '🟩'.repeat(WORD_COUNT)) + '\n';
         shareText += '\nPlay at: ' + window.location.href;
         return shareText;
     }
@@ -713,6 +772,9 @@ class GrepGame {
             elapsed: this.elapsed,
             timerStarted: this.timerStarted,
             isPaused: this.isPaused,
+            hintsUsed: this.hintsUsed,
+            revealedWords: this.revealedWords,
+            themeRevealed: this.themeRevealed,
             gameActive: this.gameActive,
             practiceSeed: this.practiceSeed,
             savedDate: this.gameMode === 'daily' ? this.getDateString() : null
@@ -743,6 +805,9 @@ class GrepGame {
             this.gameActive = !!state.gameActive;
             this.isPaused = !!state.isPaused && this.gameActive && this.timerStarted;
             this.lastFoundAt = null;
+            this.hintsUsed = Math.min(HINT_MAX, parseInt(state.hintsUsed) || 0);
+            this.revealedWords = (state.revealedWords || []).filter(w => this.puzzle.words.includes(w));
+            this.themeRevealed = !!state.themeRevealed;
 
             this.applyPauseUI();
             this.renderAll();

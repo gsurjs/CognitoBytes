@@ -233,7 +233,8 @@ body {
     margin-bottom: 0.8rem;
 }
 
-.pause-mini {
+.pause-mini,
+.hint-mini {
     background: rgba(10, 10, 25, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 999px;
@@ -247,8 +248,20 @@ body {
     touch-action: manipulation;
 }
 
-.pause-mini:active {
+.pause-mini:active,
+.hint-mini:active {
     transform: scale(0.95);
+}
+
+.hint-mini:disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+/* A hint-revealed word: you know WHAT to hunt, not where */
+.word-chip.peeked {
+    border: 1px dashed rgba(255, 215, 0, 0.85);
+    color: #ffe36e;
 }
 
 .found-count {
