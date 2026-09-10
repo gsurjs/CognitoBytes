@@ -48,7 +48,7 @@ const DAILY_GAMES = [
         icon: '🔎',
         href: 'games/grep/',
         gradClass: 'g-grep',
-        desc: 'Find all six hidden words in the grid'
+        desc: 'Six hidden words share one secret thread'
     },
     {
         id: 'bitwise',

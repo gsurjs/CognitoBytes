@@ -10,7 +10,7 @@
                frame-src 'self' https://vercel.live;">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>🔎 GREP - Daily Word Search</title>
+    <title>🔎 GREP - Daily Hidden Thread</title>
     <link rel="stylesheet" href="/games/grep/styles.css">
     <script src="/analytics.js"></script>
 </head>
@@ -23,7 +23,7 @@
                 <div class="badge" style="background: linear-gradient(135deg, #d68910, #f4d03f);">🔎</div>
                 <div class="lockup-text">
                     <h1 class="game-name">GREP</h1>
-                    <div class="game-tag">DAILY WORD HUNT</div>
+                    <div class="game-tag">DAILY HIDDEN THREAD</div>
                 </div>
             </div>
 
@@ -40,17 +40,27 @@
         </div>
 
         <div class="game-content">
+            <div class="theme-banner">
+                <span class="theme-label">TODAY'S THREAD</span>
+                <span class="theme-clue" id="themeClue">…</span>
+            </div>
+
             <div class="game-info">
                 <div class="found-count" id="foundCount">Found: 0/6</div>
+                <button type="button" class="pause-mini" id="pauseButton">⏸ PAUSE</button>
                 <div class="timer" id="timer">⏱ 00:00</div>
             </div>
 
             <div class="message" id="message">
-                <p>Drag across the grid to find all 6 hidden words!</p>
+                <p>Six hidden words share one thread — no word list! Drag to hunt.</p>
             </div>
 
             <div class="grid-wrap">
                 <div class="word-grid" id="wordGrid"></div>
+                <div class="pause-overlay" id="pauseOverlay">
+                    <div class="po-title">⏸️ PAUSED</div>
+                    <div class="po-sub">The board is hidden — no peeking!<br>Tap to resume</div>
+                </div>
             </div>
 
             <div class="word-chips" id="wordChips"></div>
@@ -99,6 +109,7 @@
         </div>
     </div>
 
+    <script src="/games/grep/data/themes.js"></script>
     <script src="/games/grep/scripts.js"></script>
     <script src="/games/alpha-bit/orientation-lock.js"></script>
 </body>

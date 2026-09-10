@@ -195,15 +195,60 @@ body {
     background: linear-gradient(90deg, #ffb700, #ffd700);
 }
 
+/* The daily theme (hidden thread) banner */
+.theme-banner {
+    background: rgba(10, 10, 25, 0.4);
+    border: 2px solid rgba(255, 215, 0, 0.5);
+    border-radius: 14px;
+    padding: 0.55rem 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+.theme-label {
+    display: block;
+    font-family: 'Silkscreen', 'Courier New', monospace;
+    font-weight: 700;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: #ffe36e;
+    margin-bottom: 2px;
+}
+
+.theme-clue {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.35);
+}
+
 .game-info {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 0.4rem;
     background: rgba(255, 255, 255, 0.1);
-    padding: 0.6rem;
+    padding: 0.45rem 0.6rem;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     margin-bottom: 0.8rem;
+}
+
+.pause-mini {
+    background: rgba(10, 10, 25, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+    color: #ffffff;
+    padding: 6px 12px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.pause-mini:active {
+    transform: scale(0.95);
 }
 
 .found-count {
@@ -251,11 +296,49 @@ body {
 
 /* The letter grid */
 .grid-wrap {
+    position: relative;
     background: rgba(10, 10, 25, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 14px;
     padding: 8px;
     margin-bottom: 0.8rem;
+}
+
+/* Anti-cheat pause cover: fully hides the letters while the clock is stopped */
+.pause-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(13, 10, 28, 0.97);
+    border-radius: 14px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.pause-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.po-title {
+    font-family: 'Righteous', 'Arial Rounded MT Bold', Arial, sans-serif;
+    font-size: 26px;
+    letter-spacing: 2px;
+    text-shadow: 1px 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.po-sub {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.5;
 }
 
 .word-grid {
@@ -286,13 +369,45 @@ body {
     background: rgba(255, 215, 0, 0.55);
     border-color: rgba(255, 215, 0, 0.9);
     color: #241a3d;
-    transform: scale(1.06);
+    transform: scale(1.08);
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
 }
 
 .cell.found {
     color: #ffffff;
     border-color: transparent;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* Juice: cascade intro + found pop */
+.cell.drop-in {
+    animation: cellDropIn 0.38s cubic-bezier(0.2, 0.9, 0.3, 1.2) backwards;
+}
+
+@keyframes cellDropIn {
+    from { opacity: 0; transform: translateY(-10px) scale(0.7); }
+    to { opacity: 1; transform: none; }
+}
+
+.cell.pop {
+    animation: cellPop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+}
+
+@keyframes cellPop {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.28) rotate(-3deg); }
+    100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cell.drop-in,
+    .cell.pop {
+        animation: none;
+    }
+
+    .pause-overlay {
+        transition: none;
+    }
 }
 
 /* Word list chips */
