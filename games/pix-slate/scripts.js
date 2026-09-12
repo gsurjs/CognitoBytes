@@ -639,11 +639,15 @@ class SlidingPuzzleGame {
 
         const text = this.generateShareText();
 
-        if (navigator.share) {
+        if (window.cbShare && window.cbShare.isDesktop()) {
+            window.cbShare.showModal(text);
+        } else if (navigator.share) {
             navigator.share({
                 title: 'Pix-Slate Puzzle Result',
                 text: text
             }).catch(err => console.log("Share failed:", err));
+        } else if (window.cbShare) {
+            window.cbShare.showModal(text);
         } else {
             alert("Share this result:\n\n" + text);
         }
