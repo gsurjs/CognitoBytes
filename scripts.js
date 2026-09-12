@@ -856,8 +856,9 @@ function initAllClearShare() {
             const snap = readJSON(SHARE_KEYS[g.id]);
             return (snap && snap.date === todayKey && snap.text) ? snap.text : `${g.icon} ${g.name} ✅`;
         });
-        const text = `CognitoBytes ${now.getMonth() + 1}/${now.getDate()} 🏆\n\n` +
-            blocks.join('\n\n') + '\n\n' +
+        const mmddyy = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}/${String(now.getFullYear()).slice(-2)}`;
+        const text = `CognitoBytes ${mmddyy} 🏆\n\n` +
+            blocks.join('\n━━━━━━━━\n') + '\n\n' +
             'Play at: ' + location.origin;
         if (window.cbShare && window.cbShare.isDesktop()) {
             window.cbShare.showModal(text);
