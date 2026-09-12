@@ -480,8 +480,6 @@ class BrainGamesMenu {
     }
 
     loadAndDisplayStats() {
-        const numberGameStats = this.getGameStats('number-game-stats');
-        const memoryGameStats = this.getGameStats('memory-game-stats');
         const slidingPuzzleDailyStats = this.getGameStats('pixSlate-stats-daily');
         const slidingPuzzleRandomStats = this.getGameStats('pixSlate-stats-random');
         const slidingPuzzleTotalPlayed = (slidingPuzzleDailyStats.gamesPlayed || 0) + (slidingPuzzleRandomStats.gamesPlayed || 0);
@@ -517,8 +515,6 @@ class BrainGamesMenu {
         const floodItTotalWon = (floodItDailyStats.gamesWon || 0) + (floodItEasyStats.gamesWon || 0) + (floodItMediumStats.gamesWon || 0) + (floodItHardStats.gamesWon || 0);
 
         const totalPlayed =
-            (numberGameStats.totalGames || 0) +
-            (memoryGameStats.gamesPlayed || 0) +
             slidingPuzzleTotalPlayed +
             woordleTotalPlayed +
             floodItTotalPlayed +
@@ -528,8 +524,6 @@ class BrainGamesMenu {
             bitwiseTotalPlayed;
 
         const totalWon =
-            (numberGameStats.gamesWon || 0) +
-            (memoryGameStats.gamesWon || 0) +
             slidingPuzzleTotalWon +
             woordleTotalWon +
             floodItTotalWon +
@@ -679,3 +673,161 @@ window.addEventListener('focus', () => {
         window.brainGamesMenu.refreshStats();
     }
 });
+
+// ============================================================
+// Stats transfer: move all localStorage progress to another
+// device via a link (data rides in the #fragment, never sent
+// to any server). Old device shares the link; new device opens
+// it, confirms, and the stats are written locally.
+// ============================================================
+
+const TRANSFER_PREFIX = '#transfer=';
+
+function transferBufToB64url(buf) {
+    const bytes = new Uint8Array(buf);
+    let s = '';
+    for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function transferB64urlToBuf(str) {
+    const bin = atob(str.replace(/-/g, '+').replace(/_/g, '/'));
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+}
+
+async function encodeAllStats() {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        data[key] = localStorage.getItem(key);
+    }
+    const json = new TextEncoder().encode(JSON.stringify(data));
+    if (typeof CompressionStream !== 'undefined') {
+        const stream = new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'));
+        return 'gz.' + transferBufToB64url(await new Response(stream).arrayBuffer());
+    }
+    return 'raw.' + transferBufToB64url(json);
+}
+
+async function decodeStats(blob) {
+    const dot = blob.indexOf('.');
+    const kind = blob.slice(0, dot);
+    const bytes = transferB64urlToBuf(blob.slice(dot + 1));
+    let json;
+    if (kind === 'gz') {
+        const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+        json = await new Response(stream).text();
+    } else {
+        json = new TextDecoder().decode(bytes);
+    }
+    const data = JSON.parse(json);
+    if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('bad payload');
+
+    // Only accept keys the games actually own, with sane sizes: the link is
+    // the one place untrusted input can reach localStorage, so imports are
+    // whitelist-only (a crafted link can't plant arbitrary keys or blobs).
+    const ALLOWED_PREFIXES = ['grep-', 'bitwise-', 'terraByte-', 'woordle-', 'flood-this-', 'cj-', 'pixSlate-', 'cognito-'];
+    const clean = {};
+    let accepted = 0;
+    for (const [key, value] of Object.entries(data)) {
+        if (accepted >= 800) break;
+        if (typeof value !== 'string' || value.length > 50000) continue;
+        if (key.length > 100 || !ALLOWED_PREFIXES.some(p => key.startsWith(p))) continue;
+        clean[key] = value;
+        accepted++;
+    }
+    if (accepted === 0) throw new Error('no recognized stats');
+    return clean;
+}
+
+function initStatsTransfer() {
+    const openButton = document.getElementById('transferButton');
+    const modal = document.getElementById('transferModal');
+    const title = document.getElementById('transferTitle');
+    const body = document.getElementById('transferBody');
+    if (!openButton || !modal) return;
+
+    const closeModal = () => { modal.style.display = 'none'; };
+    modal.querySelector('.modal-close-button').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    openButton.addEventListener('click', async () => {
+        title.textContent = 'Transfer Stats';
+        modal.style.display = 'flex';
+        try {
+            const link = location.origin + '/' + TRANSFER_PREFIX + await encodeAllStats();
+            body.innerHTML = `
+                <p>Send this link to your other device (AirDrop, message, email…), then open it there. Your streaks and stats come along — nothing is uploaded anywhere.</p>
+                <div class="transfer-actions"></div>`;
+            const actions = body.querySelector('.transfer-actions');
+            const hasTouch = (navigator.maxTouchPoints || 0) > 0;
+            if (navigator.share && hasTouch) {
+                const shareBtn = document.createElement('button');
+                shareBtn.className = 'transfer-action';
+                shareBtn.textContent = '📤 SEND LINK';
+                shareBtn.addEventListener('click', () => {
+                    navigator.share({ url: link }).catch(() => {});
+                });
+                actions.appendChild(shareBtn);
+            }
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'transfer-action';
+            copyBtn.textContent = '📋 COPY LINK';
+            copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(link).then(() => {
+                    copyBtn.textContent = '✅ COPIED';
+                    setTimeout(() => copyBtn.textContent = '📋 COPY LINK', 1600);
+                }).catch(() => {
+                    const field = document.createElement('input');
+                    field.className = 'transfer-field';
+                    field.readOnly = true;
+                    field.value = link;
+                    body.appendChild(field);
+                    field.select();
+                });
+            });
+            actions.appendChild(copyBtn);
+        } catch (error) {
+            body.innerHTML = '<p>Sorry — the transfer link could not be built on this browser.</p>';
+        }
+    });
+
+    // Receiving side: a #transfer= link was opened on this device
+    if (location.hash.startsWith(TRANSFER_PREFIX)) {
+        const blob = location.hash.slice(TRANSFER_PREFIX.length);
+        history.replaceState(null, '', location.pathname);
+        decodeStats(blob).then((data) => {
+            const count = Object.keys(data).length;
+            title.textContent = 'Import Stats';
+            body.innerHTML = `
+                <p>Import <b>${count}</b> saved items (streaks, stats, and game progress) from your other device?</p>
+                <p class="transfer-warning">This replaces the stats currently on THIS device.</p>
+                <div class="transfer-actions">
+                    <button type="button" class="transfer-action" id="transferImport">✅ IMPORT</button>
+                    <button type="button" class="transfer-action ghost" id="transferCancel">CANCEL</button>
+                </div>`;
+            modal.style.display = 'flex';
+            document.getElementById('transferCancel').addEventListener('click', closeModal);
+            document.getElementById('transferImport').addEventListener('click', () => {
+                Object.entries(data).forEach(([key, value]) => {
+                    try { localStorage.setItem(key, value); } catch (error) { /* storage full */ }
+                });
+                location.reload();
+            });
+        }).catch(() => {
+            title.textContent = 'Import Stats';
+            body.innerHTML = '<p>That transfer link is damaged or incomplete — generate a fresh one on your other device and try again.</p>';
+            modal.style.display = 'flex';
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initStatsTransfer);
+
+// Ask the browser to exempt our storage from automatic eviction (Chrome and
+// Firefox honor this; it protects streaks on devices that purge idle sites)
+if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().catch(() => {});
+}

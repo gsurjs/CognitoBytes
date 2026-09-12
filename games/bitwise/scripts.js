@@ -38,6 +38,41 @@ function applyOp(a, op, b) {
 
 // Deterministic puzzle: 2 large + 4 small numbers; the target is built by
 // chaining 3-4 random valid operations, so it is always reachable.
+// True par: fewest ops that can reach the target from these numbers.
+// Breadth-first over number-multisets, level = op count, memoized on a
+// canonical multiset key so the state space stays small (runs in a few ms).
+function minOpsFor(numbers, target) {
+    let frontier = [numbers.slice().sort((a, b) => a - b)];
+    const seen = new Set([frontier[0].join(',')]);
+    for (let ops = 1; ops <= numbers.length - 1; ops++) {
+        const next = [];
+        for (const nums of frontier) {
+            for (let i = 0; i < nums.length; i++) {
+                for (let j = i + 1; j < nums.length; j++) {
+                    const rest = nums.filter((_, k) => k !== i && k !== j);
+                    for (const op of ['+', '-', '*', '/']) {
+                        const candidates = op === '+' || op === '*'
+                            ? [applyOp(nums[i], op, nums[j])]
+                            : [applyOp(nums[i], op, nums[j]), applyOp(nums[j], op, nums[i])];
+                        for (const value of candidates) {
+                            if (value === null) continue;
+                            if (value === target) return ops;
+                            const state = rest.concat(value).sort((a, b) => a - b);
+                            const key = state.join(',');
+                            if (!seen.has(key)) {
+                                seen.add(key);
+                                next.push(state);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        frontier = next;
+    }
+    return null; // unreachable: puzzles are constructed solvable
+}
+
 function generateBitwisePuzzle(seed) {
     for (let attempt = 0; attempt < 200; attempt++) {
         const rng = bwMakeRNG(seed + attempt * 104729);
@@ -83,13 +118,20 @@ function generateBitwisePuzzle(seed) {
         if (current < 101 || current > 999) continue;
         if (numbers.includes(current)) continue;
 
+        // Par is the true minimum over all solutions, not the construction
+        // path — so under-par is impossible and hitting par means a genuinely
+        // optimal solve. Reject targets with a 1-2 op shortcut: those play
+        // as trivial puzzles no matter how long the constructed chain was.
+        const par = minOpsFor(numbers, current);
+        if (par === null || par < 3) continue;
+
         // Shuffle display order deterministically
         for (let i = numbers.length - 1; i > 0; i--) {
             const j = Math.floor(rng() * (i + 1));
             [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
         }
 
-        return { numbers: numbers, target: current, par: steps };
+        return { numbers: numbers, target: current, par: par };
     }
     return null; // practically unreachable
 }
@@ -677,5 +719,5 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
 
 // Export pure logic for testing in Node (no effect in the browser)
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { generateBitwisePuzzle, applyOp, bwHashCode, bwMakeRNG };
+    module.exports = { generateBitwisePuzzle, applyOp, bwHashCode, bwMakeRNG, minOpsFor };
 }

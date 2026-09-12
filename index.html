@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               script-src 'self' 'unsafe-inline' https://www.google-analytics.com https://www.googletagmanager.com https://vercel.live;
+               style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+               font-src 'self' https://fonts.gstatic.com;
+               img-src 'self' data:;
+               connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com;
+               frame-src 'self' https://vercel.live;">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🧠 Cognito Bytes</title>
@@ -42,7 +50,7 @@
             </noscript>
         </section>
 
-        <div class="stats-row">
+        <div class="stats-row" id="statsRow">
             <div class="stat-tile">
                 <div class="stat-value" id="totalGamesPlayed">0</div>
                 <div class="stat-label">Games Played</div>
@@ -54,6 +62,16 @@
             <div class="stat-tile">
                 <div class="stat-value" id="winPercentage">0%</div>
                 <div class="stat-label">Win Rate</div>
+            </div>
+        </div>
+
+        <button type="button" class="transfer-link" id="transferButton">⇄ Move my stats to another device</button>
+
+        <div id="transferModal" class="transfer-modal" style="display: none;">
+            <div class="transfer-content">
+                <button class="modal-close-button" type="button">&times;</button>
+                <h2 id="transferTitle">Transfer Stats</h2>
+                <div id="transferBody"></div>
             </div>
         </div>
     </div>
