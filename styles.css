@@ -625,3 +625,23 @@ body {
     padding: 9px;
     font-size: 12px;
 }
+
+.all-clear-share {
+    display: block;
+    margin: 0.6rem auto 0;
+    background: linear-gradient(45deg, #27ae60, #2ecc71);
+    border: none;
+    border-radius: 999px;
+    color: #ffffff;
+    padding: 10px 20px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.all-clear-share:active {
+    transform: scale(0.96);
+}

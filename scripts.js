@@ -299,6 +299,8 @@ class BrainGamesMenu {
 
             const banner = document.getElementById('allClearBanner');
             if (banner) banner.style.display = nextGame ? 'none' : '';
+            const allClearShare = document.getElementById('allClearShare');
+            if (allClearShare) allClearShare.style.display = nextGame ? 'none' : '';
 
             document.querySelectorAll('.game-item').forEach(item => {
                 const game = DAILY_GAMES.find(g => g.id === item.dataset.game);
@@ -831,3 +833,25 @@ document.addEventListener('DOMContentLoaded', initStatsTransfer);
 if (navigator.storage && navigator.storage.persist) {
     navigator.storage.persist().catch(() => {});
 }
+
+// All-clear share: one combined card once every daily is done
+function initAllClearShare() {
+    const button = document.getElementById('allClearShare');
+    if (!button) return;
+    button.addEventListener('click', () => {
+        const now = new Date();
+        const text = `CognitoBytes ${now.getMonth() + 1}/${now.getDate()}\n` +
+            `${DAILY_GAMES.length}/${DAILY_GAMES.length} dailies 🏆\n` +
+            DAILY_GAMES.map(g => g.icon).join('') + '\n' +
+            '\nPlay at: ' + location.origin;
+        if (window.cbShare && window.cbShare.isDesktop()) {
+            window.cbShare.showModal(text);
+        } else if (navigator.share) {
+            navigator.share({ text: text }).catch(() => {});
+        } else if (window.cbShare) {
+            window.cbShare.showModal(text);
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initAllClearShare);

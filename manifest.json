@@ -1,0 +1,14 @@
+{
+  "name": "Cognito Bytes",
+  "short_name": "Cognito Bytes",
+  "description": "7 free daily brain games — new puzzles every day",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#3a2158",
+  "theme_color": "#3a2158",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
