@@ -611,6 +611,7 @@ class CrossJumbleGame {
                     moves: this.moves,
                     time: this.timer
                 }));
+                this.saveDailyShare();
             }
             setTimeout(() => this.dom.statsModal.style.display = 'flex', 1500);
         }
@@ -756,6 +757,18 @@ class CrossJumbleGame {
             gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
             osc.stop(ctx.currentTime + 0.3);
         }
+    }
+
+    saveDailyShare() {
+        // Snapshot today's emoji result (minus the link) so the hub can build
+        // one combined all-dailies share
+        try {
+            const now = new Date();
+            localStorage.setItem('cj-daily-share', JSON.stringify({
+                date: `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`,
+                text: this.generateShareText().split('Play at:')[0].trim()
+            }));
+        } catch (error) { /* storage full */ }
     }
 
     generateShareText() {

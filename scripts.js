@@ -840,10 +840,25 @@ function initAllClearShare() {
     if (!button) return;
     button.addEventListener('click', () => {
         const now = new Date();
-        const text = `CognitoBytes ${now.getMonth() + 1}/${now.getDate()}\n` +
-            `${DAILY_GAMES.length}/${DAILY_GAMES.length} dailies 🏆\n` +
-            DAILY_GAMES.map(g => g.icon).join('') + '\n' +
-            '\nPlay at: ' + location.origin;
+        const todayKey = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+        const SHARE_KEYS = {
+            terrabyte: 'terraByte-daily-share',
+            alphabit: 'woordle-daily-share',
+            floodthis: 'flood-this-daily-share',
+            decipherly: 'cj-daily-share',
+            pixslate: 'pixSlate-daily-share',
+            grep: 'grep-daily-share',
+            bitwise: 'bitwise-daily-share'
+        };
+        // Stitch together each game's own emoji result from today; games
+        // finished before this feature shipped fall back to a checkmark line
+        const blocks = DAILY_GAMES.map(g => {
+            const snap = readJSON(SHARE_KEYS[g.id]);
+            return (snap && snap.date === todayKey && snap.text) ? snap.text : `${g.icon} ${g.name} ✅`;
+        });
+        const text = `CognitoBytes ${now.getMonth() + 1}/${now.getDate()} 🏆\n\n` +
+            blocks.join('\n\n') + '\n\n' +
+            'Play at: ' + location.origin;
         if (window.cbShare && window.cbShare.isDesktop()) {
             window.cbShare.showModal(text);
         } else if (navigator.share) {

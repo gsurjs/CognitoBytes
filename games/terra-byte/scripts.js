@@ -1229,6 +1229,7 @@ class TerraByteGame {
         this.createConfetti();
 
         this.gameAnalytics.trackGameEnd(true, count);
+        if (this.gameMode === 'daily') this.saveDailyShare();
 
         const stats = this.getStats();
         const gameKey = this.gameMode === 'daily' ? this.getDateString() : this.practiceGameId;
@@ -1612,6 +1613,18 @@ class TerraByteGame {
     // ------------------------------------------------------------
     // Sharing
     // ------------------------------------------------------------
+
+    saveDailyShare() {
+        // Snapshot today's emoji result (minus the link) so the hub can build
+        // one combined all-dailies share
+        try {
+            const now = new Date();
+            localStorage.setItem('terraByte-daily-share', JSON.stringify({
+                date: `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`,
+                text: this.generateShareText().split('Play at:')[0].trim()
+            }));
+        } catch (error) { /* storage full */ }
+    }
 
     generateShareText() {
         const epoch = new Date(TB_EPOCH);

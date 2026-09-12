@@ -357,6 +357,7 @@ class FloodThisGame {
         this.gameActive = false;
         this.saveGameState(); // Save final game state
         this.updateMessage(`🎉 Excellent! You flooded the board in ${this.currentMoves} moves!`, "success");
+        if (this.gameMode === 'daily') this.saveDailyShare();
         this.playSound('win');
 
         // Simplified confetti - less intensive
@@ -899,6 +900,18 @@ class FloodThisGame {
                 
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
+    }
+
+    saveDailyShare() {
+        // Snapshot today's emoji result (minus the link) so the hub can build
+        // one combined all-dailies share
+        try {
+            const now = new Date();
+            localStorage.setItem('flood-this-daily-share', JSON.stringify({
+                date: `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`,
+                text: this.generateShareText().split('Play at:')[0].trim()
+            }));
+        } catch (error) { /* storage full */ }
     }
 
     generateShareText() {
