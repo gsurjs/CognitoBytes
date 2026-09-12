@@ -1644,8 +1644,11 @@ class TerraByteGame {
             window.cbShare.showModal(shareText);
         } else if (navigator.share) {
             navigator.share({ text: shareText }).catch(err => {
-                console.log('Error sharing:', err);
-                this.fallbackShare(shareText);
+                // A dismissed share sheet is a user choice, not a failure
+                if (!err || err.name !== 'AbortError') {
+                    console.log('Error sharing:', err);
+                    this.fallbackShare(shareText);
+                }
             });
         } else {
             this.fallbackShare(shareText);

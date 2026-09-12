@@ -717,7 +717,10 @@ class GrepGame {
         if (window.cbShare && window.cbShare.isDesktop()) {
             window.cbShare.showModal(shareText);
         } else if (navigator.share) {
-            navigator.share({ text: shareText }).catch(() => this.fallbackShare(shareText));
+            navigator.share({ text: shareText }).catch(err => {
+                // A dismissed share sheet is a user choice, not a failure
+                if (!err || err.name !== 'AbortError') this.fallbackShare(shareText);
+            });
         } else {
             this.fallbackShare(shareText);
         }
