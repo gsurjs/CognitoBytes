@@ -808,7 +808,9 @@ class FloodThisGame {
     shareResults() {
         const shareText = this.generateShareText();
 
-        if (navigator.share) {
+        if (window.cbShare && window.cbShare.isDesktop()) {
+            window.cbShare.showModal(shareText);
+        } else if (navigator.share) {
             navigator.share({ text: shareText }).catch(err => {
                 console.log('Error sharing:', err);
                 this.fallbackShare(shareText);

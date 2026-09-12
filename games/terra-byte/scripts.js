@@ -1640,7 +1640,9 @@ class TerraByteGame {
         const shareText = this.generateShareText();
         this.gameAnalytics.trackButtonClick('share_results');
 
-        if (navigator.share) {
+        if (window.cbShare && window.cbShare.isDesktop()) {
+            window.cbShare.showModal(shareText);
+        } else if (navigator.share) {
             navigator.share({ text: shareText }).catch(err => {
                 console.log('Error sharing:', err);
                 this.fallbackShare(shareText);

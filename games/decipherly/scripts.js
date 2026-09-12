@@ -786,7 +786,9 @@ class CrossJumbleGame {
 
     shareResult() {
         const text = this.generateShareText();
-        if (navigator.share) {
+        if (window.cbShare && window.cbShare.isDesktop()) {
+            window.cbShare.showModal(text);
+        } else if (navigator.share) {
             navigator.share({text: text}).catch(e => console.log(e));
         } else {
             navigator.clipboard.writeText(text);
