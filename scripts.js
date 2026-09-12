@@ -724,7 +724,22 @@ async function decodeStats(blob) {
     }
     const data = JSON.parse(json);
     if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('bad payload');
-    return data;
+
+    // Only accept keys the games actually own, with sane sizes: the link is
+    // the one place untrusted input can reach localStorage, so imports are
+    // whitelist-only (a crafted link can't plant arbitrary keys or blobs).
+    const ALLOWED_PREFIXES = ['grep-', 'bitwise-', 'terraByte-', 'woordle-', 'flood-this-', 'cj-', 'pixSlate-', 'cognito-'];
+    const clean = {};
+    let accepted = 0;
+    for (const [key, value] of Object.entries(data)) {
+        if (accepted >= 800) break;
+        if (typeof value !== 'string' || value.length > 50000) continue;
+        if (key.length > 100 || !ALLOWED_PREFIXES.some(p => key.startsWith(p))) continue;
+        clean[key] = value;
+        accepted++;
+    }
+    if (accepted === 0) throw new Error('no recognized stats');
+    return clean;
 }
 
 function initStatsTransfer() {
@@ -810,3 +825,9 @@ function initStatsTransfer() {
 }
 
 document.addEventListener('DOMContentLoaded', initStatsTransfer);
+
+// Ask the browser to exempt our storage from automatic eviction (Chrome and
+// Firefox honor this; it protects streaks on devices that purge idle sites)
+if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().catch(() => {});
+}
