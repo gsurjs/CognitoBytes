@@ -6,6 +6,12 @@
 (function () {
     function isDesktop() {
         try {
+            // Touch capability is the reliable mobile signal: every phone and
+            // tablet reports touch points (iPads masquerading as Macs included),
+            // while true desktops report none. Media-query heuristics proved
+            // flaky on iOS, so touch wins whenever the two disagree.
+            var hasTouch = (navigator.maxTouchPoints || 0) > 0 || 'ontouchstart' in window;
+            if (hasTouch) return false;
             return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
         } catch (error) {
             return false;
