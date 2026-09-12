@@ -539,6 +539,7 @@ class WoordleGame {
         this.playSound('win');
 
         this.gameAnalytics.trackGameEnd(true, attempts);
+        if (this.gameMode === 'daily') this.saveDailyShare();
 
         this.createConfetti();
         
@@ -1014,6 +1015,18 @@ class WoordleGame {
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
         
+    }
+
+    saveDailyShare() {
+        // Snapshot today's emoji result (minus the link) so the hub can build
+        // one combined all-dailies share
+        try {
+            const now = new Date();
+            localStorage.setItem('woordle-daily-share', JSON.stringify({
+                date: `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`,
+                text: this.generateShareText().split('Play at:')[0].trim()
+            }));
+        } catch (error) { /* storage full */ }
     }
 
     generateShareText() {

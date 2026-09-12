@@ -416,6 +416,7 @@ class BitwiseGame {
         this.playSound('win');
         this.createConfetti();
         this.gameAnalytics.trackGameEnd(true, this.ops);
+        if (this.gameMode === 'daily') this.saveDailyShare();
 
         const stats = this.getStats();
         const gameKey = this.gameMode === 'daily' ? this.getDateString() : 'practice-' + this.practiceSeed;
@@ -489,6 +490,18 @@ class BitwiseGame {
         document.getElementById('statsCurrentStreak').textContent = stats.currentStreak;
         document.getElementById('statsMaxStreak').textContent = stats.maxStreak;
         modal.style.display = 'flex';
+    }
+
+    saveDailyShare() {
+        // Snapshot today's emoji result (minus the link) so the hub can build
+        // one combined all-dailies share
+        try {
+            const now = new Date();
+            localStorage.setItem('bitwise-daily-share', JSON.stringify({
+                date: `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`,
+                text: this.generateShareText().split('Play at:')[0].trim()
+            }));
+        } catch (error) { /* storage full */ }
     }
 
     generateShareText() {

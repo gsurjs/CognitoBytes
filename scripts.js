@@ -299,6 +299,8 @@ class BrainGamesMenu {
 
             const banner = document.getElementById('allClearBanner');
             if (banner) banner.style.display = nextGame ? 'none' : '';
+            const allClearShare = document.getElementById('allClearShare');
+            if (allClearShare) allClearShare.style.display = nextGame ? 'none' : '';
 
             document.querySelectorAll('.game-item').forEach(item => {
                 const game = DAILY_GAMES.find(g => g.id === item.dataset.game);
@@ -831,3 +833,41 @@ document.addEventListener('DOMContentLoaded', initStatsTransfer);
 if (navigator.storage && navigator.storage.persist) {
     navigator.storage.persist().catch(() => {});
 }
+
+// All-clear share: one combined card once every daily is done
+function initAllClearShare() {
+    const button = document.getElementById('allClearShare');
+    if (!button) return;
+    button.addEventListener('click', () => {
+        const now = new Date();
+        const todayKey = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+        const SHARE_KEYS = {
+            terrabyte: 'terraByte-daily-share',
+            alphabit: 'woordle-daily-share',
+            floodthis: 'flood-this-daily-share',
+            decipherly: 'cj-daily-share',
+            pixslate: 'pixSlate-daily-share',
+            grep: 'grep-daily-share',
+            bitwise: 'bitwise-daily-share'
+        };
+        // Stitch together each game's own emoji result from today; games
+        // finished before this feature shipped fall back to a checkmark line
+        const blocks = DAILY_GAMES.map(g => {
+            const snap = readJSON(SHARE_KEYS[g.id]);
+            return (snap && snap.date === todayKey && snap.text) ? snap.text : `${g.icon} ${g.name} ✅`;
+        });
+        const mmddyy = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}/${String(now.getFullYear()).slice(-2)}`;
+        const text = `CognitoBytes ${mmddyy} 🧠\n\n` +
+            blocks.join('\n━━━━━━━━\n') + '\n\n' +
+            'Play at: ' + location.origin;
+        if (window.cbShare && window.cbShare.isDesktop()) {
+            window.cbShare.showModal(text);
+        } else if (navigator.share) {
+            navigator.share({ text: text }).catch(() => {});
+        } else if (window.cbShare) {
+            window.cbShare.showModal(text);
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initAllClearShare);

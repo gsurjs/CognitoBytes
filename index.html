@@ -12,7 +12,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🧠 Cognito Bytes</title>
+    <meta name="description" content="7 free daily brain games: word hunts, number puzzles, geography, logic and more. New puzzles every day, no account needed.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Cognito Bytes">
+    <meta property="og:title" content="Cognito Bytes — Free Daily Brain Games">
+    <meta property="og:description" content="7 free daily brain games: word hunts, number puzzles, geography, logic and more. New puzzles every day, no account needed.">
+    <meta property="og:url" content="https://cognitobytes.com/">
+    <meta property="og:image" content="https://cognitobytes.com/assets/images/og-card.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta name="theme-color" content="#3a2158">
+    <meta name="apple-mobile-web-app-title" content="Cognito Bytes">
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&family=Silkscreen:wght@400;700&display=swap">
     <link rel="stylesheet" href="styles.css">
     <script src="analytics.js"></script>
@@ -37,6 +52,7 @@
         <div class="hub-date" id="hubDate">Daily brain games</div>
 
         <div class="all-clear" id="allClearBanner" style="display: none;">🏆 All dailies done — come back tomorrow!</div>
+        <button type="button" class="all-clear-share" id="allClearShare" style="display: none;">📤 SHARE 7/7</button>
 
         <section class="game-rows" id="gameRows">
             <noscript>
@@ -76,6 +92,7 @@
         </div>
     </div>
 
+    <script src="assets/share-modal.js"></script>
     <script src="scripts.js"></script>
     <script>// Orientation Lock Script
         class OrientationLock {
