@@ -791,6 +791,11 @@ function initStatsTransfer() {
                 });
             });
             actions.appendChild(copyBtn);
+            const pasteBtn = document.createElement('button');
+            pasteBtn.className = 'transfer-action ghost';
+            pasteBtn.textContent = '📥 I HAVE A LINK';
+            pasteBtn.addEventListener('click', showPasteImport);
+            actions.appendChild(pasteBtn);
         } catch (error) {
             body.innerHTML = '<p>Sorry — the transfer link could not be built on this browser.</p>';
         }
@@ -800,28 +805,51 @@ function initStatsTransfer() {
     if (location.hash.startsWith(TRANSFER_PREFIX)) {
         const blob = location.hash.slice(TRANSFER_PREFIX.length);
         history.replaceState(null, '', location.pathname);
-        decodeStats(blob).then((data) => {
-            const count = Object.keys(data).length;
-            title.textContent = 'Import Stats';
-            body.innerHTML = `
-                <p>Import <b>${count}</b> saved items (streaks, stats, and game progress) from your other device?</p>
-                <p class="transfer-warning">This replaces the stats currently on THIS device.</p>
-                <div class="transfer-actions">
-                    <button type="button" class="transfer-action" id="transferImport">✅ IMPORT</button>
-                    <button type="button" class="transfer-action ghost" id="transferCancel">CANCEL</button>
-                </div>`;
-            modal.style.display = 'flex';
-            document.getElementById('transferCancel').addEventListener('click', closeModal);
-            document.getElementById('transferImport').addEventListener('click', () => {
-                Object.entries(data).forEach(([key, value]) => {
-                    try { localStorage.setItem(key, value); } catch (error) { /* storage full */ }
-                });
-                location.reload();
+        decodeStats(blob).then(showImportConfirm).catch(showImportError);
+    }
+
+    function showImportConfirm(data) {
+        const count = Object.keys(data).length;
+        title.textContent = 'Import Stats';
+        body.innerHTML = `
+            <p>Import <b>${count}</b> saved items (streaks, stats, and game progress) from your other device?</p>
+            <p class="transfer-warning">This replaces the stats currently on THIS device.</p>
+            <div class="transfer-actions">
+                <button type="button" class="transfer-action" id="transferImport">✅ IMPORT</button>
+                <button type="button" class="transfer-action ghost" id="transferCancel">CANCEL</button>
+            </div>`;
+        modal.style.display = 'flex';
+        document.getElementById('transferCancel').addEventListener('click', closeModal);
+        document.getElementById('transferImport').addEventListener('click', () => {
+            Object.entries(data).forEach(([key, value]) => {
+                try { localStorage.setItem(key, value); } catch (error) { /* storage full */ }
             });
-        }).catch(() => {
-            title.textContent = 'Import Stats';
-            body.innerHTML = '<p>That transfer link is damaged or incomplete — generate a fresh one on your other device and try again.</p>';
-            modal.style.display = 'flex';
+            location.reload();
+        });
+    }
+
+    function showImportError() {
+        title.textContent = 'Import Stats';
+        body.innerHTML = '<p>That transfer link is damaged or incomplete — generate a fresh one and try again.</p>';
+        modal.style.display = 'flex';
+    }
+
+    // iOS home-screen apps get storage separate from Safari, and transfer
+    // links always open in Safari - so the app needs a way to receive a
+    // pasted link instead
+    function showPasteImport() {
+        title.textContent = 'Import Stats';
+        body.innerHTML = `
+            <p>Paste a transfer link from your other device — or from Safari, if you're moving your stats into the home-screen app.</p>
+            <input type="text" class="transfer-field" id="transferPaste" placeholder="Paste the link here…">
+            <div class="transfer-actions">
+                <button type="button" class="transfer-action" id="transferParse">📥 IMPORT</button>
+            </div>`;
+        modal.style.display = 'flex';
+        document.getElementById('transferParse').addEventListener('click', () => {
+            const raw = document.getElementById('transferPaste').value.trim();
+            const match = raw.match(/#transfer=([A-Za-z0-9_.\-]+)/);
+            decodeStats(match ? match[1] : raw).then(showImportConfirm).catch(showImportError);
         });
     }
 }
