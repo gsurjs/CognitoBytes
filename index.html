@@ -42,7 +42,7 @@
             </noscript>
         </section>
 
-        <div class="stats-row">
+        <div class="stats-row" id="statsRow">
             <div class="stat-tile">
                 <div class="stat-value" id="totalGamesPlayed">0</div>
                 <div class="stat-label">Games Played</div>
@@ -54,6 +54,16 @@
             <div class="stat-tile">
                 <div class="stat-value" id="winPercentage">0%</div>
                 <div class="stat-label">Win Rate</div>
+            </div>
+        </div>
+
+        <button type="button" class="transfer-link" id="transferButton">⇄ Move my stats to another device</button>
+
+        <div id="transferModal" class="transfer-modal" style="display: none;">
+            <div class="transfer-content">
+                <button class="modal-close-button" type="button">&times;</button>
+                <h2 id="transferTitle">Transfer Stats</h2>
+                <div id="transferBody"></div>
             </div>
         </div>
     </div>
